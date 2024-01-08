@@ -116,6 +116,13 @@ Return value
 str (string) – Decompressed string
 ```
 
+### How to install:
+Download `pros.sdk.x64.dll` and copy it to the Teardown directory, overwrite the existing file.  
+Press 'F1' on the pause menu to access the DLL options.
+
+### How to uninstall:
+Verify the game on Steam.
+
 ## TODO:
 - Do not crash the game
 - Register functions automatically
