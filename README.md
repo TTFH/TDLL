@@ -125,11 +125,12 @@ Verify the game on Steam.
 
 ## TODO:
 - Do not crash the game
-- Register functions automatically
 - Rename GetWater() to FindWater()
 - Rename GetScripts() to FindScripts()
 - Change return type of GetTextureOffset(shape) to Vec()
 - Implement SetRenderDistance(dist)
 - Implement ToggleBoundary()
 - Implement tr = GetJointWorldTransform(j)
-- Does the water/scripts have tags? Can I get local script entities? for example to implement FindWater(tag, global)
+- Implement v = GetShadowVolumeSize()
+- Remove "function is only for internal usage"
+- Get entity tags and local script entities to implement FindWater(tag, global), FindScripts(tag, global)

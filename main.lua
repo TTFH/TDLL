@@ -1,5 +1,4 @@
 function init()
---[[
 	DebugPrint("coroutine " .. tostring(coroutine ~= nil))
 	DebugPrint("debug " .. tostring(debug ~= nil))
 	DebugPrint("io " .. tostring(io ~= nil))
@@ -8,7 +7,7 @@ function init()
 	DebugPrint("package " .. tostring(package ~= nil))
 	DebugPrint("string " .. tostring(string ~= nil))
 	DebugPrint("table " .. tostring(table ~= nil))
-]]
+
 	g_shape = 0
 	dll_loaded = false
 	if GetDllVersion then
@@ -19,6 +18,7 @@ end
 function tick(dt)
 	if not dll_loaded and GetDllVersion then
 		dll_loaded = true
+
 		local version = GetDllVersion()
 		DebugPrint(version)
 
@@ -65,15 +65,17 @@ function update(dt)
 	end
 
 	local boundary_vertices = GetBoundaryVertices()
-	for i = 1, #boundary_vertices do
-		local v1 = boundary_vertices[i]
-		local v2 = boundary_vertices[i + 1]
-		if v2 == nil then
-			v2 = boundary_vertices[1]
+	for j = -5, 20 do
+		for i = 1, #boundary_vertices do
+			local v1 = boundary_vertices[i]
+			local v2 = boundary_vertices[i + 1]
+			if v2 == nil then
+				v2 = boundary_vertices[1]
+			end
+			v1[2] = player_pos[2] + j
+			v2[2] = player_pos[2] + j
+			DrawLine(v1, v2, 1, 1, 0)
 		end
-		v1[2] = player_pos[2]
-		v2[2] = player_pos[2]
-		DebugLine(v1, v2, 1, 1, 0)
 	end
 
 	local vehicle = GetPlayerVehicle()
@@ -104,7 +106,7 @@ function update(dt)
 		DebugWatch("texture offset", VecStr(Vec(x, y, z)))
 	end
 
-	if InputPressed("P") then
+	if InputPressed("T") then
 		local current_map = GetString("game.levelid")
 		if current_map ~= "" then
 			local text = ZlibLoadCompressed(current_map)
@@ -113,18 +115,24 @@ function update(dt)
 	end
 end
 
+joint_cache = {}
+
 function draw()
 	if not dll_loaded then return end
 	local joints = FindJoints("", true)
 	for i = 1, #joints do
 		local joint = joints[i]
 		local shapes = GetJointShapes(joint)
-		local point1, _ = GetJointLocalBodyPos(joint)
+		if not joint_cache[joint] then
+			local point = GetJointLocalBodyPos(joint)
+			joint_cache[joint] = point1
+			return
+		end
 		for j = 1, #shapes do
 			local shape = shapes[j]
 			local body = GetShapeBody(shape)
 			local body_tr = GetBodyTransform(body)
-			local joint_pos = TransformToParentPoint(body_tr, point1)
+			local joint_pos = TransformToParentPoint(body_tr, joint_cache[joint])
 			DrawPoint(joint_pos, GetJointType(joint))
 			break
 		end

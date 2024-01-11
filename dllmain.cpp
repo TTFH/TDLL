@@ -18,6 +18,12 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 typedef BOOL (WINAPI* t_wglSwapBuffers)(HDC hDc);
 t_wglSwapBuffers wglSwapBuffersOriginal = nullptr;
 
+typedef void (*t_RegisterGameFunctions) (ScriptCore* core);
+t_RegisterGameFunctions td_RegisterGameFunctions = nullptr;
+
+typedef void (*t_RegisterLuaFunction) (CoreStateInfo* scsi, td_string* function_name, void* function_addr);
+t_RegisterLuaFunction td_RegisterLuaFunction = nullptr;
+
 uintptr_t moduleBase;
 WNDPROC hGameWindowProc;
 bool show_menu = false;
@@ -29,7 +35,7 @@ void Patch(BYTE* dst, BYTE* src, size_t size) {
 	VirtualProtect(dst, size, oldProtect, &oldProtect);
 }
 
-LRESULT CALLBACK windowProc_hook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	if (uMsg == WM_KEYDOWN && wParam == VK_F1)
 		show_menu = !show_menu;
 	if (show_menu) {
@@ -43,7 +49,12 @@ bool awwnb = false;
 bool registered = false;
 bool is_playing = false;
 
-void RegisterLuaFunctions(lua_State* L) {
+void RegisterLuaCFunctions(lua_State* L) {
+/*	luaopen_debug(L);
+	luaopen_io(L);
+	luaopen_os(L);
+	luaopen_package(L);
+*/
 	lua_pushcfunction(L, GetDllVersion);
 	lua_setglobal(L, "GetDllVersion");
 
@@ -79,12 +90,22 @@ void RegisterLuaFunctions(lua_State* L) {
 	lua_setglobal(L, "ZlibLoadCompressed");
 }
 
+void RegisterGameFunctionsHook(ScriptCore* core) {
+	td_RegisterGameFunctions(core);
+	const char* script_name = core->path.c_str();
+	if (strstr(script_name, "DLL") != NULL) {
+		printf("Extending API for script: %s\n", script_name);
+		lua_State* L = core->core_state_info.state_info->state; // TODO: rename to something that make sense
+		RegisterLuaCFunctions(L);
+	}
+}
+
 BOOL wglSwapBuffersHook(HDC hDc) {
 	static bool imGuiInitialized = false;
 	if (!imGuiInitialized) {
 		imGuiInitialized = true;
 		HWND hGameWindow = WindowFromDC(hDc);
-		hGameWindowProc = (WNDPROC)SetWindowLongPtr(hGameWindow, GWLP_WNDPROC, (LONG_PTR)windowProc_hook);
+		hGameWindowProc = (WNDPROC)SetWindowLongPtr(hGameWindow, GWLP_WNDPROC, (LONG_PTR)WindowProcHook);
 
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
@@ -100,14 +121,6 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		ImGuiContext* imgui_ctx_td = (ImGuiContext*)Teardown::GetPointerTo(MEM_OFFSET::ImguiCtx);
 		printf("TD  ImGuiContext %p\n", (void*)imgui_ctx_td);
 		//ImGui::SetCurrentContext(imgui_ctx_td);
-	}
-
-	// TODO: fix, this doesn't work if the map is reset
-	Game* game = (Game*)Teardown::GetGame();
-	int current_state = game->state;
-	if (is_playing != (current_state == GameState::Play)) {
-		is_playing = !is_playing;
-		printf("Game state changed to %s\n", is_playing ? "Map Loaded" : "Map Unloaded");
 	}
 
 	if (show_menu) {
@@ -138,6 +151,7 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		ImGui::PopItemFlag();
 
 		if (ImGui::Checkbox("Remove boundaries", &awwnb) && awwnb) {
+			Game* game = (Game*)Teardown::GetGame();
 			game->scene->boundary.removeVertices();
 		}
 		ImGui::BeginDisabled();
@@ -195,15 +209,6 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		ImGui::PopItemFlag();
 		if (ImGui::Button("Register All") && !registered) {
 			registered = true;
-			td_vector<Script*> scripts = game->scene->scripts;
-			for (unsigned int i = 0; i < scripts.getSize(); i++) {
-				Script* script = scripts[i];
-				const char* script_name = script->editor_path.c_str();
-				if (strstr(script_name, "DLL") != NULL) {
-					lua_State* L = script->state_info->state;
-					RegisterLuaFunctions(L);
-				}
-			}
 		}
 		ImGui::End();
 
@@ -233,8 +238,10 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	MH_Initialize();
 	void* wglSwapBuffers = (void*)GetProcAddress(openglModule, "wglSwapBuffers");
 	MH_CreateHook(wglSwapBuffers, (void*)wglSwapBuffersHook, (void**)&wglSwapBuffersOriginal);
+	MH_CreateHook((LPVOID)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions), (void*)RegisterGameFunctionsHook, (void**)&td_RegisterGameFunctions);
 	MH_EnableHook(MH_ALL_HOOKS);
 
+	//td_RegisterLuaFunction = (t_RegisterLuaFunction)Teardown::GetReferenceTo(MEM_OFFSET::RegisterLuaFunction);
 	return TRUE;
 }
 

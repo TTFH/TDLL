@@ -19,10 +19,12 @@ uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 }
 
 namespace MEM_OFFSET {
-	uintptr_t GetSteer		= 0x1FC3A4;
-	uintptr_t RenderDist	= 0x5063C8;
-	uintptr_t Game			= 0x713090;
-	uintptr_t ImguiCtx		= 0x719A60;
+	uintptr_t GetSteer				= 0x1FC3A4;
+	uintptr_t RegisterGameFunctions	= 0x215A00;
+	uintptr_t RegisterLuaFunction	= 0x396DB0;
+	uintptr_t RenderDist			= 0x5063C8;
+	uintptr_t Game					= 0x713090;
+	uintptr_t ImguiCtx				= 0x719A60;
 }
 
 namespace Teardown {
@@ -38,14 +40,14 @@ namespace Teardown {
 }
 
 int GetDllVersion(lua_State* L) {
-	lua_pushstring(L, "v1.5.3_01.07");
+	lua_pushstring(L, "v1.5.3_01.11");
 	return 1;
 }
 
 int GetWater(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->waters.getSize();
-	lua_createtable(L, n, 0);
+	lua_createtable(L, 0, n);
 	for (unsigned int j = 0; j < n; j++) {
 		Water* water = game->scene->waters[j];
         lua_pushinteger(L, j + 1);
@@ -58,7 +60,7 @@ int GetWater(lua_State* L) {
 int GetScripts(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->scripts.getSize();
-	lua_createtable(L, n, 0);
+	lua_createtable(L, 0, n);
 	for (unsigned int j = 0; j < n; j++) {
 		Script* script = game->scene->scripts[j];
 		lua_pushinteger(L, j + 1);
@@ -71,7 +73,7 @@ int GetScripts(lua_State* L) {
 int GetBoundaryVertices(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->boundary.getSize();
-	lua_createtable(L, n, 0);
+	lua_createtable(L, 0, n);
 	for (unsigned int j = 0; j < n; j++) {
 		Vertex vertex = game->scene->boundary[j];
 		lua_pushinteger(L, j + 1);
@@ -103,7 +105,7 @@ int GetScriptPath(lua_State* L) {
 	for (unsigned int j = 0; j < game->scene->scripts.getSize(); j++) {
 		Script* script = game->scene->scripts[j];
 		if (script->self.handle == handle) {
-			lua_pushstring(L, script->file_path1.c_str());
+			lua_pushstring(L, script->path.c_str());
 			return 1;
 		}
 	}
@@ -136,7 +138,7 @@ int GetWaterVertices(lua_State* L) {
 		Water* water = game->scene->waters[j];
 		if (water->self.handle == handle) {
 			unsigned int n = water->vertices.getSize();
-			lua_createtable(L, n, 0);
+			lua_createtable(L, 0, n);
 			for (unsigned int k = 0; k < n; k++) {
 				Vertex vertex = water->vertices[k];
 				lua_pushinteger(L, k + 1);
@@ -156,8 +158,8 @@ int GetJointLocalBodyPos(lua_State* L) {
 		Joint* joint = game->scene->joints[j];
 		if (joint->self.handle == handle) {
 			LuaPushVector(L, joint->local_pos_body1.x, joint->local_pos_body1.y, joint->local_pos_body1.z);
-			LuaPushVector(L, joint->local_pos_body2.x, joint->local_pos_body2.y, joint->local_pos_body2.z);
-			return 2;
+			//LuaPushVector(L, joint->local_pos_body2.x, joint->local_pos_body2.y, joint->local_pos_body2.z);
+			return 1;
 		}
 	}
 	return 0;

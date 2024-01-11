@@ -3,12 +3,17 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
+
+#include "lua_utils.h"
 
 enum GameState : int {
 	Splash = 1,
 	Menu = 2,
+	UI = 3,
+	Loading = 4,
 	Play = 5,
-	Editor = 6,
+	Edit = 6,
 	Quit = 7
 };
 
@@ -18,6 +23,15 @@ class td_string {
 		char StackBuffer[32] = { 0 };
 	};
 public:
+	td_string(const char* str) {
+		if (strlen(str) < 32)
+			strcpy(StackBuffer, str);
+		else {
+			HeapBuffer = new char[strlen(str) + 1];
+			strcpy(HeapBuffer, str);
+			StackBuffer[31] = 1;
+		}
+	}
 	const char* c_str() const {
 		return StackBuffer[31] != '\0' ? HeapBuffer : &StackBuffer[0];
 	}
@@ -58,10 +72,6 @@ struct Quat {
 struct Transform {
 	Vector pos;
 	Quat rot;
-};
-
-struct LuaStateInfo {
-	lua_State* state;
 };
 
 struct Entity {
@@ -132,21 +142,39 @@ struct Trigger {
 	Entity self;
 };
 
-struct Script {
-	Entity self;
-	td_string editor_path;		// 0x30
-	td_string file_path1;		// 0x50
-	uint8_t padding1[0x10];
-	td_string file_path2;		// 0x80
-	td_string folder_path;		// 0xA0
-	uint8_t padding2[0x58];
-	LuaStateInfo* state_info;	// 0x118
+struct StateInfo {
+	lua_State* state;
 };
 
-static_assert(offsetof(Script, file_path1) == 0x50, "Wrong offset Script->file_path1");
-static_assert(offsetof(Script, file_path2) == 0x80, "Wrong offset Script->file_path2");
-static_assert(offsetof(Script, folder_path) == 0xA0, "Wrong offset Script->folder_path");
-static_assert(offsetof(Script, state_info) == 0x118, "Wrong offset Script->state_info");
+struct CoreStateInfo {
+	uint8_t padding[0x40];
+	StateInfo* state_info;		// 0x40
+};
+
+static_assert(offsetof(CoreStateInfo, state_info) == 0x40, "Wrong offset LuaStateInfo->state");
+
+struct ScriptCore {
+	uint8_t padding1[8];
+	float time;
+	float dt;
+	td_string path;					// 0x10
+	td_string location;				// 0x30
+	uint8_t padding2[0x18];
+	CoreStateInfo core_state_info;	// 0x68
+};
+
+static_assert(offsetof(ScriptCore, path) == 0x10, "Wrong offset ScriptCore->path");
+static_assert(offsetof(ScriptCore, core_state_info) == 0x68, "Wrong offset ScriptCore->state_info");
+
+struct Script {
+	Entity self;
+	td_string name;			// 0x30
+	td_string path;			// 0x50
+	ScriptCore core;		// 0x70
+};
+
+static_assert(offsetof(Script, name) == 0x30, "Wrong offset Script->name");
+static_assert(offsetof(Script, core) == 0x70, "Wrong offset Script->core");
 
 struct Scene {
 	uint8_t padding1[0x80];
@@ -176,7 +204,7 @@ struct Game {
 	int screen_res_y;
 	GameState state;
 	uint8_t padding[0x44];
-	Scene* scene;
+	Scene* scene;			// 0x50
 };
 
 static_assert(offsetof(Game, scene) == 0x50, "Wrong offset game->scene");

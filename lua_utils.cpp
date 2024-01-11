@@ -1,7 +1,7 @@
 #include "lua_utils.h"
 
 void LuaPushList(lua_State* L, std::vector<int> list) {
-    lua_createtable(L, list.size(), 0);
+    lua_createtable(L, 0, list.size());
     for (size_t i = 0; i < list.size(); ++i) {
 		lua_pushinteger(L, i + 1);
         lua_pushinteger(L, list[i]);
@@ -10,7 +10,7 @@ void LuaPushList(lua_State* L, std::vector<int> list) {
 }
 
 void LuaPushVector(lua_State* L, float x, float y, float z) {
-	lua_createtable(L, 3, 0);
+	lua_createtable(L, 0, 3);
 	lua_pushnumber(L, 1);
 	lua_pushnumber(L, x);
 	lua_settable(L, -3);
@@ -31,7 +31,7 @@ void LuaPushTransform(lua_State* L, Transform transform) {
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "rot");
-	lua_createtable(L, 4, 0);
+	lua_createtable(L, 0, 4);
 
 	lua_pushnumber(L, 1);
 	lua_pushnumber(L, transform.rot.x);

@@ -7,6 +7,8 @@ extern uintptr_t moduleBase;
 
 namespace MEM_OFFSET {
 	extern uintptr_t GetSteer;
+	extern uintptr_t RegisterGameFunctions;
+	extern uintptr_t RegisterLuaFunction;
 	extern uintptr_t RenderDist;
 	extern uintptr_t Game;
 	extern uintptr_t ImguiCtx;
