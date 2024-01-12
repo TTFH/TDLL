@@ -21,7 +21,7 @@ t_wglSwapBuffers wglSwapBuffersOriginal = nullptr;
 typedef void (*t_RegisterGameFunctions) (ScriptCore* core);
 t_RegisterGameFunctions td_RegisterGameFunctions = nullptr;
 
-typedef void (*t_RegisterLuaFunction) (CoreStateInfo* scsi, td_string* function_name, void* function_addr);
+typedef void (*t_RegisterLuaFunction) (StateInfo* scsi, td_string* function_name, void* function_addr);
 t_RegisterLuaFunction td_RegisterLuaFunction = nullptr;
 
 uintptr_t moduleBase;
@@ -90,13 +90,21 @@ void RegisterLuaCFunctions(lua_State* L) {
 	lua_setglobal(L, "ZlibLoadCompressed");
 }
 
+void TD_GetDllVersion(ScriptCore* core, lua_State* L, RetInfo* ret) {
+	lua_pushstring(L, "v1.5.3.112");
+	ret->ret_count = 1;
+}
+
 void RegisterGameFunctionsHook(ScriptCore* core) {
 	td_RegisterGameFunctions(core);
 	const char* script_name = core->path.c_str();
 	if (strstr(script_name, "DLL") != NULL) {
 		printf("Extending API for script: %s\n", script_name);
-		lua_State* L = core->core_state_info.state_info->state;
+		lua_State* L = core->state_info.state_wrapper->state;
 		RegisterLuaCFunctions(L);
+
+		//td_string function_name("GetDllVersion");
+		//td_RegisterLuaFunction(&core->state_info, &function_name, (void*)TD_GetDllVersion);
 	}
 }
 
@@ -116,10 +124,10 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		ImGui_ImplOpenGL3_Init();
 
 		ImGuiContext* imguiContext = ImGui::GetCurrentContext();
-		printf("DLL ImGuiContext %p\n", (void*)imguiContext);
+		printf("DLL ImGuiContext @0x%p\n", (void*)imguiContext);
 
 		ImGuiContext* imgui_ctx_td = (ImGuiContext*)Teardown::GetPointerTo(MEM_OFFSET::ImguiCtx);
-		printf("TD  ImGuiContext %p\n", (void*)imgui_ctx_td);
+		printf("TD  ImGuiContext @0x%p\n", (void*)imgui_ctx_td);
 		//ImGui::SetCurrentContext(imgui_ctx_td);
 	}
 
@@ -152,7 +160,7 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 
 		if (ImGui::Checkbox("Remove boundaries", &awwnb) && awwnb) {
 			Game* game = (Game*)Teardown::GetGame();
-			game->scene->boundary.removeVertices();
+			game->scene->boundary.setSize(0);
 		}
 		ImGui::BeginDisabled();
 		ImGui::Checkbox("Show Dev Menu", &disabled);
@@ -241,7 +249,7 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	MH_CreateHook((LPVOID)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions), (void*)RegisterGameFunctionsHook, (void**)&td_RegisterGameFunctions);
 	MH_EnableHook(MH_ALL_HOOKS);
 
-	//td_RegisterLuaFunction = (t_RegisterLuaFunction)Teardown::GetReferenceTo(MEM_OFFSET::RegisterLuaFunction);
+	td_RegisterLuaFunction = (t_RegisterLuaFunction)Teardown::GetReferenceTo(MEM_OFFSET::RegisterLuaFunction);
 	return TRUE;
 }
 

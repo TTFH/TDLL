@@ -24,10 +24,12 @@ class td_string {
 	};
 public:
 	td_string(const char* str) {
-		if (strlen(str) < 32)
+		int length = strlen(str);
+		if (length < 32) {
 			strcpy(StackBuffer, str);
-		else {
-			HeapBuffer = new char[strlen(str) + 1];
+			StackBuffer[31] = 0;
+		} else {
+			HeapBuffer = new char[length + 1];
 			strcpy(HeapBuffer, str);
 			StackBuffer[31] = 1;
 		}
@@ -46,8 +48,8 @@ public:
 	uint32_t getSize() const {
 		return size;
 	}
-	void removeVertices() {
-		size = 0;
+	void setSize(uint32_t size) {
+		this->size = size;
 	}
 	T operator[](uint32_t index) const {
 		return data[index];
@@ -143,29 +145,35 @@ struct Trigger {
 	Entity self;
 };
 
-struct StateInfo {
+struct RetInfo {
+	lua_State* L;
+	int ret_count;
+	int max_ret;
+};
+
+struct StateWrapper {
 	lua_State* state;
 };
 
-struct CoreStateInfo {
+struct StateInfo {
 	uint8_t padding[0x40];
-	StateInfo* state_info;		// 0x40
+	StateWrapper* state_wrapper;	// 0x40
 };
 
-static_assert(offsetof(CoreStateInfo, state_info) == 0x40, "Wrong offset LuaStateInfo->state");
+static_assert(offsetof(StateInfo, state_wrapper) == 0x40, "Wrong offset StateInfo->state_wrapper");
 
 struct ScriptCore {
 	uint8_t padding1[8];
 	float time;
 	float dt;
-	td_string path;					// 0x10
-	td_string location;				// 0x30
+	td_string path;			// 0x10
+	td_string location;		// 0x30
 	uint8_t padding2[0x18];
-	CoreStateInfo core_state_info;	// 0x68
+	StateInfo state_info;	// 0x68
 };
 
 static_assert(offsetof(ScriptCore, path) == 0x10, "Wrong offset ScriptCore->path");
-static_assert(offsetof(ScriptCore, core_state_info) == 0x68, "Wrong offset ScriptCore->state_info");
+static_assert(offsetof(ScriptCore, state_info) == 0x68, "Wrong offset ScriptCore->state_info");
 
 struct Script {
 	Entity self;

@@ -17,30 +17,40 @@ void LuaPushListB(lua_State* L, std::vector<float> list) {
 	}
 }
 
-void LuaPushVector(lua_State* L, float x, float y, float z) {
+void LuaPushList(lua_State* L, std::vector<int> list) {
+	lua_newtable(L);
+	for (size_t i = 0; i < list.size(); i++) {
+		lua_pushinteger(L, list[i]);
+		lua_rawseti(L, -2, i + 1);
+	}
+}
+
+void LuaPushVector(lua_State* L, Vector v) {
 	lua_createtable(L, 3, 0);
-	lua_pushnumber(L, x);
+
+	lua_pushnumber(L, v.x);
 	lua_rawseti(L, -2, 1);
 
-	lua_pushnumber(L, y);
+	lua_pushnumber(L, v.y);
 	lua_rawseti(L, -2, 2);
 
-	lua_pushnumber(L, z);
+	lua_pushnumber(L, v.z);
 	lua_rawseti(L, -2, 3);
 }
 
-void LuaPushQuat(lua_State* L, float x, float y, float z, float w) {
+void LuaPushQuat(lua_State* L, Quat q) {
 	lua_createtable(L, 4, 0);
-	lua_pushnumber(L, x);
+
+	lua_pushnumber(L, q.x);
 	lua_rawseti(L, -2, 1);
 
-	lua_pushnumber(L, y);
+	lua_pushnumber(L, q.y);
 	lua_rawseti(L, -2, 2);
 
-	lua_pushnumber(L, z);
+	lua_pushnumber(L, q.z);
 	lua_rawseti(L, -2, 3);
 
-	lua_pushnumber(L, w);
+	lua_pushnumber(L, q.w);
 	lua_rawseti(L, -2, 4);
 }
 
@@ -48,10 +58,10 @@ void LuaPushTransform(lua_State* L, Transform transform) {
 	lua_createtable(L, 0, 2);
 
 	lua_pushstring(L, "pos");
-	LuaPushVector(L, transform.pos.x, transform.pos.y, transform.pos.z);
+	LuaPushVector(L, transform.pos);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "rot");
-	LuaPushQuat(L, transform.rot.x, transform.rot.y, transform.rot.z, transform.rot.w);
+	LuaPushQuat(L, transform.rot);
 	lua_settable(L, -3);
 }

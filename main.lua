@@ -9,10 +9,11 @@ function init()
 	DebugPrint("table " .. tostring(table ~= nil))
 
 	g_shape = 0
+	joint_cache = {}
+	wheel_cache = {}
+	water_cache = {}
+	boundary_vertices = {}
 	dll_loaded = false
-	if GetDllVersion then
-		DebugPrint("DLL loaded before init!!! <firework noises>")
-	end
 end
 
 function tick(dt)
@@ -26,11 +27,14 @@ function tick(dt)
 		SetLightEnabled(flashlight, true)
 		SetLightColor(flashlight, 1, 0, 0)
 
+		boundary_vertices = GetBoundaryVertices()
+		waters = GetWater()
+
 		local scripts = GetScripts()
 		for i = 1, #scripts do
 			local script = scripts[i]
 			local script_path = GetScriptPath(script)
-			DebugPrint(script_path)
+			DebugPrint(script .. " | " .. script_path)
 		end
 
 		local current_map = GetString("game.levelid")
@@ -43,11 +47,16 @@ function tick(dt)
 	if not dll_loaded then return end
 	local player_pos = GetPlayerTransform().pos
 
-	local waters = GetWater()
 	for i = 1, #waters do
 		local water = waters[i]
-		local water_tr = GetWaterTransform(water)
-		local water_vertices = GetWaterVertices(water)
+		if not water_cache[water] then
+			water_cache[water] = {
+				tr = GetWaterTransform(water),
+				vertices = GetWaterVertices(water)
+			}
+		end
+		local water_tr = water_cache[water].tr
+		local water_vertices = water_cache[water].vertices
 		for j = 1, #water_vertices do
 			local v1 = water_vertices[j]
 			local v2 = water_vertices[j + 1]
@@ -62,7 +71,6 @@ function tick(dt)
 		end
 	end
 
-	local boundary_vertices = GetBoundaryVertices()
 	for j = -5, 20 do
 		for i = 1, #boundary_vertices do
 			local v1 = boundary_vertices[i]
@@ -78,14 +86,18 @@ function tick(dt)
 
 	local vehicle = GetPlayerVehicle()
 	if vehicle ~= 0 then
-		local wheels = GetVehicleWheels(vehicle)
+		if not wheel_cache[vehicle] then
+			local wheels = GetVehicleWheels(vehicle)
+			wheel_cache[vehicle] = wheels
+		end
+		local wheels = wheel_cache[vehicle]
 		for i = 1, #wheels do
 			local wheel_shape = wheels[i] + 1
 			DrawOBB(wheel_shape)
 		end
 	end
 
-	if InputPressed("lmb") then
+	if InputPressed("rmb") then
 		local camera_tr = GetCameraTransform()
 		local camera_fwd = TransformToParentVec(camera_tr, Vec(0, 0, -1))
 		local hit, _, _, shape = QueryRaycast(camera_tr.pos, camera_fwd, 100, 0, false)
@@ -113,8 +125,6 @@ function tick(dt)
 	end
 end
 
-joint_cache = {}
-
 function draw()
 	if not dll_loaded then return end
 	local joints = FindJoints("", true)
@@ -123,7 +133,7 @@ function draw()
 		local shapes = GetJointShapes(joint)
 		if not joint_cache[joint] then
 			local point = GetJointLocalBodyPos(joint)
-			joint_cache[joint] = point1
+			joint_cache[joint] = point
 			return
 		end
 		for j = 1, #shapes do

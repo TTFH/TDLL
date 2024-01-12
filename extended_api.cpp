@@ -40,20 +40,18 @@ namespace Teardown {
 }
 
 int GetDllVersion(lua_State* L) {
-	lua_pushstring(L, "v1.5.3_01.11");
+	lua_pushstring(L, "v1.5.3.112");
 	return 1;
 }
 
 int GetWater(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->waters.getSize();
-	lua_createtable(L, n, 0);
-	for (unsigned int j = 0; j < n; j++) {
-		Water* water = game->scene->waters[j];
-		//lua_pushinteger(L, j + 1);
+	lua_newtable(L);
+	for (unsigned int i = 0; i < n; i++) {
+		Water* water = game->scene->waters[i];
 		lua_pushinteger(L, water->self.handle);
-		//lua_settable(L, -3);
-		lua_rawseti(L, -2, j + 1);
+		lua_rawseti(L, -2, i + 1);
 	}
 	return 1;
 }
@@ -61,13 +59,11 @@ int GetWater(lua_State* L) {
 int GetScripts(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->scripts.getSize();
-	lua_createtable(L, n, 0);
-	for (unsigned int j = 0; j < n; j++) {
-		Script* script = game->scene->scripts[j];
-		//lua_pushinteger(L, j + 1);
+	lua_newtable(L);
+	for (unsigned int i = 0; i < n; i++) {
+		Script* script = game->scene->scripts[i];
 		lua_pushinteger(L, script->self.handle);
-		//lua_settable(L, -3);
-		lua_rawseti(L, -2, j + 1);
+		lua_rawseti(L, -2, i + 1);
 	}
 	return 1;
 }
@@ -75,39 +71,33 @@ int GetScripts(lua_State* L) {
 int GetBoundaryVertices(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->boundary.getSize();
-	lua_createtable(L, n, 0);
-	for (unsigned int j = 0; j < n; j++) {
-		Vertex vertex = game->scene->boundary[j];
-		//lua_pushinteger(L, j + 1);
-		LuaPushVector(L, vertex.x, 0, vertex.y);
-		//lua_settable(L, -3);
-		lua_rawseti(L, -2, j + 1);
+	lua_newtable(L);
+	for (unsigned int i = 0; i < n; i++) {
+		Vertex vertex = game->scene->boundary[i];
+		LuaPushVector(L, Vector(vertex.x, 0, vertex.y));
+		lua_rawseti(L, -2, i + 1);
 	}
 	return 1;
 }
 
 int GetVehicleWheels(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
-	int i = 1;
-	lua_newtable(L);
+	std::vector<int> wheels;
 	Game* game = (Game*)Teardown::GetGame();
-	for (unsigned int j = 0; j < game->scene->wheels.getSize(); j++) {
-		Wheel* wheel = game->scene->wheels[j];
-		if (wheel->vehicle->self.handle == handle) {
-			//lua_pushinteger(L, i++);
-			lua_pushinteger(L, wheel->self.handle);
-			//lua_settable(L, -3);
-			lua_rawseti(L, -2, i++);
-		}
+	for (unsigned int i = 0; i < game->scene->wheels.getSize(); i++) {
+		Wheel* wheel = game->scene->wheels[i];
+		if (wheel->vehicle->self.handle == handle)
+			wheels.push_back(wheel->self.handle);
 	}
+	LuaPushList(L, wheels);
 	return 1;
 }
 
 int GetScriptPath(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = (Game*)Teardown::GetGame();
-	for (unsigned int j = 0; j < game->scene->scripts.getSize(); j++) {
-		Script* script = game->scene->scripts[j];
+	for (unsigned int i = 0; i < game->scene->scripts.getSize(); i++) {
+		Script* script = game->scene->scripts[i];
 		if (script->self.handle == handle) {
 			lua_pushstring(L, script->path.c_str());
 			return 1;
@@ -125,8 +115,8 @@ int GetPlayerFlashlight(lua_State* L) {
 int GetWaterTransform(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = (Game*)Teardown::GetGame();
-	for (unsigned int j = 0; j < game->scene->waters.getSize(); j++) {
-		Water* water = game->scene->waters[j];
+	for (unsigned int i = 0; i < game->scene->waters.getSize(); i++) {
+		Water* water = game->scene->waters[i];
 		if (water->self.handle == handle) {
 			LuaPushTransform(L, water->transform);
 			return 1;
@@ -138,17 +128,15 @@ int GetWaterTransform(lua_State* L) {
 int GetWaterVertices(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = (Game*)Teardown::GetGame();
-	for (unsigned int j = 0; j < game->scene->waters.getSize(); j++) {
-		Water* water = game->scene->waters[j];
+	for (unsigned int i = 0; i < game->scene->waters.getSize(); i++) {
+		Water* water = game->scene->waters[i];
 		if (water->self.handle == handle) {
 			unsigned int n = water->vertices.getSize();
-			lua_createtable(L, n, 0);
-			for (unsigned int k = 0; k < n; k++) {
-				Vertex vertex = water->vertices[k];
-				//lua_pushinteger(L, k + 1);
-				LuaPushVector(L, vertex.x, 0, vertex.y);
-				//lua_settable(L, -3);
-				lua_rawseti(L, -2, k + 1);
+			lua_newtable(L);
+			for (unsigned int j = 0; j < n; j++) {
+				Vertex vertex = water->vertices[j];
+				LuaPushVector(L, Vector(vertex.x, 0, vertex.y));
+				lua_rawseti(L, -2, j + 1);
 			}
 			return 1;
 		}
@@ -159,11 +147,11 @@ int GetWaterVertices(lua_State* L) {
 int GetJointLocalBodyPos(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = (Game*)Teardown::GetGame();
-	for (unsigned int j = 0; j < game->scene->joints.getSize(); j++) {
-		Joint* joint = game->scene->joints[j];
+	for (unsigned int i = 0; i < game->scene->joints.getSize(); i++) {
+		Joint* joint = game->scene->joints[i];
 		if (joint->self.handle == handle) {
-			LuaPushVector(L, joint->local_pos_body1.x, joint->local_pos_body1.y, joint->local_pos_body1.z);
-			//LuaPushVector(L, joint->local_pos_body2.x, joint->local_pos_body2.y, joint->local_pos_body2.z);
+			LuaPushVector(L, joint->local_pos_body1);
+			//LuaPushVector(L, joint->local_pos_body2);
 			return 1;
 		}
 	}
@@ -173,8 +161,8 @@ int GetJointLocalBodyPos(lua_State* L) {
 int GetShapeTexture(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = (Game*)Teardown::GetGame();
-	for (unsigned int j = 0; j < game->scene->shapes.getSize(); j++) {
-		Shape* shape = game->scene->shapes[j];
+	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
+		Shape* shape = game->scene->shapes[i];
 		if (shape->self.handle == handle) {
 			lua_pushinteger(L, shape->texture_tile);
 			lua_pushnumber(L, shape->texture_weight);
@@ -189,10 +177,10 @@ int GetShapeTexture(lua_State* L) {
 int GetTextureOffset(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = (Game*)Teardown::GetGame();
-	for (unsigned int j = 0; j < game->scene->shapes.getSize(); j++) {
-		Shape* shape = game->scene->shapes[j];
+	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
+		Shape* shape = game->scene->shapes[i];
 		if (shape->self.handle == handle) {
-			//LuaPushVector(L, shape->texture_offset.x, shape->texture_offset.y, shape->texture_offset.z);
+			//LuaPushVector(L, shape->texture_offset);
 			//return 1;
 			lua_pushnumber(L, shape->texture_offset.x);
 			lua_pushnumber(L, shape->texture_offset.y);
@@ -211,8 +199,8 @@ int SetShapeTexture(lua_State* L) {
 	float blendtexture_weight = lua_tonumber(L, 5);
 
 	Game* game = (Game*)Teardown::GetGame();
-	for (unsigned int j = 0; j < game->scene->shapes.getSize(); j++) {
-		Shape* shape = game->scene->shapes[j];
+	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
+		Shape* shape = game->scene->shapes[i];
 		if (shape->self.handle == handle) {
 			shape->texture_tile = texture_tile;
 			shape->blendtexture_tile = blendtexture_tile;
@@ -231,8 +219,8 @@ int SetTextureOffset(lua_State* L) {
 	float z = lua_tonumber(L, 4);
 
 	Game* game = (Game*)Teardown::GetGame();
-	for (unsigned int j = 0; j < game->scene->shapes.getSize(); j++) {
-		Shape* shape = game->scene->shapes[j];
+	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
+		Shape* shape = game->scene->shapes[i];
 		if (shape->self.handle == handle) {
 			shape->texture_offset.x = x;
 			shape->texture_offset.y = y;
@@ -264,7 +252,7 @@ int ZlibSaveCompressed(lua_State* L) {
 
 	FILE* file = fopen(filename, "wb");
 	if (file == NULL) {
-		printf("Error opening file for writing.\n");
+		printf("Error opening file %s for writing.\n", filename);
 		delete[] dest;
 		return 0;
 	}
@@ -282,7 +270,7 @@ int ZlibLoadCompressed(lua_State* L) {
 
 	FILE* file = fopen(filename, "rb");
 	if (file == NULL) {
-		printf("Error opening file for reading.\n");
+		printf("Error opening file %s for reading.\n", filename);
 		return 0;
 	}
 
