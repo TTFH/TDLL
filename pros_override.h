@@ -79,7 +79,7 @@ EXPORT uint64_t prosdk_mods_add_mod_version(uint64_t* param1, uint64_t* param2, 
 	return HYDRA_OK;
 }
 
-EXPORT uint64_t prosdk_mods_add_mod(uint64_t* param1, uint64_t* param2,  uint64_t* param3, uint64_t param4, uint64_t param5) {
+EXPORT uint64_t prosdk_mods_add_mod(uint64_t* param1, uint64_t* param2, uint64_t* param3, uint64_t param4, uint64_t param5) {
 	return HYDRA_OK;
 }
 

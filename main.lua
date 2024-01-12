@@ -39,9 +39,7 @@ function tick(dt)
 			ZlibSaveCompressed(current_map, "Hello, World!")
 		end
 	end
-end
 
-function update(dt)
 	if not dll_loaded then return end
 	local player_pos = GetPlayerTransform().pos
 
@@ -95,8 +93,8 @@ function update(dt)
 			g_shape = shape
 			SetShapeTexture(shape, 8, 0.5, 4, 0.7)
 			local t, tw, b, bw = GetShapeTexture(shape)
-			DebugWatch("texture", t .. " " ..  tw)
-			DebugWatch("blend texture", b .. " " ..  bw)
+			DebugWatch("texture", t .. " " .. tw)
+			DebugWatch("blend texture", b .. " " .. bw)
 		end
 	end
 

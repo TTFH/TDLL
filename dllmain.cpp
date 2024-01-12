@@ -95,7 +95,7 @@ void RegisterGameFunctionsHook(ScriptCore* core) {
 	const char* script_name = core->path.c_str();
 	if (strstr(script_name, "DLL") != NULL) {
 		printf("Extending API for script: %s\n", script_name);
-		lua_State* L = core->core_state_info.state_info->state; // TODO: rename to something that make sense
+		lua_State* L = core->core_state_info.state_info->state;
 		RegisterLuaCFunctions(L);
 	}
 }

@@ -47,12 +47,13 @@ int GetDllVersion(lua_State* L) {
 int GetWater(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->waters.getSize();
-	lua_createtable(L, 0, n);
+	lua_createtable(L, n, 0);
 	for (unsigned int j = 0; j < n; j++) {
 		Water* water = game->scene->waters[j];
-        lua_pushinteger(L, j + 1);
+		//lua_pushinteger(L, j + 1);
 		lua_pushinteger(L, water->self.handle);
-        lua_settable(L, -3);
+		//lua_settable(L, -3);
+		lua_rawseti(L, -2, j + 1);
 	}
 	return 1;
 }
@@ -60,12 +61,13 @@ int GetWater(lua_State* L) {
 int GetScripts(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->scripts.getSize();
-	lua_createtable(L, 0, n);
+	lua_createtable(L, n, 0);
 	for (unsigned int j = 0; j < n; j++) {
 		Script* script = game->scene->scripts[j];
-		lua_pushinteger(L, j + 1);
+		//lua_pushinteger(L, j + 1);
 		lua_pushinteger(L, script->self.handle);
-		lua_settable(L, -3);
+		//lua_settable(L, -3);
+		lua_rawseti(L, -2, j + 1);
 	}
 	return 1;
 }
@@ -73,12 +75,13 @@ int GetScripts(lua_State* L) {
 int GetBoundaryVertices(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->boundary.getSize();
-	lua_createtable(L, 0, n);
+	lua_createtable(L, n, 0);
 	for (unsigned int j = 0; j < n; j++) {
 		Vertex vertex = game->scene->boundary[j];
-		lua_pushinteger(L, j + 1);
+		//lua_pushinteger(L, j + 1);
 		LuaPushVector(L, vertex.x, 0, vertex.y);
-        lua_settable(L, -3);
+		//lua_settable(L, -3);
+		lua_rawseti(L, -2, j + 1);
 	}
 	return 1;
 }
@@ -86,14 +89,15 @@ int GetBoundaryVertices(lua_State* L) {
 int GetVehicleWheels(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	int i = 1;
-	lua_createtable(L, 0, 0);
+	lua_newtable(L);
 	Game* game = (Game*)Teardown::GetGame();
 	for (unsigned int j = 0; j < game->scene->wheels.getSize(); j++) {
 		Wheel* wheel = game->scene->wheels[j];
 		if (wheel->vehicle->self.handle == handle) {
-			lua_pushinteger(L, i++);
+			//lua_pushinteger(L, i++);
 			lua_pushinteger(L, wheel->self.handle);
-			lua_settable(L, -3);
+			//lua_settable(L, -3);
+			lua_rawseti(L, -2, i++);
 		}
 	}
 	return 1;
@@ -138,12 +142,13 @@ int GetWaterVertices(lua_State* L) {
 		Water* water = game->scene->waters[j];
 		if (water->self.handle == handle) {
 			unsigned int n = water->vertices.getSize();
-			lua_createtable(L, 0, n);
+			lua_createtable(L, n, 0);
 			for (unsigned int k = 0; k < n; k++) {
 				Vertex vertex = water->vertices[k];
-				lua_pushinteger(L, k + 1);
+				//lua_pushinteger(L, k + 1);
 				LuaPushVector(L, vertex.x, 0, vertex.y);
-				lua_settable(L, -3);
+				//lua_settable(L, -3);
+				lua_rawseti(L, -2, k + 1);
 			}
 			return 1;
 		}

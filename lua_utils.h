@@ -12,7 +12,6 @@ extern "C" {
 #include "lua5.1.4/lua.hpp"
 #include "teardown_structs.h"
 
-void LuaPushList(lua_State* L, std::vector<int> list);
 void LuaPushVector(lua_State* L, float x, float y, float z);
 void LuaPushTransform(lua_State* L, Transform transform);
 

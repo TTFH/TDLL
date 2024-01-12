@@ -125,12 +125,12 @@ Verify the game on Steam.
 
 ## TODO:
 - Do not crash the game
-- Rename GetWater() to FindWater()
+- Rename GetWater() to FindWaters()
 - Rename GetScripts() to FindScripts()
-- Change return type of GetTextureOffset(shape) to Vec()
+- Change return type of GetTextureOffset(shape) to Vec(), and SetTextureOffset(s, v)
 - Implement SetRenderDistance(dist)
 - Implement ToggleBoundary()
-- Implement tr = GetJointWorldTransform(j)
 - Implement v = GetShadowVolumeSize()
+- Implement tr = GetJointWorldTransform(j)
 - Remove "function is only for internal usage"
-- Get entity tags and local script entities to implement FindWater(tag, global), FindScripts(tag, global)
+- Get entity tags and local script entities to implement FindWater(s)(tag, global), FindScript(s)(tag, global)
