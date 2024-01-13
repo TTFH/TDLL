@@ -35,7 +35,7 @@ end
 function tick(dt)
 	if not extended_api then
 		extended_api = true
-		GetDllVersion() -- Removes "function is only for internal usage" for all already loaded mods
+		AllowInternalFunctions() -- Removes "function is only for internal usage" for all already loaded mods
 	end
 
 	local player_pos = GetPlayerTransform().pos

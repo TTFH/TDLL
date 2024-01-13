@@ -196,7 +196,7 @@ struct ExternalScript {
 	int privilege; // 0x38C
 };
 
-struct ScriptInternals {
+struct ModData {
 	uint8_t padding[0x158];
 	td_vector<ExternalScript*> external_scripts; // 0x158
 };
@@ -206,12 +206,12 @@ struct Game {
 	int screen_res_y;
 	GameState state;
 	uint8_t padding[0x44];
-	Scene* scene;			// 0x50
+	Scene* scene;		// 0x50
 	uint8_t padding2[0x78];
-	ScriptInternals* script_internals; // 0xD0
+	ModData* mod_data; // 0xD0
 };
 
 static_assert(offsetof(Game, scene) == 0x50, "Wrong offset game->scene");
-static_assert(offsetof(Game, script_internals) == 0xD0, "Wrong offset game->script_internals");
+static_assert(offsetof(Game, mod_data) == 0xD0, "Wrong offset game->script_internals");
 
 #endif

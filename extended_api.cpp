@@ -43,18 +43,22 @@ namespace Teardown {
 
 void SkipIsInternalFunctionCheck() {
 	Game* game = (Game*)Teardown::GetGame();
-	unsigned int n = game->script_internals->external_scripts.getSize();
+	unsigned int n = game->mod_data->external_scripts.getSize();
 	for (unsigned int i = 0; i < n; i++) {
-		ExternalScript* script = game->script_internals->external_scripts[i];
+		ExternalScript* script = game->mod_data->external_scripts[i];
 		if (script->privilege > 1)
 			script->privilege = 1;
 	}
 }
 
 int GetDllVersion(lua_State* L) {
-	SkipIsInternalFunctionCheck();
-	lua_pushstring(L, "v1.5.3.113");
+	lua_pushstring(L, "v1.5.3.114");
 	return 1;
+}
+
+int AllowInternalFunctions(lua_State* L) {
+	SkipIsInternalFunctionCheck();
+	return 0;
 }
 
 int FindWaters(lua_State* L) {
@@ -348,13 +352,10 @@ int ZlibLoadCompressed(lua_State* L) {
 }
 
 void RegisterLuaCFunctions(lua_State* L) {
-/*	luaopen_debug(L);
-	luaopen_io(L);
-	luaopen_os(L);
-	luaopen_package(L);
-*/
 	lua_pushcfunction(L, GetDllVersion);
 	lua_setglobal(L, "GetDllVersion");
+	lua_pushcfunction(L, AllowInternalFunctions);
+	lua_setglobal(L, "AllowInternalFunctions");
 
 	lua_pushcfunction(L, FindWaters);
 	lua_setglobal(L, "FindWaters");

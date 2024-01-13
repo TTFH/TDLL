@@ -19,12 +19,25 @@ Or restore the original `pros.sdk.x64.dll` file if you made a backup.
 ### TODO:
 - Implement ToggleBoundary()
 - Implement SetRenderDistance(dist)
+- Implement GetHingeAxis(joint)
 - Get entity tags and local script entities to implement FindWater[s](tag, global), FindScript[s](tag, global), FindWheel[s](tag, global)
 - Add ImGui API for Lua
 
 ## New API functions:
 
 ```lua
+version = GetDllVersion()
+Arguments
+none
+Return value
+(string) – Version of the DLL
+
+AllowInternalFunctions()
+Arguments
+none
+Return value
+none -- Allow loaded mods to access internal funtions
+
 list = FindWaters()
 Arguments
 none
