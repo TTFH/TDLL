@@ -10,7 +10,8 @@ extern t_lua_createtable td_lua_createtable;
 
 void LuaPushList(lua_State* L, std::vector<int> list);
 void LuaPushVector(lua_State* L, Vector v);
-Vector LuaToVector(lua_State* L, int index);
+void LuaPushQuat(lua_State* L, Quat q);
 void LuaPushTransform(lua_State* L, Transform transform);
+Vector LuaToVector(lua_State* L, int index);
 
 #endif

@@ -43,7 +43,7 @@ function tick(dt)
 	local waters = FindWaters()
 	for i = 1, #waters do
 		local water = waters[i]
-		local water_tr = GetWaterTransform(water)
+		local water_tr = Transform(GetWaterUnwrappedTransform(water))
 		local water_vertices = GetWaterVertices(water)
 		for j = 1, #water_vertices do
 			local v1 = water_vertices[j]
@@ -114,19 +114,39 @@ function draw()
 	local joints = FindJoints("", true)
 	for i = 1, #joints do
 		local joint = joints[i]
-		local point1, point2 = GetJointLocalBodyPos(joint)
 		local shapes = GetJointShapes(joint)
 		for j = 1, #shapes do
 			local shape = shapes[j]
 			local body = GetShapeBody(shape)
 			local body_tr = GetBodyTransform(body)
 			local joint_type = GetJointType(joint)
-			if j == 1 then
-				local joint_pos = TransformToParentPoint(body_tr, point1)
-				DrawPoint(joint_pos, joint_type .. "-1")
-			elseif joint_type ~= "ball" and joint_type ~= "hinge" then
-				local joint_pos = TransformToParentPoint(body_tr, point2)
-				DrawPoint(joint_pos, joint_type .. "-2")
+
+			local point, axis = GetJointLocalPosAndAxis(joint, j)
+			local joint_pos = TransformToParentPoint(body_tr, point)
+			local joint_dir = TransformToParentVec(body_tr, axis)
+
+			if joint_type == "ball" then
+				if j == 1 then
+					DrawPoint(joint_pos, joint_type)
+				end
+			elseif joint_type == "hinge" then
+				if j == 1 then
+					DrawPoint(joint_pos, joint_type)
+					DebugLine(joint_pos, VecAdd(joint_pos, joint_dir), 1, 1, 0)
+				end
+			elseif joint_type == "prismatic" then
+				if j == 1 then
+					DrawPoint(joint_pos, joint_type .. "-1")
+				else
+					DrawPoint(joint_pos, joint_type .. "-2")
+					DebugLine(joint_pos, VecAdd(joint_pos, joint_dir), 1, 0, 0)
+				end
+			elseif joint_type == "rope" then
+				if j == 1 then
+					DrawPoint(joint_pos, joint_type .. "-1")
+				else
+					DrawPoint(joint_pos, joint_type .. "-2")
+				end
 			end
 		end
 	end

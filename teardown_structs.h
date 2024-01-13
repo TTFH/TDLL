@@ -122,11 +122,13 @@ static_assert(offsetof(Water, vertices) == 0x50, "Wrong offset Water->vertices")
 class Joint : public Entity {
 public:
 	uint8_t padding1[0x40];
-	Vector local_pos_body1;	// 0x70
-	Vector local_pos_body2;
+	Vector local_pos1;	// 0x70
+	Vector local_pos2;
+	Vector local_rot1;
+	Vector local_rot2;
 };
 
-static_assert(offsetof(Joint, local_pos_body1) == 0x70, "Wrong offset Joint->local_pos_body1");
+static_assert(offsetof(Joint, local_pos1) == 0x70, "Wrong offset Joint->local_pos1");
 
 class Vehicle : public Entity { };
 
@@ -212,6 +214,6 @@ struct Game {
 };
 
 static_assert(offsetof(Game, scene) == 0x50, "Wrong offset game->scene");
-static_assert(offsetof(Game, mod_data) == 0xD0, "Wrong offset game->script_internals");
+static_assert(offsetof(Game, mod_data) == 0xD0, "Wrong offset game->mod_data");
 
 #endif

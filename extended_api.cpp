@@ -160,14 +160,15 @@ int GetShadowVolumeSize(lua_State* L) {
 	return 1;
 }
 
-int GetWaterTransform(lua_State* L) {
+int GetWaterUnwrappedTransform(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = (Game*)Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->waters.getSize(); i++) {
 		Water* water = game->scene->waters[i];
 		if (water->handle == handle) {
-			LuaPushTransform(L, water->transform);
-			return 1;
+			LuaPushVector(L, water->transform.pos);
+			LuaPushQuat(L, water->transform.rot);
+			return 2;
 		}
 	}
 	return 0;
@@ -192,14 +193,20 @@ int GetWaterVertices(lua_State* L) {
 	return 0;
 }
 
-int GetJointLocalBodyPos(lua_State* L) {
+int GetJointLocalPosAndAxis(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
+	unsigned int index = lua_tointeger(L, 2);
 	Game* game = (Game*)Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->joints.getSize(); i++) {
 		Joint* joint = game->scene->joints[i];
 		if (joint->handle == handle) {
-			LuaPushVector(L, joint->local_pos_body1);
-			LuaPushVector(L, joint->local_pos_body2);
+			if (index == 1) {
+				LuaPushVector(L, joint->local_pos1);
+				LuaPushVector(L, joint->local_rot1);
+			} else {
+				LuaPushVector(L, joint->local_pos2);
+				LuaPushVector(L, joint->local_rot2);
+			}
 			return 2;
 		}
 	}
@@ -375,12 +382,12 @@ void RegisterLuaCFunctions(lua_State* L) {
 	lua_setglobal(L, "GetPlayerFlashlight");
 	lua_pushcfunction(L, GetShadowVolumeSize);
 	lua_setglobal(L, "GetShadowVolumeSize");
-	lua_pushcfunction(L, GetWaterTransform);
-	lua_setglobal(L, "GetWaterTransform");
+	lua_pushcfunction(L, GetWaterUnwrappedTransform);
+	lua_setglobal(L, "GetWaterUnwrappedTransform");
 	lua_pushcfunction(L, GetWaterVertices);
 	lua_setglobal(L, "GetWaterVertices");
-	lua_pushcfunction(L, GetJointLocalBodyPos);
-	lua_setglobal(L, "GetJointLocalBodyPos");
+	lua_pushcfunction(L, GetJointLocalPosAndAxis);
+	lua_setglobal(L, "GetJointLocalPosAndAxis");
 	lua_pushcfunction(L, GetShapeTexture);
 	lua_setglobal(L, "GetShapeTexture");
 	lua_pushcfunction(L, GetTextureOffset);

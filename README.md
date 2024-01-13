@@ -19,24 +19,22 @@ Or restore the original `pros.sdk.x64.dll` file if you made a backup.
 ### TODO:
 - Implement ToggleBoundary()
 - Implement SetRenderDistance(dist)
-- Implement GetHingeAxis(joint)
+- Implement ImGui Lua API
 - Get entity tags and local script entities to implement FindWater[s](tag, global), FindScript[s](tag, global), FindWheel[s](tag, global)
-- Add ImGui API for Lua
 
 ## New API functions:
-
 ```lua
 version = GetDllVersion()
 Arguments
 none
 Return value
-(string) – Version of the DLL
+version (string) – Version of the DLL
 
 AllowInternalFunctions()
 Arguments
 none
 Return value
-none -- Allow loaded mods to access internal funtions
+none -- Allows all already loaded mods to access internal funtions
 
 list = FindWaters()
 Arguments
@@ -92,11 +90,12 @@ none
 Return value
 size (number) – Vector with the size of the shadow volume
 
-transform = GetWaterTransform(water)
+pos, rot = GetWaterUnwrappedTransform(water)
 Arguments
 water (number) – Water handle
 Return value
-transform (table) – Transform of the water
+pos (table) – Vector with the position of the water
+rot (table) – Quaternion with the rotation of the water
 
 list = GetWaterVertices(water)
 Arguments
@@ -104,12 +103,13 @@ water (number) – Water handle
 Return value
 list (table) – Indexed table with vertices of the water
 
-p1, p2 = GetJointLocalBodyPos(joint)
+pos, axis = GetJointLocalPosAndAxis(joint, index)
 Arguments
 joint (number) – Joint handle
+index (number) – Index of the body (1 or 2)
 Return value
-p1 (table) – Local position of the joint relative to the first attached body
-p2 (table) – Local position of the joint relative to the second attached body
+pos (table) – Vector with the position of the joint relative to the index-th body
+axis (table) – Vector with the axis of the joint relative to the index-th body
 
 texture, weight, blendTexture, blendTextureWeight = GetShapeTexture(shape)
 Arguments
@@ -158,7 +158,6 @@ str (string) – Decompressed string
 ```
 
 ## Internal functions:
-
 ```lua
 fuction ActivityAvailabilityChange(...)
 fuction ActivityEnd(...)
