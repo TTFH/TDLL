@@ -21,9 +21,6 @@ t_wglSwapBuffers wglSwapBuffersOriginal = nullptr;
 typedef void (*t_RegisterGameFunctions) (ScriptCore* core);
 t_RegisterGameFunctions td_RegisterGameFunctions = nullptr;
 
-typedef void (*t_RegisterLuaFunction) (StateInfo* scsi, td_string* function_name, void* function_addr);
-t_RegisterLuaFunction td_RegisterLuaFunction = nullptr;
-
 uintptr_t moduleBase;
 WNDPROC hGameWindowProc;
 bool show_menu = false;
@@ -90,11 +87,6 @@ void RegisterLuaCFunctions(lua_State* L) {
 	lua_setglobal(L, "ZlibLoadCompressed");
 }
 
-void TD_GetDllVersion(ScriptCore* core, lua_State* L, RetInfo* ret) {
-	lua_pushstring(L, "v1.5.3.112");
-	ret->ret_count = 1;
-}
-
 void RegisterGameFunctionsHook(ScriptCore* core) {
 	td_RegisterGameFunctions(core);
 	const char* script_name = core->path.c_str();
@@ -102,9 +94,6 @@ void RegisterGameFunctionsHook(ScriptCore* core) {
 		printf("Extending API for script: %s\n", script_name);
 		lua_State* L = core->state_info.state_wrapper->state;
 		RegisterLuaCFunctions(L);
-
-		//td_string function_name("GetDllVersion");
-		//td_RegisterLuaFunction(&core->state_info, &function_name, (void*)TD_GetDllVersion);
 	}
 }
 
@@ -249,7 +238,7 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	MH_CreateHook((LPVOID)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions), (void*)RegisterGameFunctionsHook, (void**)&td_RegisterGameFunctions);
 	MH_EnableHook(MH_ALL_HOOKS);
 
-	td_RegisterLuaFunction = (t_RegisterLuaFunction)Teardown::GetReferenceTo(MEM_OFFSET::RegisterLuaFunction);
+	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable); // Lua doesn't like to have 2 GC
 	return TRUE;
 }
 

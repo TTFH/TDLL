@@ -3,10 +3,6 @@
 ## Extended Teardown API - DLL
 
 ### What it does:
-- It crashes the game.
-- That's it.
-
-### What it's supposed to do:
 - Provides a DLL that can be used to extend the Teardown API
 - Implements the next functions:
 
@@ -118,13 +114,15 @@ str (string) – Decompressed string
 
 ### How to install:
 Download `pros.sdk.x64.dll` and copy it to the Teardown directory, overwrite the existing file.  
+Create a script that contains the text "DLL" on it's path, for example: `DLL Global Mod\main.lua` or `Content Mod\DLL_main.lua` to access the new function.  
 Press 'F1' on the pause menu to access the DLL options.
 
 ### How to uninstall:
 Verify the game on Steam.
 
 ## TODO:
-- Do not crash the game
+- Clean useless UI code
+- Add ImGui API for Lua
 - Rename GetWater() to FindWaters()
 - Rename GetScripts() to FindScripts()
 - Change return type of GetTextureOffset(shape) to Vec(), and SetTextureOffset(s, v)

@@ -7,6 +7,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+t_lua_createtable td_lua_createtable = nullptr;
+
 uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 	uintptr_t addr = ptr;
 	for (size_t i = 0; i < offsets.size(); i++) {
@@ -21,7 +23,7 @@ uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 namespace MEM_OFFSET {
 	uintptr_t GetSteer				= 0x1FC3A4;
 	uintptr_t RegisterGameFunctions	= 0x215A00;
-	uintptr_t RegisterLuaFunction	= 0x396DB0;
+	uintptr_t LuaCreateTable		= 0x3897A0;
 	uintptr_t RenderDist			= 0x5063C8;
 	uintptr_t Game					= 0x713090;
 	uintptr_t ImguiCtx				= 0x719A60;
@@ -47,7 +49,7 @@ int GetDllVersion(lua_State* L) {
 int GetWater(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->waters.getSize();
-	lua_newtable(L);
+	td_lua_createtable(L, n, 0);
 	for (unsigned int i = 0; i < n; i++) {
 		Water* water = game->scene->waters[i];
 		lua_pushinteger(L, water->self.handle);
@@ -59,7 +61,7 @@ int GetWater(lua_State* L) {
 int GetScripts(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->scripts.getSize();
-	lua_newtable(L);
+	td_lua_createtable(L, n, 0);
 	for (unsigned int i = 0; i < n; i++) {
 		Script* script = game->scene->scripts[i];
 		lua_pushinteger(L, script->self.handle);
@@ -71,7 +73,7 @@ int GetScripts(lua_State* L) {
 int GetBoundaryVertices(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->boundary.getSize();
-	lua_newtable(L);
+	td_lua_createtable(L, n, 0);
 	for (unsigned int i = 0; i < n; i++) {
 		Vertex vertex = game->scene->boundary[i];
 		LuaPushVector(L, Vector(vertex.x, 0, vertex.y));
@@ -132,7 +134,7 @@ int GetWaterVertices(lua_State* L) {
 		Water* water = game->scene->waters[i];
 		if (water->self.handle == handle) {
 			unsigned int n = water->vertices.getSize();
-			lua_newtable(L);
+			td_lua_createtable(L, n, 0);
 			for (unsigned int j = 0; j < n; j++) {
 				Vertex vertex = water->vertices[j];
 				LuaPushVector(L, Vector(vertex.x, 0, vertex.y));

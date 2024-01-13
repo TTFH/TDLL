@@ -1,4 +1,5 @@
 function init()
+--[[
 	DebugPrint("coroutine " .. tostring(coroutine ~= nil))
 	DebugPrint("debug " .. tostring(debug ~= nil))
 	DebugPrint("io " .. tostring(io ~= nil))
@@ -7,7 +8,7 @@ function init()
 	DebugPrint("package " .. tostring(package ~= nil))
 	DebugPrint("string " .. tostring(string ~= nil))
 	DebugPrint("table " .. tostring(table ~= nil))
-
+]]
 	g_shape = 0
 	joint_cache = {}
 	wheel_cache = {}
@@ -36,12 +37,13 @@ function tick(dt)
 			local script_path = GetScriptPath(script)
 			DebugPrint(script .. " | " .. script_path)
 		end
-
+--[[
 		local current_map = GetString("game.levelid")
 		DebugPrint("level id: " .. current_map)
 		if current_map ~= "" then
 			ZlibSaveCompressed(current_map, "Hello, World!")
 		end
+]]
 	end
 
 	if not dll_loaded then return end

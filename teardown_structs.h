@@ -81,9 +81,12 @@ struct Entity {
 	void* unknown;
 	uint8_t kind;
 	uint8_t flags;
-	uint8_t padding[2];
+	uint8_t padding1[2];
 	uint32_t handle;	// 0x0C
-	Entity* tree[4];
+	Entity* parent;
+	Entity* sibling;
+	Entity* child;
+	uint8_t padding2[8];
 }; // 0x30
 
 static_assert(sizeof(Entity) == 0x30, "Wrong size Entity");
@@ -145,12 +148,6 @@ struct Trigger {
 	Entity self;
 };
 
-struct RetInfo {
-	lua_State* L;
-	int ret_count;
-	int max_ret;
-};
-
 struct StateWrapper {
 	lua_State* state;
 };
@@ -188,7 +185,9 @@ static_assert(offsetof(Script, core) == 0x70, "Wrong offset Script->core");
 struct Scene {
 	uint8_t padding1[0x80];
 	Light* flashlight;				// 0x80
-	uint8_t padding2[0xB0];
+	uint8_t padding2[0x58];
+	Vector sv_size;					// 0xE0
+	uint8_t padding3[0x4C];
 	td_vector<Body*> bodies;		// 0x138
 	td_vector<Shape*> shapes;		// 0x148
 	td_vector<Light*> lights;		// 0x158
@@ -200,11 +199,12 @@ struct Scene {
 	td_vector<Screen*> screens;		// 0x1B8
 	td_vector<Trigger*> triggers;	// 0x1C8
 	td_vector<Script*> scripts;		// 0x1D8
-	uint8_t padding3[0x380];
+	uint8_t padding4[0x380];
 	td_vector<Vertex> boundary;		// 0x568
 };
 
 static_assert(offsetof(Scene, flashlight) == 0x80, "Wrong offset Scene->flashlight");
+static_assert(offsetof(Scene, sv_size) == 0xE0, "Wrong offset Scene->sv_size");
 static_assert(offsetof(Scene, bodies) == 0x138, "Wrong offset Scene->bodies");
 static_assert(offsetof(Scene, boundary) == 0x568, "Wrong offset Scene->boundary");
 
