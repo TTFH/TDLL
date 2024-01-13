@@ -9,56 +9,42 @@ function init()
 	DebugPrint("string " .. tostring(string ~= nil))
 	DebugPrint("table " .. tostring(table ~= nil))
 ]]
+	local version = GetDllVersion()
+	DebugPrint(version)
+
+	local flashlight = GetPlayerFlashlight()
+	SetLightEnabled(flashlight, true)
+	SetLightColor(flashlight, 1, 0, 0)
+
+	local scripts = FindScripts()
+	for i = 1, #scripts do
+		local script = scripts[i]
+		local script_path = GetScriptPath(script)
+		DebugPrint(script .. " | " .. script_path)
+	end
+--[[
+	local current_map = GetString("game.levelid")
+	if current_map ~= "" then
+		ZlibSaveCompressed(current_map .. ".z", "Hello, World!")
+	end
+]]
 	g_shape = 0
-	joint_cache = {}
-	wheel_cache = {}
-	water_cache = {}
-	boundary_vertices = {}
-	dll_loaded = false
+	extended_api = false
 end
 
 function tick(dt)
-	if not dll_loaded and GetDllVersion then
-		dll_loaded = true
-
-		local version = GetDllVersion()
-		DebugPrint(version)
-
-		local flashlight = GetPlayerFlashlight()
-		SetLightEnabled(flashlight, true)
-		SetLightColor(flashlight, 1, 0, 0)
-
-		boundary_vertices = GetBoundaryVertices()
-		waters = GetWater()
-
-		local scripts = GetScripts()
-		for i = 1, #scripts do
-			local script = scripts[i]
-			local script_path = GetScriptPath(script)
-			DebugPrint(script .. " | " .. script_path)
-		end
---[[
-		local current_map = GetString("game.levelid")
-		DebugPrint("level id: " .. current_map)
-		if current_map ~= "" then
-			ZlibSaveCompressed(current_map, "Hello, World!")
-		end
-]]
+	if not extended_api then
+		extended_api = true
+		GetDllVersion() -- Removes "function is only for internal usage" for all already loaded mods
 	end
 
-	if not dll_loaded then return end
 	local player_pos = GetPlayerTransform().pos
 
+	local waters = FindWaters()
 	for i = 1, #waters do
 		local water = waters[i]
-		if not water_cache[water] then
-			water_cache[water] = {
-				tr = GetWaterTransform(water),
-				vertices = GetWaterVertices(water)
-			}
-		end
-		local water_tr = water_cache[water].tr
-		local water_vertices = water_cache[water].vertices
+		local water_tr = GetWaterTransform(water)
+		local water_vertices = GetWaterVertices(water)
 		for j = 1, #water_vertices do
 			local v1 = water_vertices[j]
 			local v2 = water_vertices[j + 1]
@@ -73,6 +59,7 @@ function tick(dt)
 		end
 	end
 
+	local boundary_vertices = GetBoundaryVertices()
 	for j = -5, 20 do
 		for i = 1, #boundary_vertices do
 			local v1 = boundary_vertices[i]
@@ -88,11 +75,7 @@ function tick(dt)
 
 	local vehicle = GetPlayerVehicle()
 	if vehicle ~= 0 then
-		if not wheel_cache[vehicle] then
-			local wheels = GetVehicleWheels(vehicle)
-			wheel_cache[vehicle] = wheels
-		end
-		local wheels = wheel_cache[vehicle]
+		local wheels = GetVehicleWheels(vehicle)
 		for i = 1, #wheels do
 			local wheel_shape = wheels[i] + 1
 			DrawOBB(wheel_shape)
@@ -113,38 +96,38 @@ function tick(dt)
 	end
 
 	if g_shape ~= 0 then
-		SetTextureOffset(g_shape, GetTime(), 0, 0)
-		local x, y, z = GetTextureOffset(g_shape)
-		DebugWatch("texture offset", VecStr(Vec(x, y, z)))
+		SetTextureOffset(g_shape, Vec(GetTime(), 0, 0))
+		local offset = GetTextureOffset(g_shape)
+		DebugWatch("texture offset", VecStr(offset))
 	end
 
 	if InputPressed("T") then
 		local current_map = GetString("game.levelid")
 		if current_map ~= "" then
-			local text = ZlibLoadCompressed(current_map)
-			DebugWatch("unzip file", text)
+			local text = ZlibLoadCompressed(current_map .. ".z")
+			DebugWatch("unzipped file content", text)
 		end
 	end
 end
 
 function draw()
-	if not dll_loaded then return end
 	local joints = FindJoints("", true)
 	for i = 1, #joints do
 		local joint = joints[i]
+		local point1, point2 = GetJointLocalBodyPos(joint)
 		local shapes = GetJointShapes(joint)
-		if not joint_cache[joint] then
-			local point = GetJointLocalBodyPos(joint)
-			joint_cache[joint] = point
-			return
-		end
 		for j = 1, #shapes do
 			local shape = shapes[j]
 			local body = GetShapeBody(shape)
 			local body_tr = GetBodyTransform(body)
-			local joint_pos = TransformToParentPoint(body_tr, joint_cache[joint])
-			DrawPoint(joint_pos, GetJointType(joint))
-			break
+			local joint_type = GetJointType(joint)
+			if j == 1 then
+				local joint_pos = TransformToParentPoint(body_tr, point1)
+				DrawPoint(joint_pos, joint_type .. "-1")
+			elseif joint_type ~= "ball" and joint_type ~= "hinge" then
+				local joint_pos = TransformToParentPoint(body_tr, point2)
+				DrawPoint(joint_pos, joint_type .. "-2")
+			end
 		end
 	end
 end

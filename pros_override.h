@@ -10,7 +10,7 @@
 const bool TELEMETRY_ENABLED = false;
 
 EXPORT uint64_t* prosdk_user_get_kernel_session_id_visual_alias(uint64_t* param1) {
-	return NULL;
+	return nullptr;
 }
 
 EXPORT uint64_t prosdk_user_get_connection_state(uint64_t* param1) {
@@ -98,7 +98,7 @@ EXPORT uint64_t prosdk_http_request_get(uint64_t* param1, uint64_t param2, uint6
 }
 
 EXPORT uint64_t* prosdk_get_error_message() {
-	return NULL;
+	return nullptr;
 }
 
 EXPORT uint32_t prosdk_disconnect_everything() {

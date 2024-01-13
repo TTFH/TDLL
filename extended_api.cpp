@@ -20,18 +20,18 @@ uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 	return addr;
 }
 
-namespace MEM_OFFSET {
-	uintptr_t GetSteer				= 0x1FC3A4;
-	uintptr_t RegisterGameFunctions	= 0x215A00;
-	uintptr_t LuaCreateTable		= 0x3897A0;
-	uintptr_t RenderDist			= 0x5063C8;
-	uintptr_t Game					= 0x713090;
-	uintptr_t ImguiCtx				= 0x719A60;
+namespace MEM_OFFSET {				// Addr		// Type
+	uintptr_t GetSteer				= 0x1FC3A4; // lua_pushinteger(vehicle->steer)
+	uintptr_t RegisterGameFunctions	= 0x215A00; // void fun(ScriptCore*)
+	uintptr_t LuaCreateTable		= 0x3897A0; // void fun(lua_State*, int, int)
+	uintptr_t RenderDist			= 0x5063C8; // float
+	uintptr_t Game					= 0x713090; // Game*
+	uintptr_t ImguiCtx				= 0x719A60; // ImGuiContext*
 }
 
 namespace Teardown {
 	uintptr_t GetReferenceTo(uintptr_t offset) {
-		return FindDMAAddy(moduleBase + offset, { });
+		return moduleBase + offset;
 	}
 	uintptr_t GetPointerTo(uintptr_t offset) {
 		return FindDMAAddy(moduleBase + offset, { 0x00 });
@@ -41,30 +41,53 @@ namespace Teardown {
 	}
 }
 
+void SkipIsInternalFunctionCheck() {
+	Game* game = (Game*)Teardown::GetGame();
+	unsigned int n = game->script_internals->external_scripts.getSize();
+	for (unsigned int i = 0; i < n; i++) {
+		ExternalScript* script = game->script_internals->external_scripts[i];
+		if (script->privilege > 1)
+			script->privilege = 1;
+	}
+}
+
 int GetDllVersion(lua_State* L) {
-	lua_pushstring(L, "v1.5.3.112");
+	SkipIsInternalFunctionCheck();
+	lua_pushstring(L, "v1.5.3.113");
 	return 1;
 }
 
-int GetWater(lua_State* L) {
+int FindWaters(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->waters.getSize();
 	td_lua_createtable(L, n, 0);
 	for (unsigned int i = 0; i < n; i++) {
 		Water* water = game->scene->waters[i];
-		lua_pushinteger(L, water->self.handle);
+		lua_pushinteger(L, water->handle);
 		lua_rawseti(L, -2, i + 1);
 	}
 	return 1;
 }
 
-int GetScripts(lua_State* L) {
+int FindScripts(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->scripts.getSize();
 	td_lua_createtable(L, n, 0);
 	for (unsigned int i = 0; i < n; i++) {
 		Script* script = game->scene->scripts[i];
-		lua_pushinteger(L, script->self.handle);
+		lua_pushinteger(L, script->handle);
+		lua_rawseti(L, -2, i + 1);
+	}
+	return 1;
+}
+
+int FindWheels(lua_State* L) {
+	Game* game = (Game*)Teardown::GetGame();
+	unsigned int n = game->scene->wheels.getSize();
+	td_lua_createtable(L, n, 0);
+	for (unsigned int i = 0; i < n; i++) {
+		Wheel* wheel = game->scene->wheels[i];
+		lua_pushinteger(L, wheel->handle);
 		lua_rawseti(L, -2, i + 1);
 	}
 	return 1;
@@ -88,11 +111,24 @@ int GetVehicleWheels(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->wheels.getSize(); i++) {
 		Wheel* wheel = game->scene->wheels[i];
-		if (wheel->vehicle->self.handle == handle)
-			wheels.push_back(wheel->self.handle);
+		if (wheel->vehicle->handle == handle)
+			wheels.push_back(wheel->handle);
 	}
 	LuaPushList(L, wheels);
 	return 1;
+}
+
+int GetWheelVehicle(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Game* game = (Game*)Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->wheels.getSize(); i++) {
+		Wheel* wheel = game->scene->wheels[i];
+		if (wheel->handle == handle) {
+			lua_pushinteger(L, wheel->vehicle->handle);
+			return 1;
+		}
+	}
+	return 0;
 }
 
 int GetScriptPath(lua_State* L) {
@@ -100,7 +136,7 @@ int GetScriptPath(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->scripts.getSize(); i++) {
 		Script* script = game->scene->scripts[i];
-		if (script->self.handle == handle) {
+		if (script->handle == handle) {
 			lua_pushstring(L, script->path.c_str());
 			return 1;
 		}
@@ -110,7 +146,13 @@ int GetScriptPath(lua_State* L) {
 
 int GetPlayerFlashlight(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
-	lua_pushinteger(L, game->scene->flashlight->self.handle);
+	lua_pushinteger(L, game->scene->flashlight->handle);
+	return 1;
+}
+
+int GetShadowVolumeSize(lua_State* L) {
+	Game* game = (Game*)Teardown::GetGame();
+	LuaPushVector(L, game->scene->sv_size);
 	return 1;
 }
 
@@ -119,7 +161,7 @@ int GetWaterTransform(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->waters.getSize(); i++) {
 		Water* water = game->scene->waters[i];
-		if (water->self.handle == handle) {
+		if (water->handle == handle) {
 			LuaPushTransform(L, water->transform);
 			return 1;
 		}
@@ -132,7 +174,7 @@ int GetWaterVertices(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->waters.getSize(); i++) {
 		Water* water = game->scene->waters[i];
-		if (water->self.handle == handle) {
+		if (water->handle == handle) {
 			unsigned int n = water->vertices.getSize();
 			td_lua_createtable(L, n, 0);
 			for (unsigned int j = 0; j < n; j++) {
@@ -151,10 +193,10 @@ int GetJointLocalBodyPos(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->joints.getSize(); i++) {
 		Joint* joint = game->scene->joints[i];
-		if (joint->self.handle == handle) {
+		if (joint->handle == handle) {
 			LuaPushVector(L, joint->local_pos_body1);
-			//LuaPushVector(L, joint->local_pos_body2);
-			return 1;
+			LuaPushVector(L, joint->local_pos_body2);
+			return 2;
 		}
 	}
 	return 0;
@@ -165,7 +207,7 @@ int GetShapeTexture(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
 		Shape* shape = game->scene->shapes[i];
-		if (shape->self.handle == handle) {
+		if (shape->handle == handle) {
 			lua_pushinteger(L, shape->texture_tile);
 			lua_pushnumber(L, shape->texture_weight);
 			lua_pushinteger(L, shape->blendtexture_tile);
@@ -181,13 +223,9 @@ int GetTextureOffset(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
 		Shape* shape = game->scene->shapes[i];
-		if (shape->self.handle == handle) {
-			//LuaPushVector(L, shape->texture_offset);
-			//return 1;
-			lua_pushnumber(L, shape->texture_offset.x);
-			lua_pushnumber(L, shape->texture_offset.y);
-			lua_pushnumber(L, shape->texture_offset.z);
-			return 3;
+		if (shape->handle == handle) {
+			LuaPushVector(L, shape->texture_offset);
+			return 1;
 		}
 	}
 	return 0;
@@ -203,7 +241,7 @@ int SetShapeTexture(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
 		Shape* shape = game->scene->shapes[i];
-		if (shape->self.handle == handle) {
+		if (shape->handle == handle) {
 			shape->texture_tile = texture_tile;
 			shape->blendtexture_tile = blendtexture_tile;
 			shape->texture_weight = texture_weight;
@@ -216,17 +254,13 @@ int SetShapeTexture(lua_State* L) {
 
 int SetTextureOffset(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
-	float x = lua_tonumber(L, 2);
-	float y = lua_tonumber(L, 3);
-	float z = lua_tonumber(L, 4);
+	Vector offset = LuaToVector(L, 2);
 
 	Game* game = (Game*)Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
 		Shape* shape = game->scene->shapes[i];
-		if (shape->self.handle == handle) {
-			shape->texture_offset.x = x;
-			shape->texture_offset.y = y;
-			shape->texture_offset.z = z;
+		if (shape->handle == handle) {
+			shape->texture_offset = offset;
 			return 0;
 		}
 	}
@@ -240,7 +274,7 @@ int ZlibSaveCompressed(lua_State* L) {
 	unsigned long src_length = strlen(str) + 1;
 	uLong dest_length = compressBound(src_length);
 	Bytef* dest = new Bytef[dest_length];
-	if (dest == NULL) {
+	if (dest == nullptr) {
 		printf("Memory allocation failed.\n");
 		return 0;
 	}
@@ -253,7 +287,7 @@ int ZlibSaveCompressed(lua_State* L) {
 	}
 
 	FILE* file = fopen(filename, "wb");
-	if (file == NULL) {
+	if (file == nullptr) {
 		printf("Error opening file %s for writing.\n", filename);
 		delete[] dest;
 		return 0;
@@ -271,7 +305,7 @@ int ZlibLoadCompressed(lua_State* L) {
 	const char* filename = lua_tostring(L, 1);
 
 	FILE* file = fopen(filename, "rb");
-	if (file == NULL) {
+	if (file == nullptr) {
 		printf("Error opening file %s for reading.\n", filename);
 		return 0;
 	}
@@ -281,7 +315,7 @@ int ZlibLoadCompressed(lua_State* L) {
 	fseek(file, 0, SEEK_SET);
 	
 	Bytef* compressed_data = new Bytef[file_size];
-	if (compressed_data == NULL) {
+	if (compressed_data == nullptr) {
 		printf("Memory allocation failed.\n");
 		fclose(file);
 		return 0;
@@ -311,4 +345,51 @@ int ZlibLoadCompressed(lua_State* L) {
 	dest[dest_length] = '\0';
 	lua_pushstring(L, (const char*)dest.data());
 	return 1;
+}
+
+void RegisterLuaCFunctions(lua_State* L) {
+/*	luaopen_debug(L);
+	luaopen_io(L);
+	luaopen_os(L);
+	luaopen_package(L);
+*/
+	lua_pushcfunction(L, GetDllVersion);
+	lua_setglobal(L, "GetDllVersion");
+
+	lua_pushcfunction(L, FindWaters);
+	lua_setglobal(L, "FindWaters");
+	lua_pushcfunction(L, FindScripts);
+	lua_setglobal(L, "FindScripts");
+	lua_pushcfunction(L, FindWheels);
+	lua_setglobal(L, "FindWheels");
+	lua_pushcfunction(L, GetBoundaryVertices);
+	lua_setglobal(L, "GetBoundaryVertices");
+	lua_pushcfunction(L, GetVehicleWheels);
+	lua_setglobal(L, "GetVehicleWheels");
+	lua_pushcfunction(L, GetWheelVehicle);
+	lua_setglobal(L, "GetWheelVehicle");
+	lua_pushcfunction(L, GetScriptPath);
+	lua_setglobal(L, "GetScriptPath");
+	lua_pushcfunction(L, GetPlayerFlashlight);
+	lua_setglobal(L, "GetPlayerFlashlight");
+	lua_pushcfunction(L, GetShadowVolumeSize);
+	lua_setglobal(L, "GetShadowVolumeSize");
+	lua_pushcfunction(L, GetWaterTransform);
+	lua_setglobal(L, "GetWaterTransform");
+	lua_pushcfunction(L, GetWaterVertices);
+	lua_setglobal(L, "GetWaterVertices");
+	lua_pushcfunction(L, GetJointLocalBodyPos);
+	lua_setglobal(L, "GetJointLocalBodyPos");
+	lua_pushcfunction(L, GetShapeTexture);
+	lua_setglobal(L, "GetShapeTexture");
+	lua_pushcfunction(L, GetTextureOffset);
+	lua_setglobal(L, "GetTextureOffset");
+	lua_pushcfunction(L, SetShapeTexture);
+	lua_setglobal(L, "SetShapeTexture");
+	lua_pushcfunction(L, SetTextureOffset);
+	lua_setglobal(L, "SetTextureOffset");
+	lua_pushcfunction(L, ZlibSaveCompressed);
+	lua_setglobal(L, "ZlibSaveCompressed");
+	lua_pushcfunction(L, ZlibLoadCompressed);
+	lua_setglobal(L, "ZlibLoadCompressed");
 }

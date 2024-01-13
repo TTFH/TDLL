@@ -20,36 +20,6 @@ namespace Teardown {
 	Game* GetGame();
 }
 
-int GetDllVersion(lua_State* L);
-
-int GetWater(lua_State* L);
-
-int GetScripts(lua_State* L);
-
-int GetBoundaryVertices(lua_State* L);
-
-int GetVehicleWheels(lua_State* L);
-
-int GetScriptPath(lua_State* L);
-
-int GetPlayerFlashlight(lua_State* L);
-
-int GetWaterTransform(lua_State* L);
-
-int GetWaterVertices(lua_State* L);
-
-int GetJointLocalBodyPos(lua_State* L);
-
-int GetShapeTexture(lua_State* L);
-
-int GetTextureOffset(lua_State* L);
-
-int SetShapeTexture(lua_State* L);
-
-int SetTextureOffset(lua_State* L);
-
-int ZlibSaveCompressed(lua_State* L);
-
-int ZlibLoadCompressed(lua_State* L);
+void RegisterLuaCFunctions(lua_State* L);
 
 #endif

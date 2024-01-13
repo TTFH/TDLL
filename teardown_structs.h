@@ -65,6 +65,7 @@ struct Vertex {
 
 struct Vector {
 	float x, y, z;
+	Vector() : x(0), y(0), z(0) {}
 	Vector(float x, float y, float z) : x(x), y(y), z(z) {}
 };
 
@@ -92,12 +93,10 @@ struct Entity {
 static_assert(sizeof(Entity) == 0x30, "Wrong size Entity");
 static_assert(offsetof(Entity, handle) == 0x0C, "Wrong offset Entity->handle");
 
-struct Body {
-	Entity self;
-};
+class Body : public Entity { };
 
-struct Shape {
-	Entity self;
+class Shape : public Entity {
+public:
 	uint8_t padding1[0x8C];
 	uint16_t texture_tile;			// 0xBC
 	uint16_t blendtexture_tile = 0;
@@ -108,22 +107,20 @@ struct Shape {
 
 static_assert(offsetof(Shape, texture_tile) == 0xBC, "Wrong offset Shape->texture_tile");
 
-struct Light {
-	Entity self;
-};
+class Light : public Entity { };
+class Location : public Entity { };
 
-struct Location {
-	Entity self;
-};
-
-struct Water {
-	Entity self;
+class Water : public Entity {
+public:
 	Transform transform;		// 0x30
+	float depth;
 	td_vector<Vertex> vertices;	// 0x50
 };
 
-struct Joint {
-	Entity self;
+static_assert(offsetof(Water, vertices) == 0x50, "Wrong offset Water->vertices");
+
+class Joint : public Entity {
+public:
 	uint8_t padding1[0x40];
 	Vector local_pos_body1;	// 0x70
 	Vector local_pos_body2;
@@ -131,49 +128,35 @@ struct Joint {
 
 static_assert(offsetof(Joint, local_pos_body1) == 0x70, "Wrong offset Joint->local_pos_body1");
 
-struct Vehicle {
-	Entity self;
-};
+class Vehicle : public Entity { };
 
-struct Wheel {
-	Entity self;
+class Wheel : public Entity {
+public:
 	Vehicle* vehicle;	// 0x30
 };
 
-struct Screen {
-	Entity self;
-};
+class Screen : public Entity { };
+class Trigger : public Entity { };
 
-struct Trigger {
-	Entity self;
-};
-
-struct StateWrapper {
+struct LuaStateInfo {
 	lua_State* state;
 };
-
-struct StateInfo {
-	uint8_t padding[0x40];
-	StateWrapper* state_wrapper;	// 0x40
-};
-
-static_assert(offsetof(StateInfo, state_wrapper) == 0x40, "Wrong offset StateInfo->state_wrapper");
 
 struct ScriptCore {
 	uint8_t padding1[8];
 	float time;
 	float dt;
-	td_string path;			// 0x10
-	td_string location;		// 0x30
-	uint8_t padding2[0x18];
-	StateInfo state_info;	// 0x68
+	td_string path;				// 0x10
+	td_string location;			// 0x30
+	uint8_t padding2[0x18 + 0x40];
+	LuaStateInfo* state_info;	// 0xA8
 };
 
 static_assert(offsetof(ScriptCore, path) == 0x10, "Wrong offset ScriptCore->path");
-static_assert(offsetof(ScriptCore, state_info) == 0x68, "Wrong offset ScriptCore->state_info");
+static_assert(offsetof(ScriptCore, state_info) == 0xA8, "Wrong offset ScriptCore->state_info");
 
-struct Script {
-	Entity self;
+class Script : public Entity {
+public:
 	td_string name;			// 0x30
 	td_string path;			// 0x50
 	ScriptCore core;		// 0x70
@@ -208,14 +191,27 @@ static_assert(offsetof(Scene, sv_size) == 0xE0, "Wrong offset Scene->sv_size");
 static_assert(offsetof(Scene, bodies) == 0x138, "Wrong offset Scene->bodies");
 static_assert(offsetof(Scene, boundary) == 0x568, "Wrong offset Scene->boundary");
 
+struct ExternalScript {
+	uint8_t padding[0x38C];
+	int privilege; // 0x38C
+};
+
+struct ScriptInternals {
+	uint8_t padding[0x158];
+	td_vector<ExternalScript*> external_scripts; // 0x158
+};
+
 struct Game {
 	int screen_res_x;
 	int screen_res_y;
 	GameState state;
 	uint8_t padding[0x44];
 	Scene* scene;			// 0x50
+	uint8_t padding2[0x78];
+	ScriptInternals* script_internals; // 0xD0
 };
 
 static_assert(offsetof(Game, scene) == 0x50, "Wrong offset game->scene");
+static_assert(offsetof(Game, script_internals) == 0xD0, "Wrong offset game->script_internals");
 
 #endif

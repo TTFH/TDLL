@@ -4,20 +4,44 @@
 
 ### What it does:
 - Provides a DLL that can be used to extend the Teardown API
-- Implements the next functions:
+- Implements the functions listed below
+
+### How to install:
+Download `pros.sdk.x64.dll` and copy it to the Teardown directory, overwrite the existing file.  
+Create a script that contains the text "DLL" on it's path, for example: `DLL Global Mod\main.lua` or `Content Mod\DLL_main.lua` to access the new API functions.  
+Check `main.lua` for examples on how to use the new API functions.  
+Press 'F1' on the pause menu to access the DLL options.
+
+### How to uninstall:
+Verify the game on Steam.
+Or restore the original `pros.sdk.x64.dll` file if you made a backup.
+
+### TODO:
+- Implement ToggleBoundary()
+- Implement SetRenderDistance(dist)
+- Get entity tags and local script entities to implement FindWater[s](tag, global), FindScript[s](tag, global), FindWheel[s](tag, global)
+- Add ImGui API for Lua
+
+## New API functions:
 
 ```lua
-list = GetWater()
+list = FindWaters()
 Arguments
 none
 Return value
 list (table) – Indexed table with handles to all water entities
 
-list = GetScripts()
+list = FindScripts()
 Arguments
 none
 Return value
 list (table) – Indexed table with handles to all script entities
+
+list = FindWheels()
+Arguments
+none
+Return value
+list (table) – Indexed table with handles to all wheel entities
 
 list = GetBoundaryVertices()
 Arguments
@@ -31,6 +55,12 @@ vehicle (number) – Vehicle handle
 Return value
 list (table) – Indexed table with handles to all wheels of the vehicle
 
+handle = GetWheelVehicle(wheel)
+Arguments
+wheel (number) – Wheel handle
+Return value
+handle (number) – Handle to the vehicle the wheel is part of
+
 path = GetScriptPath(handle)
 Arguments
 handle (number) – Script handle
@@ -42,6 +72,12 @@ Arguments
 none
 Return value
 handle (number) – Handle to the player flashlight, a normal Light entity
+
+size = GetShadowVolumeSize()
+Arguments
+none
+Return value
+size (number) – Vector with the size of the shadow volume
 
 transform = GetWaterTransform(water)
 Arguments
@@ -71,13 +107,11 @@ weight (number) – Texture weight
 blendTexture (number) – Blend texture index
 blendTextureWeight (number) – Blend texture weight
 
-x, y, z = GetTextureOffset(shape)
+offset = GetTextureOffset(shape)
 Arguments
 shape (number) – Shape handle
 Return value
-x (number) – X offset
-y (number) – Y offset
-z (number) – Z offset
+offset (table) – Vector with the texture offset
 
 SetShapeTexture(shape, texture, weight, blendTexture, blendTextureWeight)
 Arguments
@@ -89,12 +123,10 @@ blendTextureWeight (number) – Blend texture weight
 Return value
 none
 
-SetTextureOffset(shape, x, y, z)
+SetTextureOffset(shape, offset)
 Arguments
 shape (number) – Shape handle
-x (number) – X offset
-y (number) – Y offset
-z (number) – Z offset
+offset (table) – Vector with the texture offset
 Return value
 none
 
@@ -112,23 +144,82 @@ Return value
 str (string) – Decompressed string
 ```
 
-### How to install:
-Download `pros.sdk.x64.dll` and copy it to the Teardown directory, overwrite the existing file.  
-Create a script that contains the text "DLL" on it's path, for example: `DLL Global Mod\main.lua` or `Content Mod\DLL_main.lua` to access the new function.  
-Press 'F1' on the pause menu to access the DLL options.
+## Internal functions:
 
-### How to uninstall:
-Verify the game on Steam.
-
-## TODO:
-- Clean useless UI code
-- Add ImGui API for Lua
-- Rename GetWater() to FindWaters()
-- Rename GetScripts() to FindScripts()
-- Change return type of GetTextureOffset(shape) to Vec(), and SetTextureOffset(s, v)
-- Implement SetRenderDistance(dist)
-- Implement ToggleBoundary()
-- Implement v = GetShadowVolumeSize()
-- Implement tr = GetJointWorldTransform(j)
-- Remove "function is only for internal usage"
-- Get entity tags and local script entities to implement FindWater(s)(tag, global), FindScript(s)(tag, global)
+```lua
+fuction ActivityAvailabilityChange(...)
+fuction ActivityEnd(...)
+fuction ActivityResume(...)
+fuction ActivityStart(...)
+fuction ActivityTerminate(...)
+fuction CompleteAchievement(...)
+fuction DeleteShape(...)
+fuction explosionDebrisCPP(...)
+fuction explosionSparksCPP(...)
+fuction fireUpdateCPP(...)
+fuction FxEmitSmokeCPP(...)
+fuction GetActionByButton(...)
+fuction GetBodyHit(...)
+fuction GetBodyHitsCount(...)
+fuction GetButtonsByAction(...)
+fuction GetDisplayCount(...)
+fuction GetDisplayName(...)
+fuction GetDisplayResolution(...)
+fuction GetKeyByAction(...)
+fuction GetLayoutActions(...)
+fuction GetScriptId(...)
+fuction GetShapeStrength(...)
+fuction HasInputController(...)
+fuction IndicateAchievementProgress(...)
+fuction IsAchievementCompleted(...)
+fuction IsBodyHitted(...)
+fuction IsRunningOnEgs(...)
+fuction IsRunningOnSwitch(...)
+fuction PermitScreenRecord(...)
+fuction ProhibitScreenRecord(...)
+fuction ProsBrowseToQRLink(...)
+fuction ProsHasActiveQRCode(...)
+fuction ProsIsAccountLinked(...)
+fuction ProsRequestQRCode(...)
+fuction QueryLayerFilter(...)
+fuction RadiolinkCheckConnectionCPP(...)
+fuction RadiolinkDrawLinesCPP(...)
+fuction ResumeLevel(...)
+fuction RobotAimUpdateCPP(...)
+fuction RobotFootStepCPP(...)
+fuction RobotGetBodyParametersCPP(...)
+fuction RobotGetTransformAndAxesCPP(...)
+fuction RobotHoverGetUpCPP(...)
+fuction RobotHoverUprightCPP(...)
+fuction RobotProcessSamplesCPP(...)
+fuction RobotRejectAllBodiesCPP(...)
+fuction RobotRemoveTaggedJointsCPP(...)
+fuction RobotSensorGetBlockedCPP(...)
+fuction RobotSetBodyCollisionFilterCPP(...)
+fuction RobotSetFootConstraintsCPP(...)
+fuction SaveShape(...)
+fuction SetPresence(...)
+fuction SetRopeSlack(rope, slack)
+fuction SetShapeStrength(...)
+fuction SetVehicleEngineHealth(...)
+fuction smokeUpdateCPP(...)
+fuction TornadoBodiesSuctionCPP(...)
+fuction TornadoSpawnParticlesCPP(...)
+fuction trailUpdateCPP(...)
+fuction UiAddDrawObject(...)
+fuction UiDislikeProsMod(...)
+fuction UiDrawLater(...)
+fuction UiForceMouse(...)
+fuction UiGetFrameNo(...)
+fuction UiGetProsModNumber(...)
+fuction UiGetProsModShortInfo(...)
+fuction UiLikeProsMod(...)
+fuction UiRemoveDrawObject(...)
+fuction UiSelectedProsModInfo(...)
+fuction UiSelectProsMod(...)
+fuction UiSetProsModFilter(...)
+fuction UiSubscribeToProsMod(...)
+fuction UiUnsubscribeFromProsMod(...)
+fuction WatchBodyHit(...)
+fuction WinddustSpawnParticlesCPP(...)
+```

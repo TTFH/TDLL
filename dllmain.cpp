@@ -43,58 +43,16 @@ LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 }
 
 bool awwnb = false;
-bool registered = false;
-bool is_playing = false;
 
-void RegisterLuaCFunctions(lua_State* L) {
-/*	luaopen_debug(L);
-	luaopen_io(L);
-	luaopen_os(L);
-	luaopen_package(L);
-*/
-	lua_pushcfunction(L, GetDllVersion);
-	lua_setglobal(L, "GetDllVersion");
-
-	lua_pushcfunction(L, GetWater);
-	lua_setglobal(L, "GetWater");
-	lua_pushcfunction(L, GetScripts);
-	lua_setglobal(L, "GetScripts");
-	lua_pushcfunction(L, GetBoundaryVertices);
-	lua_setglobal(L, "GetBoundaryVertices");
-	lua_pushcfunction(L, GetVehicleWheels);
-	lua_setglobal(L, "GetVehicleWheels");
-	lua_pushcfunction(L, GetScriptPath);
-	lua_setglobal(L, "GetScriptPath");
-	lua_pushcfunction(L, GetPlayerFlashlight);
-	lua_setglobal(L, "GetPlayerFlashlight");
-	lua_pushcfunction(L, GetWaterTransform);
-	lua_setglobal(L, "GetWaterTransform");
-	lua_pushcfunction(L, GetWaterVertices);
-	lua_setglobal(L, "GetWaterVertices");
-	lua_pushcfunction(L, GetJointLocalBodyPos);
-	lua_setglobal(L, "GetJointLocalBodyPos");
-	lua_pushcfunction(L, GetShapeTexture);
-	lua_setglobal(L, "GetShapeTexture");
-	lua_pushcfunction(L, GetTextureOffset);
-	lua_setglobal(L, "GetTextureOffset");
-	lua_pushcfunction(L, SetShapeTexture);
-	lua_setglobal(L, "SetShapeTexture");
-	lua_pushcfunction(L, SetTextureOffset);
-	lua_setglobal(L, "SetTextureOffset");
-	lua_pushcfunction(L, ZlibSaveCompressed);
-	lua_setglobal(L, "ZlibSaveCompressed");
-	lua_pushcfunction(L, ZlibLoadCompressed);
-	lua_setglobal(L, "ZlibLoadCompressed");
-}
-
-void RegisterGameFunctionsHook(ScriptCore* core) {
-	td_RegisterGameFunctions(core);
-	const char* script_name = core->path.c_str();
-	if (strstr(script_name, "DLL") != NULL) {
+void RegisterGameFunctionsHook(ScriptCore* script_core) {
+	td_RegisterGameFunctions(script_core);
+	const char* script_name = script_core->path.c_str();
+	if (strstr(script_name, "DLL") != nullptr) {
 		printf("Extending API for script: %s\n", script_name);
-		lua_State* L = core->state_info.state_wrapper->state;
+		lua_State* L = script_core->state_info->state;
 		RegisterLuaCFunctions(L);
 	}
+	awwnb = false; // reset remove boundary checkbox
 }
 
 BOOL wglSwapBuffersHook(HDC hDc) {
@@ -125,10 +83,6 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
-		static bool enabled = true;
-		static bool disabled = false;
-		static bool telemetry_disabled = !TELEMETRY_ENABLED;
-
 		ImGui::Begin("DLL Utils");
 		ImGui::Text("Render distance:");
 		static float render_dist = 500;
@@ -152,61 +106,9 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 			game->scene->boundary.setSize(0);
 		}
 		ImGui::BeginDisabled();
-		ImGui::Checkbox("Show Dev Menu", &disabled);
-		ImGui::Checkbox("Disable SV Clamping", &disabled);
+		static bool telemetry_disabled = !TELEMETRY_ENABLED;
 		ImGui::Checkbox("Disable Saber Telemetry", &telemetry_disabled);
 		ImGui::EndDisabled();
-		if (ImGui::Button("RESET")) {
-			awwnb = false;
-			registered = false;
-		}
-		ImGui::End();
-
-
-		ImGui::Begin("Extra Lua libs");
-		ImGui::Text("Enabled libraries:");
-		static bool libs_enabled = false;
-		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-		ImGui::Checkbox("coroutine", &enabled);
-		ImGui::Checkbox("debug", &libs_enabled);
-		ImGui::Checkbox("io", &libs_enabled);
-		ImGui::Checkbox("math", &enabled);
-		ImGui::Checkbox("os", &libs_enabled);
-		ImGui::Checkbox("package", &libs_enabled);
-		ImGui::Checkbox("string", &enabled);
-		ImGui::Checkbox("table", &enabled);
-		ImGui::PopItemFlag();
-		if (ImGui::Button("Enable All") && !libs_enabled) {
-			libs_enabled = true;
-		}
-		ImGui::End();
-
-
-		ImGui::Begin("Extended Teardown API");
-		ImGui::Text("Enabled functions:");
-		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-		ImGui::Checkbox("[h] = GetWater()", &registered);
-		ImGui::Checkbox("[h] = GetScripts()", &registered);
-		ImGui::Checkbox("[p] = GetBoundaryVertices()", &registered);
-		ImGui::Checkbox("[h] = GetVehicleWheels(v)", &registered);
-		ImGui::Checkbox("path = GetScriptPath(h)", &registered);
-		ImGui::Checkbox("h = GetPlayerFlashlight()", &registered);
-		ImGui::Checkbox("tr = GetWaterTransform(w)", &registered);
-		ImGui::Checkbox("[p] = GetWaterVertices(w)", &registered);
-		ImGui::Checkbox("p1, p2 = GetJointLocalBodyPos(j)", &registered);
-		ImGui::Checkbox("t, w, bt, bw = GetShapeTexture(s)", &registered);
-		ImGui::Checkbox("x, y, z = GetTextureOffset(s)", &registered);
-		ImGui::Dummy(ImVec2(0, 5));
-		ImGui::Checkbox("SetShapeTexture(s, t, w, bt, bw)", &registered);
-		ImGui::Checkbox("SetTextureOffset(s, x, y, z)", &registered);
-		ImGui::Dummy(ImVec2(0, 5));
-		ImGui::Checkbox("ZlibSaveCompressed(file, str);", &registered);
-		ImGui::Checkbox("str = ZlibLoadCompressed(file);", &registered);
-
-		ImGui::PopItemFlag();
-		if (ImGui::Button("Register All") && !registered) {
-			registered = true;
-		}
 		ImGui::End();
 
 		//ImGui::ShowDemoWindow();
