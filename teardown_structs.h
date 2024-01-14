@@ -23,17 +23,6 @@ class td_string {
 		char StackBuffer[32] = { 0 };
 	};
 public:
-	td_string(const char* str) {
-		int length = strlen(str);
-		if (length < 32) {
-			strcpy(StackBuffer, str);
-			StackBuffer[31] = 0;
-		} else {
-			HeapBuffer = new char[length + 1];
-			strcpy(HeapBuffer, str);
-			StackBuffer[31] = 1;
-		}
-	}
 	const char* c_str() const {
 		return StackBuffer[31] != '\0' ? HeapBuffer : &StackBuffer[0];
 	}

@@ -126,21 +126,16 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	freopen_s(&stream, "CONOUT$", "w", stdout);
 	printf("DLL Loaded\n");
 #endif
-#ifdef _MSC_VER
-	moduleBase = (uintptr_t)GetModuleHandle(L"teardown.exe");
-	HMODULE openglModule = GetModuleHandle(L"opengl32.dll");
-#else
 	moduleBase = (uintptr_t)GetModuleHandleA("teardown.exe");
 	HMODULE openglModule = GetModuleHandleA("opengl32.dll");
-#endif
 
 	MH_Initialize();
-	void* wglSwapBuffers = (void*)GetProcAddress(openglModule, "wglSwapBuffers");
-	MH_CreateHook(wglSwapBuffers, (void*)wglSwapBuffersHook, (void**)&wglSwapBuffersOriginal);
-	MH_CreateHook((LPVOID)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions), (void*)RegisterGameFunctionsHook, (void**)&td_RegisterGameFunctions);
+	t_wglSwapBuffers wglSwapBuffers = (t_wglSwapBuffers)GetProcAddress(openglModule, "wglSwapBuffers");
+	MH_CreateHook((void*)wglSwapBuffers, (void*)wglSwapBuffersHook, (void**)&wglSwapBuffersOriginal);
+	MH_CreateHook((void*)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions), (void*)RegisterGameFunctionsHook, (void**)&td_RegisterGameFunctions);
 	MH_EnableHook(MH_ALL_HOOKS);
 
-	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable); // Lua doesn't like to have 2 GC
+	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable);
 	return TRUE;
 }
 
