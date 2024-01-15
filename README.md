@@ -103,6 +103,24 @@ water (number) – Water handle
 Return value
 list (table) – Indexed table with vertices of the water
 
+type = GetTriggerType(trigger)
+Arguments
+trigger (number) – Trigger handle
+Return value
+type (string) – Type of the trigger, can be box, sphere or polygon
+
+size = GetTriggerSize(trigger)
+Arguments
+trigger (number) – Trigger handle
+Return value
+size (number / table) – Vector with the size of the trigger if type is box, number if type is sphere or polygon
+
+list = GetTriggerVertices(trigger)
+Arguments
+trigger (number) – Trigger handle
+Return value
+list (table) – Indexed table with the vertices of the trigger
+
 pos, axis = GetJointLocalPosAndAxis(joint, index)
 Arguments
 joint (number) – Joint handle

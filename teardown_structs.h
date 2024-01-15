@@ -56,6 +56,9 @@ struct Vector {
 	float x, y, z;
 	Vector() : x(0), y(0), z(0) {}
 	Vector(float x, float y, float z) : x(x), y(y), z(z) {}
+	Vector operator*(float f) const {
+		return Vector(x * f, y * f, z * f);
+	}
 };
 
 struct Quat {
@@ -127,7 +130,26 @@ public:
 };
 
 class Screen : public Entity { };
-class Trigger : public Entity { };
+
+enum TriggerKind : int {
+	TrSphere = 1,
+	TrBox,
+	TrPolygon,
+};
+
+class Trigger : public Entity {
+public:
+	uint8_t padding1[0x1C];
+	TriggerKind type;			// 0x4C
+	float sphere_size;			// 0x50
+	Vector half_box_size;		// 0x54
+	td_vector<Vertex> vertices;	// 0x60
+	uint8_t padding2[0x80];
+	float polygon_size; 		// 0xF0
+};
+
+static_assert(offsetof(Trigger, type) == 0x4C, "Wrong offset Trigger->type");
+static_assert(offsetof(Trigger, polygon_size) == 0xF0, "Wrong offset Trigger->polygon_size");
 
 struct LuaStateInfo {
 	lua_State* state;

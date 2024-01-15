@@ -193,6 +193,71 @@ int GetWaterVertices(lua_State* L) {
 	return 0;
 }
 
+int GetTriggerType(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Game* game = (Game*)Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->triggers.getSize(); i++) {
+		Trigger* trigger = game->scene->triggers[i];
+		if (trigger->handle == handle) {
+			switch (trigger->type) {
+			case TrSphere:
+				lua_pushstring(L, "sphere");
+				break;
+			case TrBox:
+				lua_pushstring(L, "box");
+				break;
+			case TrPolygon:
+				lua_pushstring(L, "polygon");
+				break;
+			}
+			return 1;
+		}
+	}
+	return 0;
+}
+
+int GetTriggerSize(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Game* game = (Game*)Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->triggers.getSize(); i++) {
+		Trigger* trigger = game->scene->triggers[i];
+		if (trigger->handle == handle) {
+			switch (trigger->type) {
+			case TrSphere:
+				lua_pushnumber(L, trigger->sphere_size);
+				break;
+			case TrBox:
+				LuaPushVector(L, trigger->half_box_size * 2);
+				break;
+			case TrPolygon:
+				lua_pushnumber(L, trigger->polygon_size);
+				break;
+			}
+			return 1;
+		}
+	}
+	return 0;
+}
+
+int GetTriggerVertices(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Game* game = (Game*)Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->triggers.getSize(); i++) {
+		Trigger* trigger = game->scene->triggers[i];
+		if (trigger->handle == handle) {
+			unsigned int n = trigger->vertices.getSize();
+			td_lua_createtable(L, n, 0);
+			for (unsigned int j = 0; j < n; j++) {
+				Vertex vertex = trigger->vertices[j];
+				LuaPushVector(L, Vector(vertex.x, 0, vertex.y));
+				lua_rawseti(L, -2, j + 1);
+			}
+			return 1;
+		}
+	}
+	return 0;
+}
+
 int GetJointLocalPosAndAxis(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	unsigned int index = lua_tointeger(L, 2);
@@ -386,6 +451,12 @@ void RegisterLuaCFunctions(lua_State* L) {
 	lua_setglobal(L, "GetWaterUnwrappedTransform");
 	lua_pushcfunction(L, GetWaterVertices);
 	lua_setglobal(L, "GetWaterVertices");
+	lua_pushcfunction(L, GetTriggerType);
+	lua_setglobal(L, "GetTriggerType");
+	lua_pushcfunction(L, GetTriggerSize);
+	lua_setglobal(L, "GetTriggerSize");
+	lua_pushcfunction(L, GetTriggerVertices);
+	lua_setglobal(L, "GetTriggerVertices");
 	lua_pushcfunction(L, GetJointLocalPosAndAxis);
 	lua_setglobal(L, "GetJointLocalPosAndAxis");
 	lua_pushcfunction(L, GetShapeTexture);

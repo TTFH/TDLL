@@ -59,6 +59,32 @@ function tick(dt)
 		end
 	end
 
+	local triggers = FindTriggers("", true)
+	for i = 1, #triggers do
+		local trigger = triggers[i]
+		local trigger_tr = GetTriggerTransform(trigger)
+		local tr_type = GetTriggerType(trigger)
+		DebugWatch("trigger " .. trigger, tr_type)
+		if tr_type == "polygon" then
+			local trigger_vertices = GetTriggerVertices(trigger)
+			local height = GetTriggerSize(trigger)
+			for j = 1, #trigger_vertices do
+				local v1 = trigger_vertices[j]
+				local v2 = trigger_vertices[j + 1]
+				if v2 == nil then
+					v2 = trigger_vertices[1]
+				end
+				local p1 = TransformToParentPoint(trigger_tr, v1)
+				local p2 = TransformToParentPoint(trigger_tr, v2)
+				local p3 = VecAdd(p1, Vec(0, height, 0))
+				local p4 = VecAdd(p2, Vec(0, height, 0))
+				DebugLine(p1, p2, 1, 0, 0) -- bottom
+				DebugLine(p3, p4, 1, 0, 0) -- top
+				DebugLine(p1, p3, 1, 0, 0) -- side
+			end
+		end
+	end
+
 	local boundary_vertices = GetBoundaryVertices()
 	for j = -5, 20 do
 		for i = 1, #boundary_vertices do
