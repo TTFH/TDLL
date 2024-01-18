@@ -24,6 +24,7 @@ t_RegisterGameFunctions td_RegisterGameFunctions = nullptr;
 uintptr_t moduleBase;
 WNDPROC hGameWindowProc;
 bool show_menu = false;
+bool awwnb = false;
 
 void Patch(BYTE* dst, BYTE* src, size_t size) {
 	DWORD oldProtect;
@@ -37,12 +38,10 @@ LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		show_menu = !show_menu;
 	if (show_menu) {
 		CallWindowProc(ImGui_ImplWin32_WndProcHandler, hWnd, uMsg, wParam, lParam);
-		return true;
+		//return true; // disable teardown input while menu is open
 	}
 	return CallWindowProc(hGameWindowProc, hWnd, uMsg, wParam, lParam);
 }
-
-bool awwnb = false;
 
 void RegisterGameFunctionsHook(ScriptCore* script_core) {
 	td_RegisterGameFunctions(script_core);

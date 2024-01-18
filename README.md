@@ -29,23 +29,11 @@ none
 Return value
 none -- Allows all already loaded mods to access internal funtions
 
-list = GetWaters()
+size = GetShadowVolumeSize()
 Arguments
 none
 Return value
-list (table) – Indexed table with handles to all water entities
-
-list = GetScripts()
-Arguments
-none
-Return value
-list (table) – Indexed table with handles to all script entities
-
-list = GetWheels()
-Arguments
-none
-Return value
-list (table) – Indexed table with handles to all wheel entities
+size (number) – Vector with the size of the shadow volume
 
 list = GetBoundaryVertices()
 Arguments
@@ -53,41 +41,25 @@ none
 Return value
 list (table) – Indexed table with vertices of the boundary
 
-list = GetVehicleWheels(vehicle)
-Arguments
-vehicle (number) – Vehicle handle
-Return value
-list (table) – Indexed table with handles to all wheels of the vehicle
-
-list = GetScriptEntities(script)
-Arguments
-script (number) – Script handle
-Return value
-list (table) – Indexed table with handles to all entities that are children of (or referenced by?) the script
-
-handle = GetWheelVehicle(wheel)
-Arguments
-wheel (number) – Wheel handle
-Return value
-handle (number) – Handle to the vehicle the wheel is part of
-
-path = GetScriptPath(script)
-Arguments
-script (number) – Script handle
-Return value
-path (string) – Path to the script
-
 handle = GetPlayerFlashlight()
 Arguments
 none
 Return value
 handle (number) – Handle to the player flashlight, a normal Light entity
 
-size = GetShadowVolumeSize()
+pos, axis = GetJointLocalPosAndAxis(joint, index)
+Arguments
+joint (number) – Joint handle
+index (number) – Index of the body (1 or 2)
+Return value
+pos (table) – Vector with the position of the joint relative to the index-th body
+axis (table) – Vector with the axis of the joint relative to the index-th body
+
+list = GetWaters()
 Arguments
 none
 Return value
-size (number) – Vector with the size of the shadow volume
+list (table) – Indexed table with handles to all water entities
 
 pos, rot = GetWaterTransform(water)
 Arguments
@@ -100,6 +72,42 @@ Arguments
 water (number) – Water handle
 Return value
 list (table) – Indexed table with vertices of the water
+
+list = GetScripts()
+Arguments
+none
+Return value
+list (table) – Indexed table with handles to all script entities
+
+path = GetScriptPath(script)
+Arguments
+script (number) – Script handle
+Return value
+path (string) – Path to the script
+
+list = GetScriptEntities(script)
+Arguments
+script (number) – Script handle
+Return value
+list (table) – Indexed table with handles to all entities referenced by the script
+
+list = GetWheels()
+Arguments
+none
+Return value
+list (table) – Indexed table with handles to all wheel entities
+
+handle = GetWheelVehicle(wheel)
+Arguments
+wheel (number) – Wheel handle
+Return value
+handle (number) – Handle to the vehicle the wheel is part of
+
+list = GetVehicleWheels(vehicle)
+Arguments
+vehicle (number) – Vehicle handle
+Return value
+list (table) – Indexed table with handles to all wheels of the vehicle
 
 type = GetTriggerType(trigger)
 Arguments
@@ -118,14 +126,6 @@ Arguments
 trigger (number) – Trigger handle
 Return value
 list (table) – Indexed table with the vertices of the trigger
-
-pos, axis = GetJointLocalPosAndAxis(joint, index)
-Arguments
-joint (number) – Joint handle
-index (number) – Index of the body (1 or 2)
-Return value
-pos (table) – Vector with the position of the joint relative to the index-th body
-axis (table) – Vector with the axis of the joint relative to the index-th body
 
 texture, weight, blendTexture, blendTextureWeight = GetShapeTexture(shape)
 Arguments

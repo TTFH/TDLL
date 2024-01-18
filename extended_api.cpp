@@ -464,38 +464,43 @@ void RegisterLuaCFunctions(lua_State* L) {
 	lua_pushcfunction(L, AllowInternalFunctions);
 	lua_setglobal(L, "AllowInternalFunctions");
 
-	lua_pushcfunction(L, GetWaters);
-	lua_setglobal(L, "GetWaters");
-	lua_pushcfunction(L, GetScripts);
-	lua_setglobal(L, "GetScripts");
-	lua_pushcfunction(L, GetWheels);
-	lua_setglobal(L, "GetWheels");
-	lua_pushcfunction(L, GetBoundaryVertices);
-	lua_setglobal(L, "GetBoundaryVertices");
-	lua_pushcfunction(L, GetVehicleWheels);
-	lua_setglobal(L, "GetVehicleWheels");
-	lua_pushcfunction(L, GetScriptEntities);
-	lua_setglobal(L, "GetScriptEntities");
-	lua_pushcfunction(L, GetWheelVehicle);
-	lua_setglobal(L, "GetWheelVehicle");
-	lua_pushcfunction(L, GetScriptPath);
-	lua_setglobal(L, "GetScriptPath");
-	lua_pushcfunction(L, GetPlayerFlashlight);
-	lua_setglobal(L, "GetPlayerFlashlight");
 	lua_pushcfunction(L, GetShadowVolumeSize);
 	lua_setglobal(L, "GetShadowVolumeSize");
+	lua_pushcfunction(L, GetBoundaryVertices);
+	lua_setglobal(L, "GetBoundaryVertices");
+	lua_pushcfunction(L, GetPlayerFlashlight);
+	lua_setglobal(L, "GetPlayerFlashlight");
+	lua_pushcfunction(L, GetJointLocalPosAndAxis);
+	lua_setglobal(L, "GetJointLocalPosAndAxis");
+
+	lua_pushcfunction(L, GetWaters);
+	lua_setglobal(L, "GetWaters");
 	lua_pushcfunction(L, GetWaterTransform);
 	lua_setglobal(L, "GetWaterTransform");
 	lua_pushcfunction(L, GetWaterVertices);
 	lua_setglobal(L, "GetWaterVertices");
+
+	lua_pushcfunction(L, GetScripts);
+	lua_setglobal(L, "GetScripts");
+	lua_pushcfunction(L, GetScriptPath);
+	lua_setglobal(L, "GetScriptPath");
+	lua_pushcfunction(L, GetScriptEntities);
+	lua_setglobal(L, "GetScriptEntities");
+
+	lua_pushcfunction(L, GetWheels);
+	lua_setglobal(L, "GetWheels");
+	lua_pushcfunction(L, GetWheelVehicle);
+	lua_setglobal(L, "GetWheelVehicle");
+	lua_pushcfunction(L, GetVehicleWheels);
+	lua_setglobal(L, "GetVehicleWheels");
+
 	lua_pushcfunction(L, GetTriggerType);
 	lua_setglobal(L, "GetTriggerType");
 	lua_pushcfunction(L, GetTriggerSize);
 	lua_setglobal(L, "GetTriggerSize");
 	lua_pushcfunction(L, GetTriggerVertices);
 	lua_setglobal(L, "GetTriggerVertices");
-	lua_pushcfunction(L, GetJointLocalPosAndAxis);
-	lua_setglobal(L, "GetJointLocalPosAndAxis");
+
 	lua_pushcfunction(L, GetShapeTexture);
 	lua_setglobal(L, "GetShapeTexture");
 	lua_pushcfunction(L, GetTextureOffset);
@@ -504,6 +509,7 @@ void RegisterLuaCFunctions(lua_State* L) {
 	lua_setglobal(L, "SetShapeTexture");
 	lua_pushcfunction(L, SetTextureOffset);
 	lua_setglobal(L, "SetTextureOffset");
+
 	lua_pushcfunction(L, ZlibSaveCompressed);
 	lua_setglobal(L, "ZlibSaveCompressed");
 	lua_pushcfunction(L, ZlibLoadCompressed);
