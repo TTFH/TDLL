@@ -8,17 +8,12 @@
 
 ### How to install:
 Download `pros.sdk.x64.dll` and copy it to the Teardown directory, overwrite the existing file.  
-Create a script that contains the text "DLL" on it's path, for example: `DLL Global Mod\main.lua` or `Content Mod\DLL_main.lua` to access the new API functions.  
-Check `main.lua` for examples on how to use the new API functions.  
-Press 'F1' on the pause menu to access the DLL options.
+Create a script that contains the text "DLL" on it's path, for example: `DLL Global Mod\main.lua` or `Content Mod\DLL_main.lua` to access the new API functions. Check the `examples` folder for, well, examples.
+Press 'F1' on the pause menu to access the DLL menu (in OpenGL only!), it contains options to change the render distance and remove the boundary.
 
 ### How to uninstall:
 Verify the game on Steam.
 Or restore the original `pros.sdk.x64.dll` file if you made a backup.
-
-### TODO:
-- Implement ImGui Lua API
-- Get local script entities to implement FindWater[s](tag, global), FindScript[s](tag, global), FindWheel[s](tag, global)
 
 ## New API functions:
 ```lua
@@ -34,19 +29,19 @@ none
 Return value
 none -- Allows all already loaded mods to access internal funtions
 
-list = FindWaters()
+list = GetWaters()
 Arguments
 none
 Return value
 list (table) – Indexed table with handles to all water entities
 
-list = FindScripts()
+list = GetScripts()
 Arguments
 none
 Return value
 list (table) – Indexed table with handles to all script entities
 
-list = FindWheels()
+list = GetWheels()
 Arguments
 none
 Return value
@@ -64,15 +59,21 @@ vehicle (number) – Vehicle handle
 Return value
 list (table) – Indexed table with handles to all wheels of the vehicle
 
+list = GetScriptEntities(script)
+Arguments
+script (number) – Script handle
+Return value
+list (table) – Indexed table with handles to all entities that are children of (or referenced by?) the script
+
 handle = GetWheelVehicle(wheel)
 Arguments
 wheel (number) – Wheel handle
 Return value
 handle (number) – Handle to the vehicle the wheel is part of
 
-path = GetScriptPath(handle)
+path = GetScriptPath(script)
 Arguments
-handle (number) – Script handle
+script (number) – Script handle
 Return value
 path (string) – Path to the script
 
@@ -169,7 +170,7 @@ str = ZlibLoadCompressed(file)
 Arguments
 file (string) – File path
 Return value
-str (string) – Decompressed string
+str (string) – Decompressed string or nil if file does not exist
 ```
 
 ## Internal functions:

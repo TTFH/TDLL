@@ -16,7 +16,7 @@ function init()
 	SetLightEnabled(flashlight, true)
 	SetLightColor(flashlight, 1, 0, 0)
 
-	local scripts = FindScripts()
+	local scripts = GetScripts()
 	for i = 1, #scripts do
 		local script = scripts[i]
 		local script_path = GetScriptPath(script)
@@ -40,7 +40,7 @@ function tick(dt)
 
 	local player_pos = GetPlayerTransform().pos
 
-	local waters = FindWaters()
+	local waters = GetWaters()
 	for i = 1, #waters do
 		local water = waters[i]
 		local water_tr = GetWaterTransform(water)

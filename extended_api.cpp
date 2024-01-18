@@ -54,7 +54,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.3.114");
+	td_lua_pushstring(L, "v1.5.3.118");
 	return 1;
 }
 
@@ -63,7 +63,7 @@ int AllowInternalFunctions(lua_State* L) {
 	return 0;
 }
 
-int FindWaters(lua_State* L) {
+int GetWaters(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->waters.getSize();
 	td_lua_createtable(L, n, 0);
@@ -75,7 +75,7 @@ int FindWaters(lua_State* L) {
 	return 1;
 }
 
-int FindScripts(lua_State* L) {
+int GetScripts(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->scripts.getSize();
 	td_lua_createtable(L, n, 0);
@@ -87,7 +87,7 @@ int FindScripts(lua_State* L) {
 	return 1;
 }
 
-int FindWheels(lua_State* L) {
+int GetWheels(lua_State* L) {
 	Game* game = (Game*)Teardown::GetGame();
 	unsigned int n = game->scene->wheels.getSize();
 	td_lua_createtable(L, n, 0);
@@ -124,6 +124,26 @@ int GetVehicleWheels(lua_State* L) {
 	return 1;
 }
 
+int GetScriptEntities(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Game* game = (Game*)Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->scripts.getSize(); i++) {
+		Script* script = game->scene->scripts[i];
+		if (script->handle == handle) {
+			unsigned int n = script->core.entities.getSize();
+			td_lua_createtable(L, n, 0);
+			for (unsigned int j = 0; j < n; j++) {
+				int entity_handle = script->core.entities[j];
+				lua_pushinteger(L, entity_handle);
+				lua_rawseti(L, -2, j + 1);
+			}
+			return 1;
+		}
+	}
+	td_lua_createtable(L, 0, 0);
+	return 1;
+}
+
 int GetWheelVehicle(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = (Game*)Teardown::GetGame();
@@ -134,7 +154,8 @@ int GetWheelVehicle(lua_State* L) {
 			return 1;
 		}
 	}
-	return 0;
+	lua_pushinteger(L, 0);
+	return 1;
 }
 
 int GetScriptPath(lua_State* L) {
@@ -147,7 +168,8 @@ int GetScriptPath(lua_State* L) {
 			return 1;
 		}
 	}
-	return 0;
+	td_lua_pushstring(L, "");
+	return 1;
 }
 
 int GetPlayerFlashlight(lua_State* L) {
@@ -172,7 +194,8 @@ int GetWaterTransform(lua_State* L) {
 			return 1;
 		}
 	}
-	return 0;
+	LuaPushTransform(L, Transform());
+	return 1;
 }
 
 int GetWaterVertices(lua_State* L) {
@@ -191,7 +214,8 @@ int GetWaterVertices(lua_State* L) {
 			return 1;
 		}
 	}
-	return 0;
+	td_lua_createtable(L, 0, 0);
+	return 1;
 }
 
 int GetTriggerType(lua_State* L) {
@@ -214,7 +238,8 @@ int GetTriggerType(lua_State* L) {
 			return 1;
 		}
 	}
-	return 0;
+	td_lua_pushstring(L, "");
+	return 1;
 }
 
 int GetTriggerSize(lua_State* L) {
@@ -237,7 +262,8 @@ int GetTriggerSize(lua_State* L) {
 			return 1;
 		}
 	}
-	return 0;
+	lua_pushnumber(L, 0);
+	return 1;
 }
 
 int GetTriggerVertices(lua_State* L) {
@@ -256,7 +282,8 @@ int GetTriggerVertices(lua_State* L) {
 			return 1;
 		}
 	}
-	return 0;
+	td_lua_createtable(L, 0, 0);
+	return 1;
 }
 
 int GetJointLocalPosAndAxis(lua_State* L) {
@@ -276,7 +303,9 @@ int GetJointLocalPosAndAxis(lua_State* L) {
 			return 2;
 		}
 	}
-	return 0;
+	LuaPushVector(L, Vector());
+	LuaPushVector(L, Vector(0, 1, 0));
+	return 2;
 }
 
 int GetShapeTexture(lua_State* L) {
@@ -292,7 +321,11 @@ int GetShapeTexture(lua_State* L) {
 			return 4;
 		}
 	}
-	return 0;
+	lua_pushinteger(L, 0);
+	lua_pushnumber(L, 1);
+	lua_pushinteger(L, 0);
+	lua_pushnumber(L, 1);
+	return 4;
 }
 
 int GetTextureOffset(lua_State* L) {
@@ -305,7 +338,8 @@ int GetTextureOffset(lua_State* L) {
 			return 1;
 		}
 	}
-	return 0;
+	LuaPushVector(L, Vector());
+	return 1;
 }
 
 int SetShapeTexture(lua_State* L) {
@@ -430,16 +464,18 @@ void RegisterLuaCFunctions(lua_State* L) {
 	lua_pushcfunction(L, AllowInternalFunctions);
 	lua_setglobal(L, "AllowInternalFunctions");
 
-	lua_pushcfunction(L, FindWaters);
-	lua_setglobal(L, "FindWaters");
-	lua_pushcfunction(L, FindScripts);
-	lua_setglobal(L, "FindScripts");
-	lua_pushcfunction(L, FindWheels);
-	lua_setglobal(L, "FindWheels");
+	lua_pushcfunction(L, GetWaters);
+	lua_setglobal(L, "GetWaters");
+	lua_pushcfunction(L, GetScripts);
+	lua_setglobal(L, "GetScripts");
+	lua_pushcfunction(L, GetWheels);
+	lua_setglobal(L, "GetWheels");
 	lua_pushcfunction(L, GetBoundaryVertices);
 	lua_setglobal(L, "GetBoundaryVertices");
 	lua_pushcfunction(L, GetVehicleWheels);
 	lua_setglobal(L, "GetVehicleWheels");
+	lua_pushcfunction(L, GetScriptEntities);
+	lua_setglobal(L, "GetScriptEntities");
 	lua_pushcfunction(L, GetWheelVehicle);
 	lua_setglobal(L, "GetWheelVehicle");
 	lua_pushcfunction(L, GetScriptPath);

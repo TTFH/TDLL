@@ -63,6 +63,7 @@ struct Vector {
 
 struct Quat {
 	float x, y, z, w;
+	Quat() : x(0), y(0), z(0), w(1) {}
 };
 
 struct Transform {
@@ -159,14 +160,17 @@ struct ScriptCore {
 	uint8_t padding1[8];
 	float time;
 	float dt;
-	td_string path;				// 0x10
-	td_string location;			// 0x30
+	td_string path;					// 0x10
+	td_string location;				// 0x30
 	uint8_t padding2[0x18 + 0x40];
-	LuaStateInfo* state_info;	// 0xA8
+	LuaStateInfo* state_info;		// 0xA8
+	uint8_t padding3[0x1E8];
+	td_vector<uint32_t> entities;	// 0x298
 };
 
 static_assert(offsetof(ScriptCore, path) == 0x10, "Wrong offset ScriptCore->path");
 static_assert(offsetof(ScriptCore, state_info) == 0xA8, "Wrong offset ScriptCore->state_info");
+static_assert(offsetof(ScriptCore, entities) == 0x298, "Wrong offset ScriptCore->entities");
 
 class Script : public Entity {
 public:
