@@ -136,6 +136,7 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	MH_EnableHook(MH_ALL_HOOKS);
 
 	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable);
+	td_lua_pushstring = (t_lua_pushstring)Teardown::GetReferenceTo(MEM_OFFSET::LuaPushString);
 	return TRUE;
 }
 

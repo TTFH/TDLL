@@ -43,7 +43,7 @@ function tick(dt)
 	local waters = FindWaters()
 	for i = 1, #waters do
 		local water = waters[i]
-		local water_tr = Transform(GetWaterUnwrappedTransform(water))
+		local water_tr = GetWaterTransform(water)
 		local water_vertices = GetWaterVertices(water)
 		for j = 1, #water_vertices do
 			local v1 = water_vertices[j]

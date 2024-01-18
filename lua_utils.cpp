@@ -40,11 +40,11 @@ void LuaPushQuat(lua_State* L, Quat q) {
 void LuaPushTransform(lua_State* L, Transform transform) {
 	td_lua_createtable(L, 0, 2);
 
-	lua_pushstring(L, "pos");
+	td_lua_pushstring(L, "pos");
 	LuaPushVector(L, transform.pos);
 	lua_settable(L, -3);
 
-	lua_pushstring(L, "rot");
+	td_lua_pushstring(L, "rot");
 	LuaPushQuat(L, transform.rot);
 	lua_settable(L, -3);
 }

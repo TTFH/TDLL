@@ -8,6 +8,7 @@
 #include <windows.h>
 
 t_lua_createtable td_lua_createtable = nullptr;
+t_lua_pushstring td_lua_pushstring = nullptr;
 
 uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 	uintptr_t addr = ptr;
@@ -24,6 +25,7 @@ namespace MEM_OFFSET {				// Addr		// Type
 	uintptr_t GetSteer				= 0x1FC3A4; // lua_pushinteger(vehicle->steer)
 	uintptr_t RegisterGameFunctions	= 0x215A00; // void fun(ScriptCore*)
 	uintptr_t LuaCreateTable		= 0x3897A0; // void fun(lua_State*, int, int)
+	uintptr_t LuaPushString			= 0x38A9E0; // void fun(lua_State*, const char*)
 	uintptr_t RenderDist			= 0x5063C8; // float
 	uintptr_t Game					= 0x713090; // Game*
 	uintptr_t ImguiCtx				= 0x719A60; // ImGuiContext*
@@ -52,7 +54,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	lua_pushstring(L, "v1.5.3.114");
+	td_lua_pushstring(L, "v1.5.3.114");
 	return 1;
 }
 
@@ -141,7 +143,7 @@ int GetScriptPath(lua_State* L) {
 	for (unsigned int i = 0; i < game->scene->scripts.getSize(); i++) {
 		Script* script = game->scene->scripts[i];
 		if (script->handle == handle) {
-			lua_pushstring(L, script->path.c_str());
+			td_lua_pushstring(L, script->path.c_str());
 			return 1;
 		}
 	}
@@ -160,15 +162,14 @@ int GetShadowVolumeSize(lua_State* L) {
 	return 1;
 }
 
-int GetWaterUnwrappedTransform(lua_State* L) {
+int GetWaterTransform(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = (Game*)Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->waters.getSize(); i++) {
 		Water* water = game->scene->waters[i];
 		if (water->handle == handle) {
-			LuaPushVector(L, water->transform.pos);
-			LuaPushQuat(L, water->transform.rot);
-			return 2;
+			LuaPushTransform(L, water->transform);
+			return 1;
 		}
 	}
 	return 0;
@@ -201,13 +202,13 @@ int GetTriggerType(lua_State* L) {
 		if (trigger->handle == handle) {
 			switch (trigger->type) {
 			case TrSphere:
-				lua_pushstring(L, "sphere");
+				td_lua_pushstring(L, "sphere");
 				break;
 			case TrBox:
-				lua_pushstring(L, "box");
+				td_lua_pushstring(L, "box");
 				break;
 			case TrPolygon:
-				lua_pushstring(L, "polygon");
+				td_lua_pushstring(L, "polygon");
 				break;
 			}
 			return 1;
@@ -419,7 +420,7 @@ int ZlibLoadCompressed(lua_State* L) {
 	delete[] compressed_data;
 	dest.resize(dest_length + 1);
 	dest[dest_length] = '\0';
-	lua_pushstring(L, (const char*)dest.data());
+	td_lua_pushstring(L, (const char*)dest.data());
 	return 1;
 }
 
@@ -447,8 +448,8 @@ void RegisterLuaCFunctions(lua_State* L) {
 	lua_setglobal(L, "GetPlayerFlashlight");
 	lua_pushcfunction(L, GetShadowVolumeSize);
 	lua_setglobal(L, "GetShadowVolumeSize");
-	lua_pushcfunction(L, GetWaterUnwrappedTransform);
-	lua_setglobal(L, "GetWaterUnwrappedTransform");
+	lua_pushcfunction(L, GetWaterTransform);
+	lua_setglobal(L, "GetWaterTransform");
 	lua_pushcfunction(L, GetWaterVertices);
 	lua_setglobal(L, "GetWaterVertices");
 	lua_pushcfunction(L, GetTriggerType);

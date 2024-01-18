@@ -17,10 +17,8 @@ Verify the game on Steam.
 Or restore the original `pros.sdk.x64.dll` file if you made a backup.
 
 ### TODO:
-- Implement ToggleBoundary()
-- Implement SetRenderDistance(dist)
 - Implement ImGui Lua API
-- Get entity tags and local script entities to implement FindWater[s](tag, global), FindScript[s](tag, global), FindWheel[s](tag, global)
+- Get local script entities to implement FindWater[s](tag, global), FindScript[s](tag, global), FindWheel[s](tag, global)
 
 ## New API functions:
 ```lua
@@ -90,12 +88,11 @@ none
 Return value
 size (number) – Vector with the size of the shadow volume
 
-pos, rot = GetWaterUnwrappedTransform(water)
+pos, rot = GetWaterTransform(water)
 Arguments
 water (number) – Water handle
 Return value
-pos (table) – Vector with the position of the water
-rot (table) – Quaternion with the rotation of the water
+transform (table) – Transform of the water
 
 list = GetWaterVertices(water)
 Arguments
