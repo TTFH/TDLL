@@ -85,9 +85,9 @@ function DrawAABB(pmin, pmax)
 	DrawLine(points[6], points[2], 1, 1, 1)
 	DrawLine(points[6], points[5], 1, 1, 1)
 	DrawLine(points[6], points[8], 1, 1, 1)
-	DrawLine(points[7], points[3], 0, 0, 1)
-	DrawLine(points[7], points[5], 1, 0, 0)
-	DrawLine(points[7], points[8], 0, 1, 0)
+	DrawLine(points[7], points[3], 1, 1, 1)
+	DrawLine(points[7], points[5], 1, 1, 1)
+	DrawLine(points[7], points[8], 1, 1, 1)
 end
 
 function DrawOBB(shape)
@@ -111,9 +111,9 @@ function DrawOBB(shape)
 	DrawLine(points[4], points[2], 1, 1, 1)
 	DrawLine(points[4], points[3], 1, 1, 1)
 	DrawLine(points[4], points[8], 1, 1, 1)
-	DrawLine(points[6], points[2], 0, 0, 1)
-	DrawLine(points[6], points[5], 1)
-	DrawLine(points[6], points[8], 0, 1)
+	DrawLine(points[6], points[2], 1, 1, 1)
+	DrawLine(points[6], points[5], 1, 1, 1)
+	DrawLine(points[6], points[8], 1, 1, 1)
 	DrawLine(points[7], points[3], 1, 1, 1)
 	DrawLine(points[7], points[5], 1, 1, 1)
 	DrawLine(points[7], points[8], 1, 1, 1)
@@ -121,18 +121,15 @@ end
 
 function DrawOBB2(transf, size)
 	local points = {
-		TransformToParentPoint(transf, Vec(size[1], size[2], size[3])),
-		TransformToParentPoint(transf, Vec(size[1], size[2], 0)),
-		TransformToParentPoint(transf, Vec(size[1], 0, size[3])),
-		TransformToParentPoint(transf, Vec(size[1], 0, 0)),
-		TransformToParentPoint(transf, Vec(0, size[2], size[3])),
-		TransformToParentPoint(transf, Vec(0, size[2], 0)),
-		TransformToParentPoint(transf, Vec(0, 0, size[3])),
-		TransformToParentPoint(transf, Vec(0, 0, 0)),
+		TransformToParentPoint(transf, Vec(size[1] / 2, size[2] / 2, size[3] / 2)),
+		TransformToParentPoint(transf, Vec(size[1] / 2, size[2] / 2, -size[3] / 2)),
+		TransformToParentPoint(transf, Vec(size[1] / 2, -size[2] / 2, size[3] / 2)),
+		TransformToParentPoint(transf, Vec(size[1] / 2, -size[2] / 2, -size[3] / 2)),
+		TransformToParentPoint(transf, Vec(-size[1] / 2, size[2] / 2, size[3] / 2)),
+		TransformToParentPoint(transf, Vec(-size[1] / 2, size[2] / 2, -size[3] / 2)),
+		TransformToParentPoint(transf, Vec(-size[1] / 2, -size[2] / 2, size[3] / 2)),
+		TransformToParentPoint(transf, Vec(-size[1] / 2, -size[2] / 2, -size[3] / 2)),
 	}
-	for i = 1, #points do
-		points[i] = VecAdd(points[i], VecScale(size, -0.5))
-	end
 	DrawLine(points[1], points[2], 1, 1, 1)
 	DrawLine(points[1], points[3], 1, 1, 1)
 	DrawLine(points[1], points[5], 1, 1, 1)
