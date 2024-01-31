@@ -14,11 +14,24 @@ function GetBoundaryVertices() return nil end
 ---@return number handle Handle to the player flashlight, a normal Light entity
 function GetPlayerFlashlight() return 0 end
 
+
 ---@param joint number Joint handle
 ---@param index number Index of the body (1 or 2)
 ---@return any pos Vector with the position of the joint relative to the index-th body
 ---@return any axis Vector with the axis of the joint relative to the index-th body
 function GetJointLocalPosAndAxis(joint, index) return nil, nil end
+
+---@param joint number Joint handle
+---@return boolean collide If the jointed bodies collide
+---@return boolean sound If the joint makes sound
+---@return boolean autodisable Whatever this does
+function GetJointParams(joint) return false, false, false end
+
+---@param rope number Joint handle
+---@return number r Red component of the color
+---@return number g Green component of the color
+---@return number b Blue component of the color
+function GetRopeColor(rope) return 0, 0, 0 end
 
 
 ---@return any list Indexed table with handles to all water entities
@@ -69,6 +82,14 @@ function GetTriggerSize(trigger) return nil end
 ---@return any list Indexed table with the vertices of the trigger
 function GetTriggerVertices(trigger) return nil end
 
+
+---@param shape number Shape handle
+---@param palette number Palette index
+function SetShapePalette(shape, palette) end
+
+---@param shape number Shape handle
+---@return number palette Palette index
+function GetShapePaletteIndex(shape) return 0 end
 
 ---@param shape number Shape handle
 ---@return number texture Texture index

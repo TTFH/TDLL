@@ -52,6 +52,10 @@ struct Vertex {
 	float x, y;
 };
 
+struct Color {
+	float r, g, b, a;
+};
+
 struct Vector {
 	float x, y, z;
 	Vector() : x(0), y(0), z(0) {}
@@ -88,17 +92,34 @@ static_assert(offsetof(Entity, handle) == 0x0C, "Wrong offset Entity->handle");
 
 class Body : public Entity { };
 
+struct Vox {
+	uint32_t size[3];
+	uint32_t volume;
+	uint8_t* voxels;
+	void* physics_buffer;
+	float scale;
+	uint8_t unknown1[48];
+	uint32_t palette;		// 0x54
+	uint8_t unknown2[4];
+	int32_t voxel_count;
+};
+
+static_assert(offsetof(Vox, palette) == 0x54, "Wrong offset Vox->palette");
+
 class Shape : public Entity {
 public:
 	uint8_t padding1[0x8C];
-	uint16_t texture_tile;			// 0xBC
+	uint16_t texture_tile;		// 0xBC
 	uint16_t blendtexture_tile = 0;
 	float texture_weight;
 	float blendtexture_weight = 1;
 	Vector texture_offset;
+	uint8_t padding2[0x4];
+	Vox* vox;					// 0xD8
 };
 
 static_assert(offsetof(Shape, texture_tile) == 0xBC, "Wrong offset Shape->texture_tile");
+static_assert(offsetof(Shape, vox) == 0xD8, "Wrong offset Shape->vox");
 
 class Light : public Entity { };
 class Location : public Entity { };
@@ -112,16 +133,41 @@ public:
 
 static_assert(offsetof(Water, vertices) == 0x50, "Wrong offset Water->vertices");
 
+enum JointType : int {
+	Ball = 1,
+	Hinge,
+	Prismatic,
+	_Rope,
+};
+
+struct Rope {
+	uint8_t padding[0xC];
+	Color color;		// 0xC
+};
+
 class Joint : public Entity {
 public:
-	uint8_t padding1[0x40];
+	uint8_t padding1[0x20];
+	JointType type;		// 0x50
+	uint8_t padding2[4];
+	bool collide;		// 0x58
+	uint8_t padding3[0x17];
 	Vector local_pos1;	// 0x70
 	Vector local_pos2;
 	Vector local_rot1;
 	Vector local_rot2;
+	uint8_t padding4[0x28];
+	Rope* rope;			// 0xC8
+	bool sound;			// 0xD0
+	bool autodisable;	// 0xD1
 };
 
+static_assert(offsetof(Joint, type) == 0x50, "Wrong offset Joint->type");
+static_assert(offsetof(Joint, collide) == 0x58, "Wrong offset Joint->collide");
 static_assert(offsetof(Joint, local_pos1) == 0x70, "Wrong offset Joint->local_pos1");
+static_assert(offsetof(Joint, rope) == 0xC8, "Wrong offset Joint->rope");
+static_assert(offsetof(Joint, sound) == 0xD0, "Wrong offset Joint->sound");
+static_assert(offsetof(Joint, autodisable) == 0xD1, "Wrong offset Joint->autodisable");
 
 class Vehicle : public Entity { };
 

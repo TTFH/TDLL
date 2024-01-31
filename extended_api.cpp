@@ -308,6 +308,56 @@ int GetJointLocalPosAndAxis(lua_State* L) {
 	return 2;
 }
 
+int GetJointParams(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Game* game = (Game*)Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->joints.getSize(); i++) {
+		Joint* joint = game->scene->joints[i];
+		if (joint->handle == handle) {
+			lua_pushboolean(L, joint->collide);
+			lua_pushboolean(L, joint->sound);
+			lua_pushboolean(L, joint->autodisable);
+			return 3;
+		}
+	}
+	lua_pushboolean(L, false);
+	lua_pushboolean(L, false);
+	lua_pushboolean(L, false);
+	return 3;
+}
+
+int GetRopeColor(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Game* game = (Game*)Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->joints.getSize(); i++) {
+		Joint* joint = game->scene->joints[i];
+		if (joint->handle == handle && joint->type == _Rope) {
+			lua_pushnumber(L, joint->rope->color.r);
+			lua_pushnumber(L, joint->rope->color.g);
+			lua_pushnumber(L, joint->rope->color.b);
+			return 3;
+		}
+	}
+	lua_pushnumber(L, 0);
+	lua_pushnumber(L, 0);
+	lua_pushnumber(L, 0);
+	return 3;
+}
+
+int GetShapePaletteIndex(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Game* game = (Game*)Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
+		Shape* shape = game->scene->shapes[i];
+		if (shape->handle == handle) {
+			lua_pushinteger(L, shape->vox->palette);
+			return 1;
+		}
+	}
+	lua_pushinteger(L, 0);
+	return 1;
+}
+
 int GetShapeTexture(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = (Game*)Teardown::GetGame();
@@ -340,6 +390,21 @@ int GetTextureOffset(lua_State* L) {
 	}
 	LuaPushVector(L, Vector());
 	return 1;
+}
+
+int SetShapePalette(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	unsigned int palette = lua_tointeger(L, 2);
+
+	Game* game = (Game*)Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
+		Shape* shape = game->scene->shapes[i];
+		if (shape->handle == handle) {
+			shape->vox->palette = palette;
+			return 0;
+		}
+	}
+	return 0;
 }
 
 int SetShapeTexture(lua_State* L) {
@@ -470,8 +535,13 @@ void RegisterLuaCFunctions(lua_State* L) {
 	lua_setglobal(L, "GetBoundaryVertices");
 	lua_pushcfunction(L, GetPlayerFlashlight);
 	lua_setglobal(L, "GetPlayerFlashlight");
+
 	lua_pushcfunction(L, GetJointLocalPosAndAxis);
 	lua_setglobal(L, "GetJointLocalPosAndAxis");
+	lua_pushcfunction(L, GetJointParams);
+	lua_setglobal(L, "GetJointParams");
+	lua_pushcfunction(L, GetRopeColor);
+	lua_setglobal(L, "GetRopeColor");
 
 	lua_pushcfunction(L, GetWaters);
 	lua_setglobal(L, "GetWaters");
@@ -501,10 +571,14 @@ void RegisterLuaCFunctions(lua_State* L) {
 	lua_pushcfunction(L, GetTriggerVertices);
 	lua_setglobal(L, "GetTriggerVertices");
 
+	lua_pushcfunction(L, GetShapePaletteIndex);
+	lua_setglobal(L, "GetShapePaletteIndex");
 	lua_pushcfunction(L, GetShapeTexture);
 	lua_setglobal(L, "GetShapeTexture");
 	lua_pushcfunction(L, GetTextureOffset);
 	lua_setglobal(L, "GetTextureOffset");
+	lua_pushcfunction(L, SetShapePalette);
+	lua_setglobal(L, "SetShapePalette");
 	lua_pushcfunction(L, SetShapeTexture);
 	lua_setglobal(L, "SetShapeTexture");
 	lua_pushcfunction(L, SetTextureOffset);

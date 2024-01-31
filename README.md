@@ -55,6 +55,22 @@ Return value
 pos (table) – Vector with the position of the joint relative to the index-th body
 axis (table) – Vector with the axis of the joint relative to the index-th body
 
+collide, sound, autodisable = GetJointParams(joint)
+Arguments
+joint (number) – Joint handle
+Return value
+collide (bool) – If the jointed bodies collide
+sound (bool) – If the joint makes sound
+autodisable (bool) – Whatever this does
+
+r, g, b = GetRopeColor(rope)
+Arguments
+rope (number) – Joint handle
+Return value
+r (number) – Red component of the color
+g (number) – Green component of the color
+b (number) – Blue component of the color
+
 list = GetWaters()
 Arguments
 none
@@ -126,6 +142,19 @@ Arguments
 trigger (number) – Trigger handle
 Return value
 list (table) – Indexed table with the vertices of the trigger
+
+palette = GetShapePaletteIndex(shape)
+Arguments
+shape (number) – Shape handle
+Return value
+palette (number) – Palette index
+
+SetShapePalette(shape, palette)
+Arguments
+shape (number) – Shape handle
+palette (number) – Palette index
+Return value
+none
 
 texture, weight, blendTexture, blendTextureWeight = GetShapeTexture(shape)
 Arguments
