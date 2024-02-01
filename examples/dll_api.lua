@@ -4,6 +4,13 @@ function GetDllVersion() return "" end
 --- Enables all functions that are "only for internal usage"
 function AllowInternalFunctions() end
 
+---@param index any Index of the timer, between 0 and 15, default is 0 if not provided
+function Tick(index) end
+
+---@param index any Index of the timer, between 0 and 15, default is 0 if not provided
+---@return number elapsed Time elapsed since Tick was called in nanoseconds
+function Tock(index) return 0 end
+
 
 ---@return any size Vector with the size of the shadow volume
 function GetShadowVolumeSize() return nil end

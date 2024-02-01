@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <chrono>
 #include <vector>
 #include <zlib.h>
 
@@ -6,6 +7,9 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+
+using hrc = std::chrono::high_resolution_clock;
+hrc::time_point timers[16];
 
 t_lua_createtable td_lua_createtable = nullptr;
 t_lua_pushstring td_lua_pushstring = nullptr;
@@ -54,13 +58,27 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.3.118");
+	td_lua_pushstring(L, "v1.5.3.201");
 	return 1;
 }
 
 int AllowInternalFunctions(lua_State* L) {
 	SkipIsInternalFunctionCheck();
 	return 0;
+}
+
+int Tick(lua_State* L) {
+	unsigned int index = lua_tointeger(L, 1);
+	timers[index] = hrc::now();
+	return 0;
+}
+
+int Tock(lua_State* L) {
+	unsigned int index = lua_tointeger(L, 1);
+	hrc::time_point now = hrc::now();
+	double elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(now - timers[index]).count();
+	lua_pushnumber(L, elapsed);
+	return 1;
 }
 
 int GetWaters(lua_State* L) {
@@ -524,68 +542,43 @@ int ZlibLoadCompressed(lua_State* L) {
 }
 
 void RegisterLuaCFunctions(lua_State* L) {
-	lua_pushcfunction(L, GetDllVersion);
-	lua_setglobal(L, "GetDllVersion");
-	lua_pushcfunction(L, AllowInternalFunctions);
-	lua_setglobal(L, "AllowInternalFunctions");
+	LuaPushFuntion(L, "GetDllVersion", GetDllVersion);
+	LuaPushFuntion(L, "AllowInternalFunctions", AllowInternalFunctions);
 
-	lua_pushcfunction(L, GetShadowVolumeSize);
-	lua_setglobal(L, "GetShadowVolumeSize");
-	lua_pushcfunction(L, GetBoundaryVertices);
-	lua_setglobal(L, "GetBoundaryVertices");
-	lua_pushcfunction(L, GetPlayerFlashlight);
-	lua_setglobal(L, "GetPlayerFlashlight");
+	LuaPushFuntion(L, "Tick", Tick);
+	LuaPushFuntion(L, "Tock", Tock);
 
-	lua_pushcfunction(L, GetJointLocalPosAndAxis);
-	lua_setglobal(L, "GetJointLocalPosAndAxis");
-	lua_pushcfunction(L, GetJointParams);
-	lua_setglobal(L, "GetJointParams");
-	lua_pushcfunction(L, GetRopeColor);
-	lua_setglobal(L, "GetRopeColor");
+	LuaPushFuntion(L, "GetShadowVolumeSize", GetShadowVolumeSize);
+	LuaPushFuntion(L, "GetBoundaryVertices", GetBoundaryVertices);
+	LuaPushFuntion(L, "GetPlayerFlashlight", GetPlayerFlashlight);
 
-	lua_pushcfunction(L, GetWaters);
-	lua_setglobal(L, "GetWaters");
-	lua_pushcfunction(L, GetWaterTransform);
-	lua_setglobal(L, "GetWaterTransform");
-	lua_pushcfunction(L, GetWaterVertices);
-	lua_setglobal(L, "GetWaterVertices");
+	LuaPushFuntion(L, "GetJointLocalPosAndAxis", GetJointLocalPosAndAxis);
+	LuaPushFuntion(L, "GetJointParams", GetJointParams);
+	LuaPushFuntion(L, "GetRopeColor", GetRopeColor);
 
-	lua_pushcfunction(L, GetScripts);
-	lua_setglobal(L, "GetScripts");
-	lua_pushcfunction(L, GetScriptPath);
-	lua_setglobal(L, "GetScriptPath");
-	lua_pushcfunction(L, GetScriptEntities);
-	lua_setglobal(L, "GetScriptEntities");
+	LuaPushFuntion(L, "GetWaters", GetWaters);
+	LuaPushFuntion(L, "GetWaterTransform", GetWaterTransform);
+	LuaPushFuntion(L, "GetWaterVertices", GetWaterVertices);
 
-	lua_pushcfunction(L, GetWheels);
-	lua_setglobal(L, "GetWheels");
-	lua_pushcfunction(L, GetWheelVehicle);
-	lua_setglobal(L, "GetWheelVehicle");
-	lua_pushcfunction(L, GetVehicleWheels);
-	lua_setglobal(L, "GetVehicleWheels");
+	LuaPushFuntion(L, "GetScripts", GetScripts);
+	LuaPushFuntion(L, "GetScriptPath", GetScriptPath);
+	LuaPushFuntion(L, "GetScriptEntities", GetScriptEntities);
 
-	lua_pushcfunction(L, GetTriggerType);
-	lua_setglobal(L, "GetTriggerType");
-	lua_pushcfunction(L, GetTriggerSize);
-	lua_setglobal(L, "GetTriggerSize");
-	lua_pushcfunction(L, GetTriggerVertices);
-	lua_setglobal(L, "GetTriggerVertices");
+	LuaPushFuntion(L, "GetWheels", GetWheels);
+	LuaPushFuntion(L, "GetWheelVehicle", GetWheelVehicle);
+	LuaPushFuntion(L, "GetVehicleWheels", GetVehicleWheels);
 
-	lua_pushcfunction(L, GetShapePaletteIndex);
-	lua_setglobal(L, "GetShapePaletteIndex");
-	lua_pushcfunction(L, GetShapeTexture);
-	lua_setglobal(L, "GetShapeTexture");
-	lua_pushcfunction(L, GetTextureOffset);
-	lua_setglobal(L, "GetTextureOffset");
-	lua_pushcfunction(L, SetShapePalette);
-	lua_setglobal(L, "SetShapePalette");
-	lua_pushcfunction(L, SetShapeTexture);
-	lua_setglobal(L, "SetShapeTexture");
-	lua_pushcfunction(L, SetTextureOffset);
-	lua_setglobal(L, "SetTextureOffset");
+	LuaPushFuntion(L, "GetTriggerType", GetTriggerType);
+	LuaPushFuntion(L, "GetTriggerSize", GetTriggerSize);
+	LuaPushFuntion(L, "GetTriggerVertices", GetTriggerVertices);
 
-	lua_pushcfunction(L, ZlibSaveCompressed);
-	lua_setglobal(L, "ZlibSaveCompressed");
-	lua_pushcfunction(L, ZlibLoadCompressed);
-	lua_setglobal(L, "ZlibLoadCompressed");
+	LuaPushFuntion(L, "GetShapePaletteIndex", GetShapePaletteIndex);
+	LuaPushFuntion(L, "GetShapeTexture", GetShapeTexture);
+	LuaPushFuntion(L, "GetTextureOffset", GetTextureOffset);
+	LuaPushFuntion(L, "SetShapePalette", SetShapePalette);
+	LuaPushFuntion(L, "SetShapeTexture", SetShapeTexture);
+	LuaPushFuntion(L, "SetTextureOffset", SetTextureOffset);
+
+	LuaPushFuntion(L, "ZlibSaveCompressed", ZlibSaveCompressed);
+	LuaPushFuntion(L, "ZlibLoadCompressed", ZlibLoadCompressed);
 }

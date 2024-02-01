@@ -29,6 +29,18 @@ none
 Return value
 none -- Allows all already loaded mods to access internal funtions
 
+Tick(index)
+Arguments
+index (number) – Index of the timer, between 0 and 15, default is 0 if not provided
+Return value
+none -- Starts a timer
+
+elapsed = Tock(index)
+Arguments
+index (number) – Index of the timer, between 0 and 15, default is 0 if not provided
+Return value
+elapsed (number) – Time elapsed since Tick was called in nanoseconds
+
 size = GetShadowVolumeSize()
 Arguments
 none

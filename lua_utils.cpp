@@ -64,3 +64,8 @@ Vector LuaToVector(lua_State* L, int index) {
 	lua_pop(L, 1);
 	return v;
 }
+
+void LuaPushFuntion(lua_State* L, const char* name, lua_CFunction func) {
+	lua_pushcfunction(L, func);
+	lua_setglobal(L, name);
+}
