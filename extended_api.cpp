@@ -9,7 +9,8 @@
 #include <windows.h>
 
 using hrc = std::chrono::high_resolution_clock;
-hrc::time_point timers[16];
+hrc::time_point clocks[16];
+bool clock_init[16] = { false };
 
 t_lua_createtable td_lua_createtable = nullptr;
 t_lua_pushstring td_lua_pushstring = nullptr;
@@ -58,7 +59,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.3.201");
+	td_lua_pushstring(L, "v1.5.3.205");
 	return 1;
 }
 
@@ -69,15 +70,19 @@ int AllowInternalFunctions(lua_State* L) {
 
 int Tick(lua_State* L) {
 	unsigned int index = lua_tointeger(L, 1);
-	timers[index] = hrc::now();
+	clocks[index] = hrc::now();
+	clock_init[index] = true;
 	return 0;
 }
 
 int Tock(lua_State* L) {
 	unsigned int index = lua_tointeger(L, 1);
-	hrc::time_point now = hrc::now();
-	double elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(now - timers[index]).count();
-	lua_pushnumber(L, elapsed);
+	if (clock_init[index]) {
+		hrc::time_point now = hrc::now();
+		double elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(now - clocks[index]).count();
+		lua_pushnumber(L, elapsed);
+	} else
+		lua_pushnumber(L, 0);
 	return 1;
 }
 

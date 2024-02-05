@@ -52,6 +52,8 @@ void RegisterGameFunctionsHook(ScriptCore* script_core) {
 		RegisterLuaCFunctions(L);
 	}
 	awwnb = false; // reset remove boundary checkbox
+	for (int i = 0; i < 16; i++)
+		clock_init[i] = false;
 }
 
 BOOL wglSwapBuffersHook(HDC hDc) {

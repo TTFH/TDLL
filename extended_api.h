@@ -21,6 +21,8 @@ namespace Teardown {
 	Game* GetGame();
 }
 
+extern bool clock_init[16];
+
 void RegisterLuaCFunctions(lua_State* L);
 
 #endif
