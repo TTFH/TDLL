@@ -59,7 +59,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.3.224");
+	td_lua_pushstring(L, "v1.5.3.225");
 	return 1;
 }
 
@@ -88,20 +88,21 @@ int Tock(lua_State* L) {
 
 int HttpRequest(lua_State* L) {
 	std::map<std::string, std::string> headers;
-	const char* endpoint = lua_tostring(L, 1);
-	if (lua_istable(L, 2)) {
+	const char* method = lua_tostring(L, 1);
+	const char* endpoint = lua_tostring(L, 2);
+	if (lua_istable(L, 3)) {
 		lua_pushnil(L);
-		while (lua_next(L, 2) != 0) {
+		while (lua_next(L, 3) != 0) {
 			const char* key = lua_tostring(L, -2);
 			const char* value = lua_tostring(L, -1);
 			headers[key] = value;
 			lua_pop(L, 1);
 		}
 	}
-	const char* request = lua_tostring(L, 3);
+	const char* request = lua_tostring(L, 4);
 
 	std::string response;
-	int status = HttpRequest(endpoint, headers, request, response);
+	int status = HttpRequest(method, endpoint, headers, request, response);
 	lua_pushinteger(L, status);
 	td_lua_pushstring(L, response.c_str());
 	return 2;

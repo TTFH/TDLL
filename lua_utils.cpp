@@ -79,25 +79,25 @@ size_t write_callback(void* contents, size_t size, size_t nmemb, std::string* re
 	return size * nmemb;
 }
 
-int HttpRequest(const char* endpoint, std::map<std::string, std::string> headers, const char* request, std::string& response) {
+int HttpRequest(const char* method, const char* endpoint, std::map<std::string, std::string> headers, const char* request, std::string& response) {
 	CURL* curl;
 	CURLcode res;
 	int http_code = 500;
 	response.clear();
 	curl = curl_easy_init();
 	if (curl != NULL) {
-		curl_easy_setopt(curl, CURLOPT_CAINFO, "ca-bundle.crt");
-
+		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
 		curl_easy_setopt(curl, CURLOPT_URL, endpoint);
 		if (request != NULL && strlen(request) > 0)
 			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request);
 
 		curl_slist* curl_headers = NULL;
-		for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it) {
+		for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++) {
 			std::string header = it->first + ": " + it->second;
 			curl_headers = curl_slist_append(curl_headers, header.c_str());
 		}
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, curl_headers);
+		curl_easy_setopt(curl, CURLOPT_CAINFO, "ca-bundle.crt");
 
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
