@@ -41,6 +41,15 @@ index (number) – Index of the clock, between 0 and 15, default is 0 if not pro
 Return value
 elapsed (number) – Time elapsed since Tick was called in nanoseconds
 
+status, response = HttpRequest(endpoint, headers, request)
+Arguments
+endpoint (string) – URL to send the request
+headers (table) – Table with headers to send
+request (string) – Request body
+Return value
+status (number) – HTTP status code
+response (string) – Response body
+
 size = GetShadowVolumeSize()
 Arguments
 none

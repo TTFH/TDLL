@@ -11,6 +11,13 @@ function Tick(index) end
 ---@return number elapsed Time elapsed since Tick was called in nanoseconds
 function Tock(index) return 0 end
 
+---@param endpoint string URL to send the request
+---@param headers any Table with headers to send
+---@param request any Request body
+---@return number status HTTP status code
+---@return string response Response body
+function HttpRequest(endpoint, headers, request) return 0, "" end
+
 
 ---@return any size Vector with the size of the shadow volume
 function GetShadowVolumeSize() return nil end

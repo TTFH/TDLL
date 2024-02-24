@@ -183,7 +183,7 @@ function DrawGrid(pmin, pmax)
 	end
 end
 
-function DrawCircleX(pos, radius)
+function DrawCircumfX(pos, radius)
 	local steps = 32
 	local angle_inc = (2 * math.pi) / steps
 	local points = {}
@@ -202,7 +202,7 @@ function DrawCircleX(pos, radius)
 	end
 end
 
-function DrawCircleY(pos, radius)
+function DrawCircumfY(pos, radius)
 	local steps = 32
 	local angle_inc = (2 * math.pi) / steps
 	local points = {}
@@ -221,7 +221,7 @@ function DrawCircleY(pos, radius)
 	end
 end
 
-function DrawCircleZ(pos, radius)
+function DrawCircumfZ(pos, radius)
 	local steps = 32
 	local angle_inc = (2 * math.pi) / steps
 	local points = {}
@@ -240,10 +240,10 @@ function DrawCircleZ(pos, radius)
 	end
 end
 
-function DrawCircle(center, radius)
-	DrawCircleX(center, radius)
-	DrawCircleY(center, radius)
-	DrawCircleZ(center, radius)
+function DrawSphere(center, radius)
+	DrawCircumfX(center, radius)
+	DrawCircumfY(center, radius)
+	DrawCircumfZ(center, radius)
 end
 
 function HSVtoRGBA(h, s, v, a)
@@ -401,7 +401,7 @@ function tick(dt)
 			DrawOBB2(trigger_tr, size)
 		else
 			local radius = GetTriggerSize(trigger)
-			DrawCircle(trigger_tr.pos, radius)
+			DrawSphere(trigger_tr.pos, radius)
 		end
 	end
 

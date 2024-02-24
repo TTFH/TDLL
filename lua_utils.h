@@ -1,6 +1,8 @@
 #ifndef _LUA_H
 #define _LUA_H
 
+#include <map>
+#include <string>
 #include <vector>
 #include "lua5.1.4/lua.hpp"
 #include "teardown_structs.h"
@@ -17,5 +19,8 @@ void LuaPushQuat(lua_State* L, Quat q);
 void LuaPushTransform(lua_State* L, Transform transform);
 Vector LuaToVector(lua_State* L, int index);
 void LuaPushFuntion(lua_State* L, const char* name, lua_CFunction func);
+
+// Not so lua related
+int HttpRequest(const char* endpoint, std::map<std::string, std::string> headers, const char* request, std::string& response);
 
 #endif

@@ -1,3 +1,5 @@
+#include <string.h>
+#include <curl/curl.h>
 #include "lua_utils.h"
 
 void LuaPushList(lua_State* L, std::vector<int> list) {
@@ -68,4 +70,43 @@ Vector LuaToVector(lua_State* L, int index) {
 void LuaPushFuntion(lua_State* L, const char* name, lua_CFunction func) {
 	lua_pushcfunction(L, func);
 	lua_setglobal(L, name);
+}
+
+size_t write_callback(void* contents, size_t size, size_t nmemb, std::string* response) {
+	response->append((char*)contents, size * nmemb);
+	return size * nmemb;
+}
+
+int HttpRequest(const char* endpoint, std::map<std::string, std::string> headers, const char* request, std::string& response) {
+	CURL* curl;
+	CURLcode res;
+	int http_code = 500;
+	response.clear();
+	curl = curl_easy_init();
+	if (curl != NULL) {
+		curl_easy_setopt(curl, CURLOPT_URL, endpoint);
+		if (request != NULL && strlen(request) > 0)
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request);
+
+		curl_slist* curl_headers = NULL;
+		for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it) {
+			std::string header = it->first + ": " + it->second;
+			curl_headers = curl_slist_append(curl_headers, header.c_str());
+		}
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, curl_headers);
+
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+
+		res = curl_easy_perform(curl);
+		if (res == CURLE_OK)
+			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+		else
+			response = curl_easy_strerror(res);
+		
+		curl_slist_free_all(curl_headers);
+		curl_easy_cleanup(curl);
+	} else
+		response = "Failed to initialize curl";
+	return http_code;
 }

@@ -16,7 +16,7 @@
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 typedef BOOL (WINAPI* t_wglSwapBuffers)(HDC hDc);
-t_wglSwapBuffers wglSwapBuffersOriginal = nullptr;
+t_wglSwapBuffers td_wglSwapBuffers = nullptr;
 
 typedef void (*t_RegisterGameFunctions) (ScriptCore* core);
 t_RegisterGameFunctions td_RegisterGameFunctions = nullptr;
@@ -117,7 +117,7 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
 
-	return wglSwapBuffersOriginal(hDc);
+	return td_wglSwapBuffers(hDc);
 }
 
 DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
@@ -132,7 +132,7 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 
 	MH_Initialize();
 	t_wglSwapBuffers wglSwapBuffers = (t_wglSwapBuffers)GetProcAddress(openglModule, "wglSwapBuffers");
-	MH_CreateHook((void*)wglSwapBuffers, (void*)wglSwapBuffersHook, (void**)&wglSwapBuffersOriginal);
+	MH_CreateHook((void*)wglSwapBuffers, (void*)wglSwapBuffersHook, (void**)&td_wglSwapBuffers);
 	MH_CreateHook((void*)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions), (void*)RegisterGameFunctionsHook, (void**)&td_RegisterGameFunctions);
 	MH_EnableHook(MH_ALL_HOOKS);
 
