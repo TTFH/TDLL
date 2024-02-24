@@ -10,10 +10,10 @@ OBJS = $(addprefix obj/, $(addsuffix .o, $(basename $(notdir $(SOURCES)))))
 UNAME_S := $(shell uname -s)
 
 CXXFLAGS = -Wall -Wextra -Werror -Wpedantic
-CXXFLAGS += -s -shared -g -DDEBUGCONSOLE
+CXXFLAGS += -s -shared -static #-g -DDEBUGCONSOLE
 CXXFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 CXXFLAGS += -Wno-cast-function-type -Wno-unused-parameter -Wno-invalid-offsetof
-LIBS = -lMinHook -lz -ldwmapi -lgdi32 -Llua5.1.4 -llua5.1 -lcurl
+LIBS = -lMinHook -lz -ldwmapi -lgdi32 -Llua5.1.4 -llua5.1 -lcurl `pkg-config --libs --static libcurl` -lcrypt32
 
 ##---------------------------------------------------------------------
 ## BUILD FLAGS PER PLATFORM

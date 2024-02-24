@@ -1,6 +1,8 @@
 #include <string.h>
-#include <curl/curl.h>
 #include "lua_utils.h"
+
+#define CURL_STATICLIB
+#include <curl/curl.h>
 
 void LuaPushList(lua_State* L, std::vector<int> list) {
 	td_lua_createtable(L, list.size(), 0);
@@ -84,6 +86,8 @@ int HttpRequest(const char* endpoint, std::map<std::string, std::string> headers
 	response.clear();
 	curl = curl_easy_init();
 	if (curl != NULL) {
+		curl_easy_setopt(curl, CURLOPT_CAINFO, "ca-bundle.crt");
+
 		curl_easy_setopt(curl, CURLOPT_URL, endpoint);
 		if (request != NULL && strlen(request) > 0)
 			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request);

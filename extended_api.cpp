@@ -89,23 +89,19 @@ int Tock(lua_State* L) {
 int HttpRequest(lua_State* L) {
 	std::map<std::string, std::string> headers;
 	const char* endpoint = lua_tostring(L, 1);
-	printf("\nSending request to %s\n", endpoint);
 	if (lua_istable(L, 2)) {
 		lua_pushnil(L);
 		while (lua_next(L, 2) != 0) {
 			const char* key = lua_tostring(L, -2);
 			const char* value = lua_tostring(L, -1);
-			printf("Header: %s: %s\n", key, value);
 			headers[key] = value;
 			lua_pop(L, 1);
 		}
 	}
 	const char* request = lua_tostring(L, 3);
-	printf("Request: %s\n", request);
 
 	std::string response;
 	int status = HttpRequest(endpoint, headers, request, response);
-	printf("Response: %d\n%s\n", status, response.c_str());
 	lua_pushinteger(L, status);
 	td_lua_pushstring(L, response.c_str());
 	return 2;
