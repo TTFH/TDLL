@@ -5,25 +5,29 @@ InitialWords = {
 		index = 1,
 		emoji = "💧",
 		result = "Water",
-		is_new = false
+		is_new = false,
+		last_used = 0,
 	},
 	{
 		index = 2,
 		emoji = "🔥",
 		result = "Fire",
-		is_new = false
+		is_new = false,
+		last_used = 0,
 	},
 	{
 		index = 3,
 		emoji = "🌬️",
 		result = "Wind",
-		is_new = false
+		is_new = false,
+		last_used = 0,
 	},
 	{
 		index = 4,
 		emoji = "🌍",
 		result = "Earth",
-		is_new = false
+		is_new = false,
+		last_used = 0,
 	},
 }
 
@@ -49,10 +53,11 @@ function LoadProgress()
 		local result = GetString(registry_key .. ".result")
 		local is_new = GetBool(registry_key .. ".is_new")
 		table.insert(Words, {
-			index = index,
+			index = tonumber(index),
 			emoji = emoji,
 			result = result,
-			is_new = is_new
+			is_new = is_new,
+			last_used = 0
 		})
 	end
 end
@@ -80,6 +85,7 @@ function init()
 		[1] = "Sort by time",
 		[2] = "Sort by name",
 		[3] = "Sort by emoji",
+		[4] = "Sort by last used"
 	}
 	filter_new = false
 end
@@ -106,6 +112,7 @@ function HandleCombination(word1, word2)
 					UiSound("MOD/snd/reward.ogg")
 				end
 				new_combination.index = #Words + 1
+				new_combination.last_used = GetTime()
 				table.insert(Words, new_combination)
 				SaveProgress()
 				if sorting ~= 1 then
@@ -151,8 +158,10 @@ function DrawElement(element)
 		UiSound("MOD/snd/instance.ogg")
 		if prev_selected == "" then
 			prev_selected = element.result
+			element.last_used = GetTime()
 		else
 			HandleCombination(prev_selected, element.result)
+			element.last_used = GetTime()
 			prev_selected = ""
 		end
 	end
@@ -189,6 +198,10 @@ function SortWords()
 	elseif sorting == 3 then
 		table.sort(Words, function(a, b)
 			return a.emoji < b.emoji
+		end)
+	elseif sorting == 4 then
+		table.sort(Words, function(a, b)
+			return a.last_used < b.last_used
 		end)
 	else
 		table.sort(Words, function(a, b)
