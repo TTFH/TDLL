@@ -10,26 +10,30 @@ function GetIndex(tbl, key)
 	return nil
 end
 
+function IncrementAndLoop(i, N)
+	return i % N + 1
+end
+
 function utf8_codepoint(byte)
-    local n = string.byte(byte)
-    if n < 128 then
-        return n
-    elseif n < 224 then
-        local a = string.byte(byte, 1) - 192
-        local b = string.byte(byte, 2) - 128
-        return a * 64 + b
-    elseif n < 240 then
-        local a = string.byte(byte, 1) - 224
-        local b = string.byte(byte, 2) - 128
-        local c = string.byte(byte, 3) - 128
-        return a * 4096 + b * 64 + c
-    elseif n < 248 then
-        local a = string.byte(byte, 1) - 240
-        local b = string.byte(byte, 2) - 128
-        local c = string.byte(byte, 3) - 128
-        local d = string.byte(byte, 4) - 128
-        return a * 262144 + b * 4096 + c * 64 + d
-    end
+	local n = string.byte(byte)
+	if n < 128 then
+		return n
+	elseif n < 224 then
+		local a = string.byte(byte, 1) - 192
+		local b = string.byte(byte, 2) - 128
+		return a * 64 + b
+	elseif n < 240 then
+		local a = string.byte(byte, 1) - 224
+		local b = string.byte(byte, 2) - 128
+		local c = string.byte(byte, 3) - 128
+		return a * 4096 + b * 64 + c
+	elseif n < 248 then
+		local a = string.byte(byte, 1) - 240
+		local b = string.byte(byte, 2) - 128
+		local c = string.byte(byte, 3) - 128
+		local d = string.byte(byte, 4) - 128
+		return a * 262144 + b * 4096 + c * 64 + d
+	end
 end
 
 function EmojiToUnicode(emoji)
@@ -40,13 +44,13 @@ function EmojiToUnicode(emoji)
 	return table.concat(codePoints, "-")
 end
 
-EmojiCache = {}
-
 function GetSpriteTile(index)
 	local x = (index - 1) % EMOJI_ROW
 	local y = math.floor((index - 1) / EMOJI_ROW)
 	return x, y
 end
+
+EmojiCache = {}
 
 function GetImageAndTile(emoji)
 	if EmojiCache[emoji] then
@@ -63,6 +67,21 @@ function GetImageAndTile(emoji)
 			return EmojiCache[emoji]
 		end
 	end
+
+	local fallback = unicode:match("([^%-]*)")
+	if fallback ~= unicode then
+		for i = 1, #EMOJI_RESOURCES do
+			local resource = EMOJI_RESOURCES[i]
+			local hexcodes = resource.hexcodes
+			local index = GetIndex(hexcodes, fallback)
+			if index then
+				local x, y = GetSpriteTile(index)
+				EmojiCache[emoji] = { image = resource.image, x = x, y = y }
+				return EmojiCache[emoji]
+			end
+		end
+	end
+
 	return { image = "", x = 0, y = 0 }
 end
 
@@ -82,14 +101,14 @@ function CombineWords(first, second)
 	if PairsCache[second] and PairsCache[second][first] then
 		return PairsCache[second][first]
 	end
-	local headers = {
-		["User-Agent"] = "Solver",
-		["Referer"] = "https://neal.fun/infinite-craft/",
-	}
 	if not GetDllVersion then
 		SetString("hud.hintinfo", "TDLL .dll is not installed")
 		return {}
 	end
+	local headers = {
+		["User-Agent"] = "Solver",
+		["Referer"] = "https://neal.fun/infinite-craft/",
+	}
 	local endpoint = "https://neal.fun/api/infinite-craft/pair?first=" .. EncodeUriComponent(first) .. "&second=" .. EncodeUriComponent(second)
 	local status, response = HttpRequest("GET", endpoint, headers)
 	if status ~= 200 then

@@ -2,33 +2,39 @@
 
 InitialWords = {
 	{
-		result = "Water",
+		index = 1,
 		emoji = "💧",
+		result = "Water",
 		is_new = false
 	},
 	{
-		result = "Fire",
+		index = 2,
 		emoji = "🔥",
+		result = "Fire",
 		is_new = false
 	},
 	{
+		index = 3,
+		emoji = "🌬️",
 		result = "Wind",
-		emoji = "💨",
 		is_new = false
 	},
 	{
-		result = "Earth",
+		index = 4,
 		emoji = "🌍",
+		result = "Earth",
 		is_new = false
 	},
 }
 
 function SaveProgress()
-	for i, element in ipairs(Words) do
-		local registry_key = "savegame.mod." .. i
-		SetString(registry_key .. ".result", element.result)
+	for _, element in ipairs(Words) do
+		local registry_key = "savegame.mod." .. element.index
 		SetString(registry_key .. ".emoji", element.emoji)
-		SetBool(registry_key .. ".is_new", element.is_new)
+		SetString(registry_key .. ".result", element.result)
+		if element.is_new then
+			SetBool(registry_key .. ".is_new", element.is_new)
+		end
 	end
 end
 
@@ -39,12 +45,13 @@ function LoadProgress()
 	for i = 1, #list do
 		local index = list[i]
 		local registry_key = "savegame.mod." .. index
-		local result = GetString(registry_key .. ".result")
 		local emoji = GetString(registry_key .. ".emoji")
+		local result = GetString(registry_key .. ".result")
 		local is_new = GetBool(registry_key .. ".is_new")
 		table.insert(Words, {
-			result = result,
+			index = index,
 			emoji = emoji,
+			result = result,
 			is_new = is_new
 		})
 	end
@@ -67,6 +74,14 @@ function init()
 	anim_timer = 0
 	anim_text = ""
 	prev_selected = ""
+
+	sorting = 1
+	SortingTexts = {
+		[1] = "Sort by time",
+		[2] = "Sort by name",
+		[3] = "Sort by emoji",
+	}
+	filter_new = false
 end
 
 function IsDuplicated(word)
@@ -76,6 +91,31 @@ function IsDuplicated(word)
 		end
 	end
 	return false
+end
+
+function HandleCombination(word1, word2)
+	local new_combination = CombineWords(word1, word2)
+	if new_combination and new_combination.result then
+		if new_combination.result ~= "Nothing" then
+			anim_text = new_combination.result
+			anim_timer = 2
+			if not IsDuplicated(new_combination.result) then
+				if new_combination.is_new then
+					UiSound("MOD/snd/discovery.ogg")
+				else
+					UiSound("MOD/snd/reward.ogg")
+				end
+				new_combination.index = #Words + 1
+				table.insert(Words, new_combination)
+				SaveProgress()
+				if sorting ~= 1 then
+					SortWords()
+				end
+			end
+		else
+			UiSound("MOD/snd/error.ogg")
+		end
+	end
 end
 
 rotation = 0
@@ -96,10 +136,11 @@ function DrawElement(element)
 	UiPop()
 
 	UiPush()
+	UiColor(1, 1, 1)
 	if selected then
 		UiColor(1, 0.98, 0.9)
 		UiImageBox("ui/common/box-solid-6.png", width + 50, 50, 6, 6)
-		UiColor(1, 1, 1)
+		UiColor(0.1, 0.1, 0.1)
 	end
 
 	UiButtonImageBox("ui/common/box-outline-6.png", 6, 6)
@@ -108,24 +149,7 @@ function DrawElement(element)
 		if prev_selected == "" then
 			prev_selected = element.result
 		else
-			local new_combination = CombineWords(prev_selected, element.result)
-			if new_combination and new_combination.result then
-				if new_combination.result ~= "Nothing" then
-					anim_text = new_combination.result
-					anim_timer = 2
-					if not IsDuplicated(new_combination.result) then
-						if new_combination.is_new then
-							UiSound("MOD/snd/discovery.ogg")
-						else
-							UiSound("MOD/snd/reward.ogg")
-						end
-						table.insert(Words, new_combination)
-						SaveProgress()
-					end
-				else
-					UiSound("MOD/snd/error.ogg")
-				end
-			end
+			HandleCombination(prev_selected, element.result)
 			prev_selected = ""
 		end
 	end
@@ -140,6 +164,45 @@ function DrawElement(element)
 	return width
 end
 
+function ToggleDiscoveries()
+	UiPush()
+	if filter_new then
+		UiColor(0.26, 0.23, 0.14)
+		UiImageBox("ui/common/box-solid-6.png", 150, 50, 6, 6)
+	end
+	UiPop()
+	UiPush()
+	if UiTextButton("Discoveries", 150, 50) then
+		filter_new = not filter_new
+	end
+	UiPop()
+end
+
+function SortWords()
+	if sorting == 2 then
+		table.sort(Words, function(a, b)
+			return a.result < b.result
+		end)
+	elseif sorting == 3 then
+		table.sort(Words, function(a, b)
+			return a.emoji < b.emoji
+		end)
+	else
+		table.sort(Words, function(a, b)
+			return a.index < b.index
+		end)
+	end
+end
+
+function SortButton()
+	UiPush()
+	if UiTextButton(SortingTexts[sorting], 150, 50) then
+		sorting = IncrementAndLoop(sorting, #SortingTexts)
+		SortWords()
+	end
+	UiPop()
+end
+
 function draw()
 	UiAlign("center middle")
 	UiFont("bold.ttf", 30)
@@ -151,15 +214,21 @@ function draw()
 	if UiTextButton("Reset", 100, 50) then
 		ClearProgress()
 	end
+	UiTranslate(175, 0)
+	ToggleDiscoveries()
+	UiTranslate(200, 0)
+	SortButton()
 	UiPop()
 
-	UiTranslate(200, 100)
+	UiTranslate(100, 100)
 	for _, element in ipairs(Words) do
-		local width = DrawElement(element)
-		UiTranslate(width / 2 + 75, 0)
-		local x = UiGetCursorPos()
-		if x > UiWidth() - 200 then
-			UiTranslate(-x + 200, 75)
+		if not filter_new or element.is_new then
+			local width = DrawElement(element)
+			UiTranslate(width / 2 + 75, 0)
+			local x = UiGetCursorPos()
+			if x > UiWidth() - 200 then
+				UiTranslate(-x + 200, 75)
+			end
 		end
 	end
 end
