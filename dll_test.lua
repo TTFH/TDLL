@@ -11,15 +11,14 @@ function FindWater(tag, global)
 			end
 		end
 	else
-		DebugPrint("FindWater: local search not implemented yet")
-		--[[local script = WhoAmI()
+		local script = GetScriptId()
 		local entities = GetScriptEntities(script)
 		for i = 1, #entities do
 			local entity = entities[i]
 			if GetEntityType(entity) == "water" and (tag == "" or HasTag(entity, tag)) then
 				return entity
 			end
-		end]]
+		end
 	end
 end
 
@@ -37,15 +36,14 @@ function FindWaters(tag, global)
 			end
 		end
 	else
-		DebugPrint("FindWaters: local search not implemented yet")
-		--[[local script = WhoAmI()
+		local script = GetScriptId()
 		local entities = GetScriptEntities(script)
 		for i = 1, #entities do
 			local entity = entities[i]
 			if GetEntityType(entity) == "water" and (tag == "" or HasTag(entity, tag)) then
 				table.insert(result, entity)
 			end
-		end]]
+		end
 	end
 	return result
 end

@@ -1,0 +1,4 @@
+name = Infinite Craft
+author = TTFH
+description = Infinite Craft in Teardown
+tags = Asset
