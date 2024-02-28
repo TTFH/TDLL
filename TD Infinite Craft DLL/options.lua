@@ -136,11 +136,14 @@ function DrawElement(element)
 	UiPop()
 
 	UiPush()
-	UiColor(1, 1, 1)
 	if selected then
 		UiColor(1, 0.98, 0.9)
 		UiImageBox("ui/common/box-solid-6.png", width + 50, 50, 6, 6)
 		UiColor(0.1, 0.1, 0.1)
+	else
+		UiColor(0.9, 0.9, 0.9)
+		UiImageBox("ui/common/box-solid-6.png", width + 50, 50, 6, 6)
+		UiColor(0, 0, 0)
 	end
 
 	UiButtonImageBox("ui/common/box-outline-6.png", 6, 6)
@@ -212,7 +215,6 @@ function Search()
 	gFocusText = false
 	if gFilterText == "" then
 		UiColor(1, 1, 1, 0.5)
-		UiTranslate(10, 0)
 		UiText("Search items...")
 	else
 		UiTranslate(125, 0)
@@ -224,6 +226,22 @@ function Search()
 	end
 	gFilterText = newText
 	UiPop()
+end
+
+scroll = 0
+scroll_speed = 10
+scroll_mutiplier = 4
+function ScrollBar()
+	UiPush()
+		local height = UiHeight() - 300
+		scroll = clamp(scroll - InputValue("mousewheel") * scroll_speed, 0, height)
+		UiTranslate(UiWidth() - 50, UiHeight() / 2 - 50)
+		UiImageBox("ui/common/box-solid-6.png", 13, height, 6, 6)
+		UiTranslate(0, -height / 2)
+		UiColor(1, 1, 0.5, 1)
+		scroll = UiSlider("ui/common/dot.png", "y", scroll, 0, height)
+	UiPop()
+	UiTranslate(0, -scroll * scroll_mutiplier)
 end
 
 function draw()
@@ -245,17 +263,22 @@ function draw()
 	Search()
 	UiPop()
 
-	UiTranslate(100, 100)
+	UiPush()
+	UiTranslate(0, 50)
+	UiClipRect(UiWidth(), UiHeight() - 150)
+	ScrollBar()
+	UiTranslate(100, 50)
 	for _, element in ipairs(Words) do
 		if not filter_new or element.is_new then
 			if gFilterText == "" or string.find(string.lower(element.result), string.lower(gFilterText)) then
 				local width = DrawElement(element)
 				UiTranslate(width / 2 + 75, 0)
 				local x = UiGetCursorPos()
-				if x > UiWidth() - 200 then
+				if x > UiWidth() - 250 then
 					UiTranslate(-x + 100, 75)
 				end
 			end
 		end
 	end
+	UiPop()
 end
