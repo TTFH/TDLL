@@ -203,6 +203,29 @@ function SortButton()
 	UiPop()
 end
 
+gFilterText = ""
+gFocusText = false
+function Search()
+	UiPush()
+	UiImageBox("ui/common/box-outline-4.png", 300, 50, 12, 12)
+	local newText = UiTextInput(gFilterText, 300, 50, gFocusText)
+	gFocusText = false
+	if gFilterText == "" then
+		UiColor(1, 1, 1, 0.5)
+		UiTranslate(10, 0)
+		UiText("Search items...")
+	else
+		UiTranslate(125, 0)
+		UiColor(1, 1, 1)
+		if UiImageButton("ui/common/close.png") then
+			newText = ""
+			gFocusText = true
+		end
+	end
+	gFilterText = newText
+	UiPop()
+end
+
 function draw()
 	UiAlign("center middle")
 	UiFont("bold.ttf", 30)
@@ -218,16 +241,20 @@ function draw()
 	ToggleDiscoveries()
 	UiTranslate(200, 0)
 	SortButton()
+	UiTranslate(275, 0)
+	Search()
 	UiPop()
 
 	UiTranslate(100, 100)
 	for _, element in ipairs(Words) do
 		if not filter_new or element.is_new then
-			local width = DrawElement(element)
-			UiTranslate(width / 2 + 75, 0)
-			local x = UiGetCursorPos()
-			if x > UiWidth() - 200 then
-				UiTranslate(-x + 200, 75)
+			if gFilterText == "" or string.find(string.lower(element.result), string.lower(gFilterText)) then
+				local width = DrawElement(element)
+				UiTranslate(width / 2 + 75, 0)
+				local x = UiGetCursorPos()
+				if x > UiWidth() - 200 then
+					UiTranslate(-x + 100, 75)
+				end
 			end
 		end
 	end
