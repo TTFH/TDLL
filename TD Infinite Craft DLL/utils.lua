@@ -40,6 +40,7 @@ function utf8_codepoint(byte)
 		local d = string.byte(byte, 4) - 128
 		return a * 262144 + b * 4096 + c * 64 + d
 	end
+	return 0
 end
 
 function EmojiToUnicode(emoji)

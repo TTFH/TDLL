@@ -27,13 +27,11 @@ uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 }
 
 namespace MEM_OFFSET {				// Addr		// Type
-	uintptr_t GetSteer				= 0x1FC3A4; // lua_pushinteger(vehicle->steer)
-	uintptr_t RegisterGameFunctions	= 0x215A00; // void fun(ScriptCore*)
-	uintptr_t LuaCreateTable		= 0x3897A0; // void fun(lua_State*, int, int)
-	uintptr_t LuaPushString			= 0x38A9E0; // void fun(lua_State*, const char*)
-	uintptr_t RenderDist			= 0x5063C8; // float
-	uintptr_t Game					= 0x713090; // Game*
-	uintptr_t ImguiCtx				= 0x719A60; // ImGuiContext*
+	uintptr_t RegisterGameFunctions	= 0x2302C0; // void fun(ScriptCore*)
+	uintptr_t LuaCreateTable		= 0x3998E0; // void fun(lua_State*, int, int)
+	uintptr_t LuaPushString			= 0x39AB30; // void fun(lua_State*, const char*)
+	uintptr_t RenderDist			= 0x6D8DF8; // float
+	uintptr_t Game					= 0x92A040; // Game*
 }
 
 namespace Teardown {
@@ -59,7 +57,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.3.225");
+	td_lua_pushstring(L, "v1.5.4.312");
 	return 1;
 }
 
@@ -578,26 +576,26 @@ void RegisterLuaCFunctions(lua_State* L) {
 
 	LuaPushFuntion(L, "GetShadowVolumeSize", GetShadowVolumeSize);
 	LuaPushFuntion(L, "GetBoundaryVertices", GetBoundaryVertices);
-	LuaPushFuntion(L, "GetPlayerFlashlight", GetPlayerFlashlight);
+	//LuaPushFuntion(L, "GetPlayerFlashlight", GetPlayerFlashlight);
 
 	LuaPushFuntion(L, "GetJointLocalPosAndAxis", GetJointLocalPosAndAxis);
 	LuaPushFuntion(L, "GetJointParams", GetJointParams);
-	LuaPushFuntion(L, "GetRopeColor", GetRopeColor);
+	//LuaPushFuntion(L, "GetRopeColor", GetRopeColor);
 
-	LuaPushFuntion(L, "GetWaters", GetWaters);
+	//LuaPushFuntion(L, "GetWaters", GetWaters);
 	LuaPushFuntion(L, "GetWaterTransform", GetWaterTransform);
 	LuaPushFuntion(L, "GetWaterVertices", GetWaterVertices);
 
-	LuaPushFuntion(L, "GetScripts", GetScripts);
+	//LuaPushFuntion(L, "GetScripts", GetScripts);
 	LuaPushFuntion(L, "GetScriptPath", GetScriptPath);
 	LuaPushFuntion(L, "GetScriptEntities", GetScriptEntities);
 
-	LuaPushFuntion(L, "GetWheels", GetWheels);
-	LuaPushFuntion(L, "GetWheelVehicle", GetWheelVehicle);
-	LuaPushFuntion(L, "GetVehicleWheels", GetVehicleWheels);
+	//LuaPushFuntion(L, "GetWheels", GetWheels);
+	//LuaPushFuntion(L, "GetWheelVehicle", GetWheelVehicle);
+	//LuaPushFuntion(L, "GetVehicleWheels", GetVehicleWheels);
 
-	LuaPushFuntion(L, "GetTriggerType", GetTriggerType);
-	LuaPushFuntion(L, "GetTriggerSize", GetTriggerSize);
+	//LuaPushFuntion(L, "GetTriggerType", GetTriggerType);
+	//LuaPushFuntion(L, "GetTriggerSize", GetTriggerSize);
 	LuaPushFuntion(L, "GetTriggerVertices", GetTriggerVertices);
 
 	LuaPushFuntion(L, "GetShapePaletteIndex", GetShapePaletteIndex);

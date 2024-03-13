@@ -226,79 +226,87 @@ str (string) – Decompressed string or nil if file does not exist
 
 ## Internal functions:
 ```lua
-ActivityAvailabilityChange(string, string, bool)
-ActivityEnd(string, number)
-ActivityResume(string, string)
-ActivityStart(string)
-ActivityTerminate()
-fuction CompleteAchievement(...)
-DeleteShape(path: string)
-explosionDebrisCPP(explosionPos: Vec, count: number, vel: number)
-explosionSparksCPP(explosionPos: Vec, count: number, vel: number)
-fireUpdateCPP(fire, pos, dt)
-FxEmitSmokeCPP(sType, sShape, sPoint, sNormal, sTimeOffset, sScale, sColor, sSpawn)
-act = GetActionByButton(mode, name)
-fuction GetBodyHit(...)
-fuction GetBodyHitsCount(...)
-button = GetButtonsByAction(mode, action)
-displayCount = GetDisplayCount(displayMode)
-displayName = GetDisplayName(i)
-resW, resH = GetDisplayResolution(displayIndex, displayMode, displayResolution)
-key = GetKeyByAction(action)
-actions = GetLayoutActions(mode)
-script: handle = GetScriptId()
-strength: number = GetShapeStrength(shape: handle)
-hasController = HasInputController()
-fuction IndicateAchievementProgress(...)
-fuction IsAchievementCompleted(...)
-fuction IsBodyHitted(...)
-on_egs: bool = IsRunningOnEgs()
-on_switch: bool = IsRunningOnSwitch()
-PermitScreenRecord()
-ProhibitScreenRecord()
-ProsBrowseToQRLink()
-hasQR: bool = ProsHasActiveQRCode()
-isLinked = ProsIsAccountLinked()
-ProsRequestQRCode(imageKey)
-fuction QueryLayerFilter(...)
-connection, dir, length = RadiolinkCheckConnectionCPP(receiverPos, transmitterPos, receiverShape, transmitterShape)
-RadiolinkDrawLinesCPP(radius, length, dir, transmitterPos, receiverPos, connectionTimer, r, g, b, alpha)
-ResumeLevel(id, file, layers, "quicksavecampaign")
-RobotAimUpdateCPP(robotBody, aimBody, robotPlayerPos, robotDistToPlayer, headCanSeePlayer)
-targetTransform = RobotFootStepCPP(robotTransform, robotDir, robotSpeed, footRayOrigin, footRayDir, footRayDist, footLocalRestTransform, stepTime, vel)
-fuction RobotGetBodyParametersCPP(...)
-fuction RobotGetTransformAndAxesCPP(...)
-fuction RobotHoverGetUpCPP(...)
-fuction RobotHoverUprightCPP(...)
-fuction RobotProcessSamplesCPP(...)
-fuction RobotRejectAllBodiesCPP(...)
-fuction RobotRemoveTaggedJointsCPP(...)
-fuction RobotSensorGetBlockedCPP(...)
-fuction RobotSetBodyCollisionFilterCPP(...)
-fuction RobotSetFootConstraintsCPP(...)
-success: bool, error: string = SaveShape(shape: handle, path: string)
-SetPresence(id)
-SetRopeSlack(rope: handle, slack: number)
-SetShapeStrength(shape: handle, strength: number)
-SetVehicleEngineHealth(vehicle: handle, health: number)
-fuction smokeUpdateCPP(...)
-fuction TornadoBodiesSuctionCPP(...)
-fuction TornadoSpawnParticlesCPP(...)
-trailUpdateCPP(trail, dt)
-UiAddDrawObject(obj)
-fuction UiDislikeProsMod(...)
-UiDrawLater(obj)
-UiForceMouse(state)
-lastFrame = UiGetFrameNo()
-count = UiGetProsModNumber()
-info = UiGetProsModShortInfo(index)
-fuction UiLikeProsMod(...)
-UiRemoveDrawObject(obj)
-info = UiSelectedProsModInfo()
-UiSelectProsMod(id)
-fuction UiSetProsModFilter(...)
-UiSubscribeToProsMod(id)
-UiUnsubscribeFromProsMod(id)
-fuction WatchBodyHit(...)
-WinddustSpawnParticlesCPP(largeParticles, smallParticles, smokeParticles, particleColor, smokeColor)
+ActivityAvailabilityChange
+ActivityEnd
+ActivityResume
+ActivityStart
+ActivityTerminate
+CompleteAchievement
+DeleteShape
+FxEmitSmokeCPP
+GetActionByButton
+GetBodyHit
+GetBodyHitsCount
+GetButtonsByAction
+GetDisplayCount
+GetDisplayName
+GetDisplayResolution
+GetKeyByAction
+GetLayoutActions
+GetScriptId
+GetShapeStrength
+HasInputController
+IndicateAchievementProgress
+IsAchievementCompleted
+IsBodyHitted
+IsRunningOnApple
+IsRunningOnEgs
+IsRunningOnIOS
+IsRunningOnMac
+IsRunningOnSwitch
+PermitScreenRecord
+ProhibitScreenRecord
+ProsBrowseToQRLink
+ProsHasActiveQRCode
+ProsIsAccountLinked
+ProsRequestQRCode
+QueryLayerFilter
+RadiolinkCheckConnectionCPP
+RadiolinkDrawLinesCPP
+ResumeLevel
+RobotAimUpdateCPP
+RobotFootStepCPP
+RobotGetBodyParametersCPP
+RobotGetTransformAndAxesCPP
+RobotHoverGetUpCPP
+RobotHoverUprightCPP
+RobotProcessSamplesCPP
+RobotRejectAllBodiesCPP
+RobotRemoveTaggedJointsCPP
+RobotSensorGetBlockedCPP
+RobotSetBodyCollisionFilterCPP
+RobotSetFootConstraintsCPP
+SaveCameraOverrideTransform
+SaveShape
+SetPresence
+SetRopeSlack
+SetShapeStrength
+SetVehicleEngineHealth
+TornadoBodiesSuctionCPP
+TornadoSpawnParticlesCPP
+UiAddDrawObject
+UiDislikeProsMod
+UiDrawLater
+UiForceMouse
+UiGetModById
+UiGetModsList
+UiGetModsNumber
+UiGetProsModAt
+UiGetProsModNumber
+UiGetProsModRange
+UiLikeProsMod
+UiLinkColor
+UiRemoveDrawObject
+UiSelectProsMod
+UiSelectedProsModInfo
+UiSetProsModFilter
+UiSubscribeToProsMod
+UiUnsubscribeFromProsMod
+WatchBodyHit
+WinddustSpawnParticlesCPP
+explosionDebrisCPP
+explosionSparksCPP
+fireUpdateCPP
+smokeUpdateCPP
+trailUpdateCPP
 ```

@@ -1,5 +1,6 @@
 #include "utils.lua"
 
+Words = {}
 InitialWords = {
 	{
 		index = 1,
@@ -71,7 +72,6 @@ function ClearProgress()
 end
 
 function init()
-	Words = {}
 	for _, element in ipairs(InitialWords) do
 		table.insert(Words, element)
 	end
