@@ -80,11 +80,9 @@ size_t write_callback(void* contents, size_t size, size_t nmemb, std::string* re
 }
 
 int HttpRequest(const char* method, const char* endpoint, std::map<std::string, std::string> headers, const char* request, std::string& response) {
-	CURL* curl;
-	CURLcode res;
 	int http_code = 500;
 	response.clear();
-	curl = curl_easy_init();
+	CURL* curl = curl_easy_init();
 	if (curl != NULL) {
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
 		curl_easy_setopt(curl, CURLOPT_URL, endpoint);
@@ -102,7 +100,7 @@ int HttpRequest(const char* method, const char* endpoint, std::map<std::string, 
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
-		res = curl_easy_perform(curl);
+		CURLcode res = curl_easy_perform(curl);
 		if (res == CURLE_OK)
 			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 		else
