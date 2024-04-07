@@ -8,12 +8,12 @@
 
 ### How to install:
 Download `pros.sdk.x64.dll` and copy it to the Teardown directory, overwrite the existing file.  
-Create a script that contains the text "DLL" on it's path, for example: `DLL Global Mod\main.lua` or `Content Mod\DLL_main.lua` to access the new API functions. Check the `examples` folder for, well, examples.
-Press 'F1' on the pause menu to access the DLL menu (in OpenGL only!), it contains options to change the render distance and remove the boundary.
+Create a script that contains the text "DLL" on it's path, for example: `DLL Global Mod\main.lua` or `Content Mod\DLL_main.lua` to access the new API functions. Check the `examples` folder for examples.
+Press 'F1' on the pause menu to access the DLL menu (only on OpenGL), it contains options to change the render distance and remove the boundary.
 
 ### How to uninstall:
 Verify the game on Steam.
-Or restore the original `pros.sdk.x64.dll` file if you made a backup.
+Or restore the original `pros.sdk.x64.dll` file if you have made a backup.
 
 ## New API functions:
 ```lua
@@ -41,12 +41,13 @@ index (number) – Index of the clock, between 0 and 15, default is 0 if not pro
 Return value
 elapsed (number) – Time elapsed since Tick was called in nanoseconds
 
-status, response = HttpRequest(method, endpoint, headers, request)
+status, response = HttpRequest(method, endpoint, headers, request, cookies)
 Arguments
 method (string) – HTTP method to use
 endpoint (string) – URL to send the request
 headers (table) – Table with headers to send
 request (string) – Request body
+cookies (string) – Filename where to store and read cookies from
 Return value
 status (number) – HTTP status code
 response (string) – Response body
@@ -62,12 +63,6 @@ Arguments
 none
 Return value
 list (table) – Indexed table with vertices of the boundary
-
-handle = GetPlayerFlashlight()
-Arguments
-none
-Return value
-handle (number) – Handle to the player flashlight, a normal Light entity
 
 pos, axis = GetJointLocalPosAndAxis(joint, index)
 Arguments
@@ -85,20 +80,6 @@ collide (bool) – If the jointed bodies collide
 sound (bool) – If the joint makes sound
 autodisable (bool) – Whatever this does
 
-r, g, b = GetRopeColor(rope)
-Arguments
-rope (number) – Joint handle
-Return value
-r (number) – Red component of the color
-g (number) – Green component of the color
-b (number) – Blue component of the color
-
-list = GetWaters()
-Arguments
-none
-Return value
-list (table) – Indexed table with handles to all water entities
-
 pos, rot = GetWaterTransform(water)
 Arguments
 water (number) – Water handle
@@ -111,12 +92,6 @@ water (number) – Water handle
 Return value
 list (table) – Indexed table with vertices of the water
 
-list = GetScripts()
-Arguments
-none
-Return value
-list (table) – Indexed table with handles to all script entities
-
 path = GetScriptPath(script)
 Arguments
 script (number) – Script handle
@@ -128,36 +103,6 @@ Arguments
 script (number) – Script handle
 Return value
 list (table) – Indexed table with handles to all entities referenced by the script
-
-list = GetWheels()
-Arguments
-none
-Return value
-list (table) – Indexed table with handles to all wheel entities
-
-handle = GetWheelVehicle(wheel)
-Arguments
-wheel (number) – Wheel handle
-Return value
-handle (number) – Handle to the vehicle the wheel is part of
-
-list = GetVehicleWheels(vehicle)
-Arguments
-vehicle (number) – Vehicle handle
-Return value
-list (table) – Indexed table with handles to all wheels of the vehicle
-
-type = GetTriggerType(trigger)
-Arguments
-trigger (number) – Trigger handle
-Return value
-type (string) – Type of the trigger, can be box, sphere or polygon
-
-size = GetTriggerSize(trigger)
-Arguments
-trigger (number) – Trigger handle
-Return value
-size (number / table) – Vector with the size of the trigger if type is box, number if type is sphere or polygon
 
 list = GetTriggerVertices(trigger)
 Arguments

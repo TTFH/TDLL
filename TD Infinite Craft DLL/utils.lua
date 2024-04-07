@@ -113,13 +113,14 @@ function CombineWords(first, second)
 		return {}
 	end
 	local headers = {
-		["User-Agent"] = "Solver",
+		["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0", -- I'm obviously a browser and not Teardown
 		["Referer"] = "https://neal.fun/infinite-craft/",
 	}
 	local endpoint = "https://neal.fun/api/infinite-craft/pair?first=" .. EncodeUriComponent(first) .. "&second=" .. EncodeUriComponent(second)
-	local status, response = HttpRequest("GET", endpoint, headers)
+	local status, response = HttpRequest("GET", endpoint, headers, "", "neal.fun_cookies.txt")
 	if status ~= 200 then
-		SetString("hud.hintinfo", "Failed to fetch data " .. response)
+		SetString("hud.hintinfo", "Failed to fetch data")
+		DebugPrint(response)
 		return {}
 	end
 	local json_response = json.parse(response)

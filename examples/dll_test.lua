@@ -1,53 +1,3 @@
-function FindWater(tag, global)
-	if tag == nil then tag = "" end
-	if global == nil then global = false end
-
-	if global then
-		local waters = GetWaters()
-		for i = 1, #waters do
-			local water = waters[i]
-			if tag == "" or HasTag(water, tag)then
-				return water
-			end
-		end
-	else
-		local script = GetScriptId()
-		local entities = GetScriptEntities(script)
-		for i = 1, #entities do
-			local entity = entities[i]
-			if GetEntityType(entity) == "water" and (tag == "" or HasTag(entity, tag)) then
-				return entity
-			end
-		end
-	end
-end
-
-function FindWaters(tag, global)
-	if tag == nil then tag = "" end
-	if global == nil then global = false end
-
-	local result = {}
-	if global then
-		local waters = GetWaters()
-		for i = 1, #waters do
-			local water = waters[i]
-			if tag == "" or HasTag(water, tag)then
-				table.insert(result, water)
-			end
-		end
-	else
-		local script = GetScriptId()
-		local entities = GetScriptEntities(script)
-		for i = 1, #entities do
-			local entity = entities[i]
-			if GetEntityType(entity) == "water" and (tag == "" or HasTag(entity, tag)) then
-				table.insert(result, entity)
-			end
-		end
-	end
-	return result
-end
-
 function DebugWater(water)
 	local water_tr = GetWaterTransform(water)
 	local water_vertices = GetWaterVertices(water)
@@ -281,6 +231,7 @@ function init()
 	local version = GetDllVersion()
 	DebugPrint(version)
 	AllowInternalFunctions()
+	DebugPrint("Hello from script " .. GetScriptId())
 --[[
 	local current_map = GetString("game.levelid")
 	if current_map ~= "" then
@@ -292,7 +243,7 @@ function init()
 end
 
 function tick(dt)
-	local flashlight = GetPlayerFlashlight()
+	local flashlight = GetFlashlight()
 	rainbow = math.fmod(rainbow + 120 * dt, 360)
 	local r, g, b = HSVtoRGBA(rainbow, 0.9, 0.9, 1.0)
 	SetLightColor(flashlight, r, g, b)
@@ -315,12 +266,12 @@ function tick(dt)
 		DrawLine(VecAdd(v1, Vec(0, -5, 0)), VecAdd(v1, Vec(0, 20, 0)), 1, 1, 0)
 	end
 
-	local waters = FindWaters("", true)
+	local waters = FindEntities("", true, "water")
 	for i = 1, #waters do
 		DebugWater(waters[i])
 	end
 
-	local scripts = GetScripts()
+	local scripts = FindEntities("", true, "script")
 	for i = 1, #scripts do
 		local script = scripts[i]
 		local script_path = GetScriptPath(script)
@@ -355,17 +306,17 @@ function tick(dt)
 
 	local vehicle = GetPlayerVehicle()
 	if vehicle ~= 0 then
-		local wheels = GetVehicleWheels(vehicle)
+		local wheels = GetEntityChildren(vehicle, "", true, "wheel")
 		for i = 1, #wheels do
 			local wheel = wheels[i]
 			local wheel_shape = GetWheelShape(wheel)
 			DrawOBB(wheel_shape)
 		end
 
-		wheels = GetWheels()
+		wheels = FindEntities("", true, "wheel")
 		for i = 1, #wheels do
 			local wheel = wheels[i]
-			if GetWheelVehicle(wheel) == vehicle then
+			if GetEntityParent(wheel, "", "vehicle") == vehicle then
 				local wheel_shape = GetWheelShape(wheel)
 				DrawAABB(GetShapeBounds(wheel_shape))
 			end
@@ -376,10 +327,10 @@ function tick(dt)
 	for i = 1, #triggers do
 		local trigger = triggers[i]
 		local trigger_tr = GetTriggerTransform(trigger)
-		local tr_type = GetTriggerType(trigger)
+		local tr_type = GetProperty(trigger, "type")
 		if tr_type == "polygon" then
 			local trigger_vertices = GetTriggerVertices(trigger)
-			local height = GetTriggerSize(trigger)
+			local height = GetProperty(trigger, "size")
 			for j = 1, #trigger_vertices do
 				local v1 = trigger_vertices[j]
 				local v2 = trigger_vertices[j + 1]
@@ -395,10 +346,10 @@ function tick(dt)
 				DrawLine(p1, p3) -- side
 			end
 		elseif tr_type == "box" then
-			local size = GetTriggerSize(trigger)
+			local size = GetProperty(trigger, "size")
 			DrawOBB2(trigger_tr, size)
 		else
-			local radius = GetTriggerSize(trigger)
+			local radius = GetProperty(trigger, "size")
 			DrawSphere(trigger_tr.pos, radius)
 		end
 	end
@@ -409,10 +360,10 @@ function tick(dt)
 		local hit, _, _, shape = QueryRaycast(camera_tr.pos, camera_fwd, 100, 0, false)
 		if hit then
 			g_shape = shape
-			SetShapeTexture(shape, 8, 0.5, 4, 0.7)
 			local t, tw, bt, bw = GetShapeTexture(shape)
 			DebugWatch("texture", t .. " " .. tw)
 			DebugWatch("blend texture", bt .. " " .. bw)
+			SetShapeTexture(shape, 8, 0.5, 4, 0.7)
 		end
 	end
 

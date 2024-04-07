@@ -21,6 +21,6 @@ Vector LuaToVector(lua_State* L, int index);
 void LuaPushFuntion(lua_State* L, const char* name, lua_CFunction func);
 
 // Not so lua related
-int HttpRequest(const char*, const char*, std::map<std::string, std::string>, const char*, std::string&);
+int HttpRequest(const char*, const char*, std::map<std::string, std::string>, const char*, const char*, std::string&);
 
 #endif

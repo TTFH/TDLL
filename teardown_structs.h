@@ -97,29 +97,30 @@ struct Vox {
 	uint32_t volume;
 	uint8_t* voxels;
 	void* physics_buffer;
-	float scale;
+	float scale;			// 0x20
 	uint8_t unknown1[48];
 	uint32_t palette;		// 0x54
 	uint8_t unknown2[4];
 	int32_t voxel_count;
 };
 
+static_assert(offsetof(Vox, scale) == 0x20, "Wrong offset Vox->scale");
 static_assert(offsetof(Vox, palette) == 0x54, "Wrong offset Vox->palette");
 
 class Shape : public Entity {
 public:
-	uint8_t padding1[0x8C];
-	uint16_t texture_tile;		// 0xBC
+	uint8_t padding1[0x94];
+	uint16_t texture_tile;		// 0xC4
 	uint16_t blendtexture_tile = 0;
 	float texture_weight;
 	float blendtexture_weight = 1;
 	Vector texture_offset;
 	uint8_t padding2[0x4];
-	Vox* vox;					// 0xD8
+	Vox* vox;					// 0xE0
 };
 
-static_assert(offsetof(Shape, texture_tile) == 0xBC, "Wrong offset Shape->texture_tile");
-static_assert(offsetof(Shape, vox) == 0xD8, "Wrong offset Shape->vox");
+static_assert(offsetof(Shape, texture_tile) == 0xC4, "Wrong offset Shape->texture_tile");
+static_assert(offsetof(Shape, vox) == 0xE0, "Wrong offset Shape->vox");
 
 class Light : public Entity { };
 class Location : public Entity { };
@@ -270,11 +271,11 @@ struct Game {
 	GameState state;
 	uint8_t padding[0x44];
 	Scene* scene;		// 0x50
-	uint8_t padding2[0x78];
-	ModData* mod_data; // 0xD0
+	uint8_t padding2[0x80];
+	ModData* mod_data; // 0xD8
 };
 
 static_assert(offsetof(Game, scene) == 0x50, "Wrong offset game->scene");
-static_assert(offsetof(Game, mod_data) == 0xD0, "Wrong offset game->mod_data");
+static_assert(offsetof(Game, mod_data) == 0xD8, "Wrong offset game->mod_data");
 
 #endif

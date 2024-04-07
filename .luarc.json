@@ -1,0 +1,11 @@
+{
+	"runtime.version": "Lua 5.1",
+	"runtime.plugin": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Teardown\\data\\td_vscode_plugin.lua",
+	"workspace.library": [
+		"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Teardown\\data\\script_defs.lua",
+		"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Teardown\\data\\voxscript_defs.lua"
+	],
+	"diagnostics.disable": [
+		"lowercase-global"
+	]
+}

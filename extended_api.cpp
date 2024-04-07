@@ -29,9 +29,9 @@ uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 namespace MEM_OFFSET {				// Addr		// Type
 	uintptr_t RegisterGameFunctions	= 0x230A80; // void fun(ScriptCore*)
 	uintptr_t LuaCreateTable		= 0x39A5D0; // void fun(lua_State*, int, int)
-	uintptr_t LuaPushString			= 0X39B820; // void fun(lua_State*, const char*)
-	uintptr_t RenderDist			= 0X6D9DF8; // float
-	uintptr_t Game					= 0X92C100; // Game*
+	uintptr_t LuaPushString			= 0x39B820; // void fun(lua_State*, const char*)
+	uintptr_t RenderDist			= 0x6D9DF8; // float
+	uintptr_t Game					= 0x92C100; // Game*
 }
 
 namespace Teardown {
@@ -57,7 +57,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.4.404");
+	td_lua_pushstring(L, "v1.5.4.0407");
 	return 1;
 }
 
@@ -98,9 +98,10 @@ int HttpRequest(lua_State* L) {
 		}
 	}
 	const char* request = lua_tostring(L, 4);
+	const char* cookies = lua_tostring(L, 5);
 
 	std::string response;
-	int status = HttpRequest(method, endpoint, headers, request, response);
+	int status = HttpRequest(method, endpoint, headers, request, cookies, response);
 	lua_pushinteger(L, status);
 	td_lua_pushstring(L, response.c_str());
 	return 2;
@@ -568,35 +569,37 @@ int ZlibLoadCompressed(lua_State* L) {
 
 void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFuntion(L, "GetDllVersion", GetDllVersion);
-	LuaPushFuntion(L, "AllowInternalFunctions", AllowInternalFunctions);
-
 	LuaPushFuntion(L, "Tick", Tick);
 	LuaPushFuntion(L, "Tock", Tock);
 	LuaPushFuntion(L, "HttpRequest", HttpRequest);
+	LuaPushFuntion(L, "ZlibSaveCompressed", ZlibSaveCompressed);
+	LuaPushFuntion(L, "ZlibLoadCompressed", ZlibLoadCompressed);
+
+	LuaPushFuntion(L, "AllowInternalFunctions", AllowInternalFunctions);
 
 	LuaPushFuntion(L, "GetShadowVolumeSize", GetShadowVolumeSize);
 	LuaPushFuntion(L, "GetBoundaryVertices", GetBoundaryVertices);
-	//LuaPushFuntion(L, "GetPlayerFlashlight", GetPlayerFlashlight);
+	//LuaPushFuntion(L, "GetPlayerFlashlight", GetPlayerFlashlight); // GetFlashlight()
 
-	LuaPushFuntion(L, "GetJointLocalPosAndAxis", GetJointLocalPosAndAxis);
-	LuaPushFuntion(L, "GetJointParams", GetJointParams);
-	//LuaPushFuntion(L, "GetRopeColor", GetRopeColor);
-
-	//LuaPushFuntion(L, "GetWaters", GetWaters);
+	//LuaPushFuntion(L, "GetWaters", GetWaters); // FindEntities("", true, "water")
 	LuaPushFuntion(L, "GetWaterTransform", GetWaterTransform);
 	LuaPushFuntion(L, "GetWaterVertices", GetWaterVertices);
 
-	//LuaPushFuntion(L, "GetScripts", GetScripts);
+	//LuaPushFuntion(L, "GetScripts", GetScripts); // FindEntities("", true, "script")
 	LuaPushFuntion(L, "GetScriptPath", GetScriptPath);
 	LuaPushFuntion(L, "GetScriptEntities", GetScriptEntities);
 
-	//LuaPushFuntion(L, "GetWheels", GetWheels);
-	//LuaPushFuntion(L, "GetWheelVehicle", GetWheelVehicle);
-	//LuaPushFuntion(L, "GetVehicleWheels", GetVehicleWheels);
+	//LuaPushFuntion(L, "GetWheels", GetWheels); // FindEntities("", true, "wheel")
+	//LuaPushFuntion(L, "GetWheelVehicle", GetWheelVehicle); // GetEntityParent(wheel, "", "vehicle")
+	//LuaPushFuntion(L, "GetVehicleWheels", GetVehicleWheels); // GetEntityChildren(vehicle, "", true, "wheel")
 
-	//LuaPushFuntion(L, "GetTriggerType", GetTriggerType);
-	//LuaPushFuntion(L, "GetTriggerSize", GetTriggerSize);
+	//LuaPushFuntion(L, "GetTriggerType", GetTriggerType); // GetProperty(trigger, "type")
+	//LuaPushFuntion(L, "GetTriggerSize", GetTriggerSize); // GetProperty(trigger, "size")
 	LuaPushFuntion(L, "GetTriggerVertices", GetTriggerVertices);
+
+	LuaPushFuntion(L, "GetJointLocalPosAndAxis", GetJointLocalPosAndAxis);
+	LuaPushFuntion(L, "GetJointParams", GetJointParams);
+	//LuaPushFuntion(L, "GetRopeColor", GetRopeColor); // GetProperty(rope, "ropecolor")
 
 	LuaPushFuntion(L, "GetShapePaletteIndex", GetShapePaletteIndex);
 	LuaPushFuntion(L, "GetShapeTexture", GetShapeTexture);
@@ -604,7 +607,4 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFuntion(L, "SetShapePalette", SetShapePalette);
 	LuaPushFuntion(L, "SetShapeTexture", SetShapeTexture);
 	LuaPushFuntion(L, "SetTextureOffset", SetTextureOffset);
-
-	LuaPushFuntion(L, "ZlibSaveCompressed", ZlibSaveCompressed);
-	LuaPushFuntion(L, "ZlibLoadCompressed", ZlibLoadCompressed);
 }
