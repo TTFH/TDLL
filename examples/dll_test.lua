@@ -380,4 +380,10 @@ function tick(dt)
 			DebugWatch("unzipped file content", text)
 		end
 	end
+--[[
+	local palette = GetShapePaletteId(shape)
+	for i = 1, 255 do
+		local _, red, green, blue = GetPaletteMaterial(palette, i)
+	end
+]]
 end

@@ -48,7 +48,7 @@ function InitShapeData(vehicle)
 				local strength = GetProperty(shape, "strength")
 				local properties = { density = density, strength = strength }
 				if extended_api then
-					local palette = GetShapePaletteIndex(shape)
+					local palette = GetShapePaletteId(shape)
 					local t, tw, bt, bw = GetShapeTexture(shape)
 					local offset = GetTextureOffset(shape)
 					properties.palette = palette

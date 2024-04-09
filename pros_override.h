@@ -38,7 +38,7 @@ EXPORT uint64_t prosdk_user_get_connection_state(uint64_t* param1) {
 }
 
 EXPORT uint64_t* prosdk_user_get_kernel_session_id_visual_alias(uint64_t* param1) {
-	return NULL;
+	return nullptr;
 }
 
 EXPORT uint64_t prosdk_account_connect(uint64_t* param1, uint64_t param2) {
@@ -79,7 +79,7 @@ EXPORT int prosdk_mods_get_mods_by_search_filter(uint64_t* param1, uint32_t* par
 }
 
 EXPORT uint64_t* prosdk_mods_get_complaint_type_array(uint64_t* param1) {
-	return NULL;
+	return nullptr;
 }
 
 EXPORT int prosdk_mods_subscribe_to_mod(uint64_t* param1, uint64_t param2, uint64_t param3, uint64_t param4, uint64_t* param5) {
@@ -129,7 +129,7 @@ EXPORT void prosdk_term() { }
 EXPORT void prosdk_is_executing_requests() { }
 
 EXPORT uint64_t* prosdk_get_error_message() {
-	return NULL;
+	return nullptr;
 }
 
 EXPORT int prosdk_http_request_get(uint64_t* param1, uint64_t param2, uint64_t param3) {

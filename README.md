@@ -110,7 +110,22 @@ trigger (number) – Trigger handle
 Return value
 list (table) – Indexed table with the vertices of the trigger
 
-palette = GetShapePaletteIndex(shape)
+type, r, g, b, a, reflectivity, shininess, metallic, emissive = GetPaletteMaterial(palette, index)
+Arguments
+palette (number) – Palette index
+index (number) – Material index
+Return value
+type (string) – Type
+red (number) – Red value
+green (number) – Green value
+blue (number) – Blue value
+alpha (number) – Alpha value
+reflectivity (number) – Range 0 to 1
+shininess (number) – Range 0 to 1
+metallic (number) – Range 0 to 1
+emissive (number) – Range 0 to 32
+
+palette = GetShapePaletteId(shape)
 Arguments
 shape (number) – Shape handle
 Return value

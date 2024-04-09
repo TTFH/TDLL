@@ -74,6 +74,13 @@ void LuaPushFuntion(lua_State* L, const char* name, lua_CFunction func) {
 	lua_setglobal(L, name);
 }
 
+bool LuaIsGlobalDefined(lua_State* L, const char* name) {
+	lua_getglobal(L, name);
+	bool defined = !lua_isnil(L, -1);
+	lua_pop(L, 1);
+	return defined;
+}
+
 size_t write_callback(void* contents, size_t size, size_t nmemb, std::string* response) {
 	response->append((char*)contents, size * nmemb);
 	return size * nmemb;
@@ -83,13 +90,13 @@ int HttpRequest(const char* method, const char* endpoint, std::map<std::string, 
 	int http_code = 500;
 	response.clear();
 	CURL* curl = curl_easy_init();
-	if (curl != NULL) {
+	if (curl != nullptr) {
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
 		curl_easy_setopt(curl, CURLOPT_URL, endpoint);
-		if (request != NULL && strlen(request) > 0)
+		if (request != nullptr && strlen(request) > 0)
 			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request);
 
-		curl_slist* curl_headers = NULL;
+		curl_slist* curl_headers = nullptr;
 		for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++) {
 			std::string header = it->first + ": " + it->second;
 			curl_headers = curl_slist_append(curl_headers, header.c_str());
@@ -97,7 +104,7 @@ int HttpRequest(const char* method, const char* endpoint, std::map<std::string, 
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, curl_headers);
 
 		curl_easy_setopt(curl, CURLOPT_CAINFO, "ca-bundle.crt");
-		if (cookie_file != NULL && strlen(cookie_file) > 0) {
+		if (cookie_file != nullptr && strlen(cookie_file) > 0) {
 			curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookie_file);
 			curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookie_file);
 		}

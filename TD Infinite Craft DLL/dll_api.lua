@@ -63,13 +63,26 @@ function GetScriptEntities(script) return nil end
 function GetTriggerVertices(trigger) return nil end
 
 
+---@param palette number Palette index
+---@param index number Material index
+---@return string type Type
+---@return number r Red value
+---@return number g Green value
+---@return number b Blue value
+---@return number a Alpha value
+---@return number reflectivity Range 0 to 1
+---@return number shininess Range 0 to 1
+---@return number metallic Range 0 to 1
+---@return number emissive Range 0 to 32
+function GetPaletteMaterial(palette, index) return "", 0, 0, 0, 0, 0, 0, 0, 0 end
+
 ---@param shape number Shape handle
 ---@param palette number Palette index
 function SetShapePalette(shape, palette) end
 
 ---@param shape number Shape handle
 ---@return number palette Palette index
-function GetShapePaletteIndex(shape) return 0 end
+function GetShapePaletteId(shape) return 0 end
 
 ---@param shape number Shape handle
 ---@return number texture Texture index

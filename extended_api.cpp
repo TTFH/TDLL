@@ -57,7 +57,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.4.0407");
+	td_lua_pushstring(L, "v1.5.4.0408");
 	return 1;
 }
 
@@ -388,7 +388,50 @@ int GetRopeColor(lua_State* L) {
 	return 3;
 }
 
-int GetShapePaletteIndex(lua_State* L) {
+static const char* MaterialKindName[] = {
+	"none",
+	"glass",
+	"wood",
+	"masonry",
+	"plaster",
+	"metal",
+	"heavymetal",
+	"rock",
+	"dirt",
+	"foliage",
+	"plastic",
+	"hardmetal",
+	"hardmasonry",
+	"ice",
+	"unphysical"
+};
+
+int GetPaletteMaterial(lua_State* L) {
+	unsigned int palette_id = lua_tointeger(L, 1);
+	unsigned int index = lua_tointeger(L, 2);
+
+	if (index > 255)
+		return 0;
+
+	Game* game = (Game*)Teardown::GetGame();
+	unsigned int palette_count = game->palettes->getSize();
+	if (palette_id >= palette_count)
+		return 0;
+
+	Material material = game->palettes->get(palette_id).materials[index];
+	td_lua_pushstring(L, MaterialKindName[material.kind]);
+	lua_pushnumber(L, material.color.r);
+	lua_pushnumber(L, material.color.g);
+	lua_pushnumber(L, material.color.b);
+	lua_pushnumber(L, material.color.a);
+	lua_pushnumber(L, material.reflectivity);
+	lua_pushnumber(L, material.shininess);
+	lua_pushnumber(L, material.metallic);
+	lua_pushnumber(L, material.emissive);
+	return 9;
+}
+
+int GetShapePaletteId(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = (Game*)Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
@@ -601,7 +644,8 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFuntion(L, "GetJointParams", GetJointParams);
 	//LuaPushFuntion(L, "GetRopeColor", GetRopeColor); // GetProperty(rope, "ropecolor")
 
-	LuaPushFuntion(L, "GetShapePaletteIndex", GetShapePaletteIndex);
+	LuaPushFuntion(L, "GetPaletteMaterial", GetPaletteMaterial);
+	LuaPushFuntion(L, "GetShapePaletteId", GetShapePaletteId);
 	LuaPushFuntion(L, "GetShapeTexture", GetShapeTexture);
 	LuaPushFuntion(L, "GetTextureOffset", GetTextureOffset);
 	LuaPushFuntion(L, "SetShapePalette", SetShapePalette);

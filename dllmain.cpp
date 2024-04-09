@@ -38,7 +38,7 @@ LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		show_menu = !show_menu;
 	if (show_menu) {
 		CallWindowProc(ImGui_ImplWin32_WndProcHandler, hWnd, uMsg, wParam, lParam);
-		//return true; // disable teardown input while menu is open
+		return true; // disable teardown input while menu is open
 	}
 	return CallWindowProc(hGameWindowProc, hWnd, uMsg, wParam, lParam);
 }
@@ -46,11 +46,11 @@ LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 void RegisterGameFunctionsHook(ScriptCore* script_core) {
 	td_RegisterGameFunctions(script_core);
 	const char* script_name = script_core->path.c_str();
-	if (strstr(script_name, "DLL") != nullptr) {
+	//if (strstr(script_name, "DLL") != nullptr) {
 		printf("Extending API for script: %s\n", script_name);
 		lua_State* L = script_core->state_info->state;
 		RegisterLuaCFunctions(L);
-	}
+	//}
 	awwnb = false; // reset remove boundary checkbox
 	for (int i = 0; i < 16; i++)
 		clock_init[i] = false;

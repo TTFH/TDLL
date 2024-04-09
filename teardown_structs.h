@@ -40,6 +40,9 @@ public:
 	void setSize(uint32_t size) {
 		this->size = size;
 	}
+	T get(uint32_t index) const {
+		return data[index];
+	}
 	T operator[](uint32_t index) const {
 		return data[index];
 	}
@@ -52,7 +55,7 @@ struct Vertex {
 	float x, y;
 };
 
-struct Color {
+struct RGBA {
 	float r, g, b, a;
 };
 
@@ -143,7 +146,7 @@ enum JointType : int {
 
 struct Rope {
 	uint8_t padding[0xC];
-	Color color;		// 0xC
+	RGBA color;		// 0xC
 };
 
 class Joint : public Entity {
@@ -265,17 +268,43 @@ struct ModData {
 	td_vector<ExternalScript*> external_scripts; // 0x158
 };
 
+struct Material {
+	uint32_t kind;
+	RGBA color;
+	float reflectivity;
+	float shininess;
+	float metallic;
+	float emissive;
+	uint32_t replaceable;
+}; // 0x28
+
+static_assert(sizeof(Material) == 0x28, "Wrong size Material");
+
+struct Palette {
+	uint32_t padding1[3];
+	Material materials[256];
+	uint8_t black_tint[4 * 256];
+	uint8_t yellow_tint[4 * 256];
+	uint8_t other_tint[4 * 256];
+	uint32_t padding2[13];
+}; // 0x3440
+
+static_assert(sizeof(Palette) == 0x3440, "Wrong size Palette");
+
 struct Game {
 	int screen_res_x;
 	int screen_res_y;
 	GameState state;
 	uint8_t padding[0x44];
 	Scene* scene;		// 0x50
-	uint8_t padding2[0x80];
+	uint8_t padding2[0x70];
+	td_vector<Palette>* palettes; // 0xC8
+	uint8_t padding3[0x8];
 	ModData* mod_data; // 0xD8
 };
 
 static_assert(offsetof(Game, scene) == 0x50, "Wrong offset game->scene");
+static_assert(offsetof(Game, palettes) == 0xC8, "Wrong offset game->palette");
 static_assert(offsetof(Game, mod_data) == 0xD8, "Wrong offset game->mod_data");
 
 #endif
