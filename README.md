@@ -110,6 +110,13 @@ trigger (number) – Trigger handle
 Return value
 list (table) – Indexed table with the vertices of the trigger
 
+val1, val2 = GetLightSize(light)
+Arguments
+light (number) – Light handle
+Return value
+val1 (number) – Light radius or width
+val2 (number) – Light length, angle or height
+
 type, r, g, b, a, reflectivity, shininess, metallic, emissive = GetPaletteMaterial(palette, index)
 Arguments
 palette (number) – Palette index

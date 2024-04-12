@@ -125,7 +125,31 @@ public:
 static_assert(offsetof(Shape, texture_tile) == 0xC4, "Wrong offset Shape->texture_tile");
 static_assert(offsetof(Shape, vox) == 0xE0, "Wrong offset Shape->vox");
 
-class Light : public Entity { };
+enum LightType : int {
+	Sphere = 1,
+	Capsule,
+	Cone,
+	Area,
+};
+
+class Light : public Entity {
+public:
+	uint8_t padding1[0x4];
+	int type;					// 0x34
+	uint8_t padding2[0x74];
+	float radius;				// 0xAC for sphere, capsule and cone
+	float unshadowed;			// 0xB0
+	float cos_half_angle_rad;	// 0xB4 for cone
+	uint8_t padding3[0xC];
+	float half_width;			// 0xC4 for area
+	float half_height;			// 0xC8 for area
+	float half_length;			// 0xCC for capsule
+};
+
+static_assert(offsetof(Light, type) == 0x34, "Wrong offset Light->type");
+static_assert(offsetof(Light, radius) == 0xAC, "Wrong offset Light->radius");
+static_assert(offsetof(Light, half_width) == 0xC4, "Wrong offset Light->half_width");
+
 class Location : public Entity { };
 
 class Water : public Entity {
@@ -296,11 +320,11 @@ struct Game {
 	int screen_res_y;
 	GameState state;
 	uint8_t padding[0x44];
-	Scene* scene;		// 0x50
+	Scene* scene;					// 0x50
 	uint8_t padding2[0x70];
-	td_vector<Palette>* palettes; // 0xC8
+	td_vector<Palette>* palettes;	// 0xC8
 	uint8_t padding3[0x8];
-	ModData* mod_data; // 0xD8
+	ModData* mod_data;				// 0xD8
 };
 
 static_assert(offsetof(Game, scene) == 0x50, "Wrong offset game->scene");

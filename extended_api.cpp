@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <chrono>
 #include <vector>
@@ -7,6 +8,8 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+
+const double PI = 3.14159265358979323846;
 
 using hrc = std::chrono::high_resolution_clock;
 hrc::time_point clocks[16];
@@ -27,10 +30,10 @@ uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 }
 
 namespace MEM_OFFSET {				// Addr		// Type
-	uintptr_t RegisterGameFunctions	= 0x230A80; // void fun(ScriptCore*)
-	uintptr_t LuaCreateTable		= 0x39A5D0; // void fun(lua_State*, int, int)
-	uintptr_t LuaPushString			= 0x39B820; // void fun(lua_State*, const char*)
-	uintptr_t RenderDist			= 0x6D9DF8; // float
+	uintptr_t RegisterGameFunctions	= 0x230BC0; // void fun(ScriptCore*)
+	uintptr_t LuaCreateTable		= 0x39A730; // void fun(lua_State*, int, int)
+	uintptr_t LuaPushString			= 0x39B980; // void fun(lua_State*, const char*)
+	uintptr_t RenderDist			= 0x6D9E28; // float
 	uintptr_t Game					= 0x92C100; // Game*
 }
 
@@ -57,7 +60,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.4.0408");
+	td_lua_pushstring(L, "v1.5.4.0412");
 	return 1;
 }
 
@@ -308,6 +311,40 @@ int GetTriggerSize(lua_State* L) {
 	}
 	lua_pushnumber(L, 0);
 	return 1;
+}
+
+int GetLightSize(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Game* game = (Game*)Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->lights.getSize(); i++) {
+		Light* light = game->scene->lights[i];
+		if (light->handle == handle) {
+			switch (light->type) {
+			case Sphere:
+				lua_pushnumber(L, light->radius);
+				lua_pushnumber(L, 0);
+				break;
+			case Capsule:
+				lua_pushnumber(L, light->radius);
+				lua_pushnumber(L, 2.0 * light->half_length);
+				break;
+			case Cone: {
+				double angle = 2.0 * acos(light->cos_half_angle_rad) * 180.0 / PI;
+				lua_pushnumber(L, light->radius);
+				lua_pushnumber(L, angle);
+			}
+				break;
+			case Area:
+				lua_pushnumber(L, 2.0 * light->half_width);
+				lua_pushnumber(L, 2.0 * light->half_height);
+				break;
+			}
+			return 2;
+		}
+	}
+	lua_pushnumber(L, 0);
+	lua_pushnumber(L, 0);
+	return 2;
 }
 
 int GetTriggerVertices(lua_State* L) {
@@ -638,6 +675,7 @@ void RegisterLuaCFunctions(lua_State* L) {
 
 	//LuaPushFuntion(L, "GetTriggerType", GetTriggerType); // GetProperty(trigger, "type")
 	//LuaPushFuntion(L, "GetTriggerSize", GetTriggerSize); // GetProperty(trigger, "size")
+	LuaPushFuntion(L, "GetLightSize", GetLightSize);
 	LuaPushFuntion(L, "GetTriggerVertices", GetTriggerVertices);
 
 	LuaPushFuntion(L, "GetJointLocalPosAndAxis", GetJointLocalPosAndAxis);

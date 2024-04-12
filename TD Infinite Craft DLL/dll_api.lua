@@ -62,6 +62,10 @@ function GetScriptEntities(script) return nil end
 ---@return any list Indexed table with the vertices of the trigger
 function GetTriggerVertices(trigger) return nil end
 
+---@param light number Light handle
+---@return number val1 Light radius or width
+---@return number val2 Light length, angle or height
+function GetLightSize(light) return 0, 0 end
 
 ---@param palette number Palette index
 ---@param index number Material index
