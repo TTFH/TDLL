@@ -56,7 +56,7 @@ size = GetShadowVolumeSize()
 Arguments
 none
 Return value
-size (number) – Vector with the size of the shadow volume
+size (table) – Vector with the size of the shadow volume
 
 list = GetBoundaryVertices()
 Arguments
