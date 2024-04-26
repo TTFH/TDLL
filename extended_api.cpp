@@ -31,10 +31,11 @@ uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 	return addr;
 }
 
+// TODO: Find by signature
 namespace MEM_OFFSET {				// Addr		// Type
-	uintptr_t RegisterGameFunctions	= 0x230C90; // void fun(ScriptCore*)
-	uintptr_t LuaCreateTable		= 0x39A800; // void fun(lua_State*, int, int)
-	uintptr_t LuaPushString			= 0x39BA50; // void fun(lua_State*, const char*)
+	uintptr_t RegisterGameFunctions	= 0x230C90; // void fn(ScriptCore*)
+	uintptr_t LuaCreateTable		= 0x39A800; // void fn(lua_State*, int, int)
+	uintptr_t LuaPushString			= 0x39BA50; // void fn(lua_State*, const char*)
 	uintptr_t RenderDist			= 0x6D9E28; // float
 	uintptr_t Game					= 0x92C100; // Game*
 }
@@ -62,7 +63,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.4.0425");
+	td_lua_pushstring(L, "v1.5.4.0426");
 	return 1;
 }
 
@@ -391,6 +392,20 @@ int GetJointLocalPosAndAxis(lua_State* L) {
 	return 2;
 }
 
+int GetJointSize(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Game* game = Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->joints.getSize(); i++) {
+		Joint* joint = game->scene->joints[i];
+		if (joint->handle == handle) {
+			lua_pushnumber(L, joint->size);
+			return 1;
+		}
+	}
+	lua_pushnumber(L, 0);
+	return 1;
+}
+
 int GetJointParams(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = Teardown::GetGame();
@@ -681,6 +696,7 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFuntion(L, "GetTriggerVertices", GetTriggerVertices);
 
 	LuaPushFuntion(L, "GetJointLocalPosAndAxis", GetJointLocalPosAndAxis);
+	LuaPushFuntion(L, "GetJointSize", GetJointSize);
 	LuaPushFuntion(L, "GetJointParams", GetJointParams);
 	//LuaPushFuntion(L, "GetRopeColor", GetRopeColor); // GetProperty(rope, "ropecolor")
 

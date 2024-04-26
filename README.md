@@ -72,6 +72,12 @@ Return value
 pos (table) – Vector with the position of the joint relative to the index-th body
 axis (table) – Vector with the axis of the joint relative to the index-th body
 
+size = GetJointSize(joint)
+Arguments
+joint (number) – Joint handle
+Return value
+size (number) – Joint size
+
 collide, sound, autodisable = GetJointParams(joint)
 Arguments
 joint (number) – Joint handle

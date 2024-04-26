@@ -101,7 +101,6 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
-
 	return td_wglSwapBuffers(hDc);
 }
 
@@ -114,9 +113,6 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	freopen_s(&stream, "CONOUT$", "w", stderr);
 	printf("DLL Loaded\n");
 #endif
-	moduleBase = (uintptr_t)GetModuleHandleA("teardown.exe");
-	HMODULE openglModule = GetModuleHandleA("opengl32.dll");
-
 	/*bool init = false;
 	while (!init) {
 		if (GetAsyncKeyState(VK_F1) & 1) {
@@ -125,32 +121,29 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 		}
 		Sleep(100);
 	}*/
-	Sleep(5000);
+	Sleep(5000); // wait for Steam DRM to load the game
 
-	if (MH_Initialize() != MH_OK) {
+	if (MH_Initialize() != MH_OK)
 		printf("Failed to initialize MinHook\n");
-		return 0;
-	}
-	t_wglSwapBuffers wglSwapBuffers = (t_wglSwapBuffers)GetProcAddress(openglModule, "wglSwapBuffers");
-	if (MH_CreateHook((void*)wglSwapBuffers, (void*)wglSwapBuffersHook, (void**)&td_wglSwapBuffers) != MH_OK) {
+
+	moduleBase = (uintptr_t)GetModuleHandleA("teardown.exe");
+	//HMODULE openglModule = GetModuleHandleA("opengl32.dll");
+	//t_wglSwapBuffers wglSwapBuffers = (t_wglSwapBuffers)GetProcAddress(openglModule, "wglSwapBuffers");
+	//MH_CreateHook((void*)wglSwapBuffers, (void*)wglSwapBuffersHook, (void**)&td_wglSwapBuffers);
+
+	LPVOID target = nullptr;
+	if (MH_CreateHookApiEx(L"opengl32.dll", "wglSwapBuffers", (void*)wglSwapBuffersHook, (void**)&td_wglSwapBuffers, &target) != MH_OK)
 		printf("Failed to create hook for wglSwapBuffers\n");
-		return 0;
-	}
 	uintptr_t rgf_addr = Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions);
 	MH_STATUS status = MH_CreateHook((void*)rgf_addr, (void*)RegisterGameFunctionsHook, (void**)&td_RegisterGameFunctions);
 	if (status != MH_OK) {
 		printf("Failed to create hook for RegisterGameFunctions\n");
 		printf("Error code: %d\n", status);
-		return 0;
 	}
-	if (MH_EnableHook((void*)wglSwapBuffers) != MH_OK) {
+	if (MH_EnableHook((void*)target) != MH_OK)
 		printf("Failed to enable hook for wglSwapBuffers\n");
-		return 0;
-	}
-	if (MH_EnableHook((void*)rgf_addr) != MH_OK) {
+	if (MH_EnableHook((void*)rgf_addr) != MH_OK)
 		printf("Failed to enable hook for RegisterGameFunctions\n");
-		return 0;
-	}
 
 	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable);
 	td_lua_pushstring = (t_lua_pushstring)Teardown::GetReferenceTo(MEM_OFFSET::LuaPushString);

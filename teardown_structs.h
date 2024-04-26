@@ -177,8 +177,8 @@ class Joint : public Entity {
 public:
 	uint8_t padding1[0x20];
 	JointType type;		// 0x50
-	uint8_t padding2[4];
-	bool collide;		// 0x58
+	float size;
+	bool collide;
 	uint8_t padding3[0x17];
 	Vector local_pos1;	// 0x70
 	Vector local_pos2;
@@ -191,7 +191,6 @@ public:
 };
 
 static_assert(offsetof(Joint, type) == 0x50, "Wrong offset Joint->type");
-static_assert(offsetof(Joint, collide) == 0x58, "Wrong offset Joint->collide");
 static_assert(offsetof(Joint, local_pos1) == 0x70, "Wrong offset Joint->local_pos1");
 static_assert(offsetof(Joint, rope) == 0xC8, "Wrong offset Joint->rope");
 static_assert(offsetof(Joint, sound) == 0xD0, "Wrong offset Joint->sound");

@@ -34,6 +34,10 @@ function GetBoundaryVertices() return nil end
 function GetJointLocalPosAndAxis(joint, index) return nil, nil end
 
 ---@param joint number Joint handle
+---@return number size Joint size
+function GetJointSize(joint) return 0 end
+
+---@param joint number Joint handle
 ---@return boolean collide If the jointed bodies collide
 ---@return boolean sound If the joint makes sound
 ---@return boolean autodisable Whatever this does
