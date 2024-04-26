@@ -21,7 +21,7 @@ Vector LuaToVector(lua_State* L, int index);
 void LuaPushFuntion(lua_State* L, const char* name, lua_CFunction func);
 bool LuaIsGlobalDefined(lua_State* L, const char* name);
 
-// Not so lua related
+// Not so Lua related
 int HttpRequest(const char*, const char*, std::map<std::string, std::string>, const char*, const char*, std::string&);
 
 #endif

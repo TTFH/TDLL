@@ -81,6 +81,8 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		ImGui::Text("Render distance:");
 		static float render_dist = 500;
 		ImGui::SliderFloat("##render_dist", &render_dist, 100.0f, 1000.0f, "%.0f");
+		ImGui::SameLine();
+		ImGui::InputFloat("##render_dist_input", &render_dist, 1.0f, 10.0f, "%.0f");
 		if (ImGui::Button("Set render distance")) {
 			float* render_addr = (float*)Teardown::GetReferenceTo(MEM_OFFSET::RenderDist);
 			Patch((BYTE*)render_addr, (BYTE*)&render_dist, sizeof(float));
@@ -115,19 +117,48 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	moduleBase = (uintptr_t)GetModuleHandleA("teardown.exe");
 	HMODULE openglModule = GetModuleHandleA("opengl32.dll");
 
-	MH_Initialize();
+	/*bool init = false;
+	while (!init) {
+		if (GetAsyncKeyState(VK_F1) & 1) {
+			init = true;
+			break;
+		}
+		Sleep(100);
+	}*/
+	Sleep(5000);
+
+	if (MH_Initialize() != MH_OK) {
+		printf("Failed to initialize MinHook\n");
+		return 0;
+	}
 	t_wglSwapBuffers wglSwapBuffers = (t_wglSwapBuffers)GetProcAddress(openglModule, "wglSwapBuffers");
-	MH_CreateHook((void*)wglSwapBuffers, (void*)wglSwapBuffersHook, (void**)&td_wglSwapBuffers);
-	MH_CreateHook((void*)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions), (void*)RegisterGameFunctionsHook, (void**)&td_RegisterGameFunctions);
-	MH_EnableHook(MH_ALL_HOOKS);
+	if (MH_CreateHook((void*)wglSwapBuffers, (void*)wglSwapBuffersHook, (void**)&td_wglSwapBuffers) != MH_OK) {
+		printf("Failed to create hook for wglSwapBuffers\n");
+		return 0;
+	}
+	uintptr_t rgf_addr = Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions);
+	MH_STATUS status = MH_CreateHook((void*)rgf_addr, (void*)RegisterGameFunctionsHook, (void**)&td_RegisterGameFunctions);
+	if (status != MH_OK) {
+		printf("Failed to create hook for RegisterGameFunctions\n");
+		printf("Error code: %d\n", status);
+		return 0;
+	}
+	if (MH_EnableHook((void*)wglSwapBuffers) != MH_OK) {
+		printf("Failed to enable hook for wglSwapBuffers\n");
+		return 0;
+	}
+	if (MH_EnableHook((void*)rgf_addr) != MH_OK) {
+		printf("Failed to enable hook for RegisterGameFunctions\n");
+		return 0;
+	}
 
 	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable);
 	td_lua_pushstring = (t_lua_pushstring)Teardown::GetReferenceTo(MEM_OFFSET::LuaPushString);
-	return TRUE;
+	return 0;
 }
 
 BOOL APIENTRY DllMain(HMODULE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
 	if (fdwReason == DLL_PROCESS_ATTACH)
-		CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)MainThread, hinstDLL, 0, nullptr);
+		CreateThread(nullptr, 0, MainThread, hinstDLL, 0, nullptr);
 	return TRUE;
 }

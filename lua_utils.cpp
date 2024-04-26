@@ -103,7 +103,7 @@ int HttpRequest(const char* method, const char* endpoint, std::map<std::string, 
 		}
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, curl_headers);
 
-		curl_easy_setopt(curl, CURLOPT_CAINFO, "ca-bundle.crt");
+		curl_easy_setopt(curl, CURLOPT_CAINFO, "ca-bundle.crt"); // C:\msys64\usr\ssl\certs
 		if (cookie_file != nullptr && strlen(cookie_file) > 0) {
 			curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookie_file);
 			curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookie_file);

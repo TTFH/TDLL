@@ -11,6 +11,8 @@
 
 const double PI = 3.14159265358979323846;
 
+using std::chrono::duration_cast;
+using std::chrono::nanoseconds;
 using hrc = std::chrono::high_resolution_clock;
 hrc::time_point clocks[16];
 bool clock_init[16] = { false };
@@ -30,9 +32,9 @@ uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 }
 
 namespace MEM_OFFSET {				// Addr		// Type
-	uintptr_t RegisterGameFunctions	= 0x230BC0; // void fun(ScriptCore*)
-	uintptr_t LuaCreateTable		= 0x39A730; // void fun(lua_State*, int, int)
-	uintptr_t LuaPushString			= 0x39B980; // void fun(lua_State*, const char*)
+	uintptr_t RegisterGameFunctions	= 0x230C90; // void fun(ScriptCore*)
+	uintptr_t LuaCreateTable		= 0x39A800; // void fun(lua_State*, int, int)
+	uintptr_t LuaPushString			= 0x39BA50; // void fun(lua_State*, const char*)
 	uintptr_t RenderDist			= 0x6D9E28; // float
 	uintptr_t Game					= 0x92C100; // Game*
 }
@@ -60,7 +62,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.4.0413");
+	td_lua_pushstring(L, "v1.5.4.0425");
 	return 1;
 }
 
@@ -80,7 +82,7 @@ int Tock(lua_State* L) {
 	unsigned int index = lua_tointeger(L, 1);
 	if (clock_init[index]) {
 		hrc::time_point now = hrc::now();
-		double elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(now - clocks[index]).count();
+		double elapsed = duration_cast<nanoseconds>(now - clocks[index]).count();
 		lua_pushnumber(L, elapsed);
 	} else
 		lua_pushnumber(L, 0);
