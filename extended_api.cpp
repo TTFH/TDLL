@@ -1,4 +1,5 @@
 #include <math.h>
+#include <time.h>
 #include <stdio.h>
 #include <chrono>
 #include <vector>
@@ -113,6 +114,24 @@ int HttpRequest(lua_State* L) {
 	return 2;
 }
 
+int GetSystemDate(lua_State* L) {
+	time_t t = time(NULL);
+	struct tm* tm = localtime(&t);
+	lua_pushinteger(L, tm->tm_year + 1900);
+	lua_pushinteger(L, tm->tm_mon + 1);
+	lua_pushinteger(L, tm->tm_mday);
+	return 3;
+}
+
+int GetSystemTime(lua_State* L) {
+	time_t t = time(NULL);
+	struct tm* tm = localtime(&t);
+	lua_pushinteger(L, tm->tm_hour);
+	lua_pushinteger(L, tm->tm_min);
+	lua_pushinteger(L, tm->tm_sec);
+	return 3;
+}
+
 int GetWaters(lua_State* L) {
 	Game* game = Teardown::GetGame();
 	unsigned int n = game->scene->waters.getSize();
@@ -225,6 +244,12 @@ int GetScriptPath(lua_State* L) {
 int GetPlayerFlashlight(lua_State* L) {
 	Game* game = Teardown::GetGame();
 	lua_pushinteger(L, game->scene->flashlight->handle);
+	return 1;
+}
+
+int GetTimeScale(lua_State* L) {
+	Game* game = Teardown::GetGame();
+	lua_pushnumber(L, game->time_scale);
 	return 1;
 }
 
@@ -485,6 +510,20 @@ int GetPaletteMaterial(lua_State* L) {
 	return 9;
 }
 
+int GetShapeDensity(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Game* game = Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
+		Shape* shape = game->scene->shapes[i];
+		if (shape->handle == handle) {
+			lua_pushnumber(L, shape->density);
+			return 1;
+		}
+	}
+	lua_pushnumber(L, 0);
+	return 1;
+}
+
 int GetShapePaletteId(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = Teardown::GetGame();
@@ -668,12 +707,15 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFuntion(L, "GetDllVersion", GetDllVersion);
 	LuaPushFuntion(L, "Tick", Tick);
 	LuaPushFuntion(L, "Tock", Tock);
+	LuaPushFuntion(L, "GetSystemTime", GetSystemTime);
+	LuaPushFuntion(L, "GetSystemDate", GetSystemDate);
 	LuaPushFuntion(L, "HttpRequest", HttpRequest);
 	LuaPushFuntion(L, "ZlibSaveCompressed", ZlibSaveCompressed);
 	LuaPushFuntion(L, "ZlibLoadCompressed", ZlibLoadCompressed);
 
 	LuaPushFuntion(L, "AllowInternalFunctions", AllowInternalFunctions);
 
+	LuaPushFuntion(L, "GetTimeScale", GetTimeScale);
 	LuaPushFuntion(L, "GetShadowVolumeSize", GetShadowVolumeSize);
 	LuaPushFuntion(L, "GetBoundaryVertices", GetBoundaryVertices);
 	//LuaPushFuntion(L, "GetPlayerFlashlight", GetPlayerFlashlight); // GetFlashlight()
@@ -701,6 +743,7 @@ void RegisterLuaCFunctions(lua_State* L) {
 	//LuaPushFuntion(L, "GetRopeColor", GetRopeColor); // GetProperty(rope, "ropecolor")
 
 	LuaPushFuntion(L, "GetPaletteMaterial", GetPaletteMaterial);
+	LuaPushFuntion(L, "GetShapeDensity", GetShapeDensity);
 	LuaPushFuntion(L, "GetShapePaletteId", GetShapePaletteId);
 	LuaPushFuntion(L, "GetShapeTexture", GetShapeTexture);
 	LuaPushFuntion(L, "GetTextureOffset", GetTextureOffset);

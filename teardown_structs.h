@@ -112,16 +112,19 @@ static_assert(offsetof(Vox, palette) == 0x54, "Wrong offset Vox->palette");
 
 class Shape : public Entity {
 public:
-	uint8_t padding1[0x94];
+	uint8_t padding1[0x8C];
+	float density;				// 0xBC
+	uint8_t padding2[4];
 	uint16_t texture_tile;		// 0xC4
 	uint16_t blendtexture_tile = 0;
 	float texture_weight;
 	float blendtexture_weight = 1;
 	Vector texture_offset;
-	uint8_t padding2[0x4];
+	uint8_t padding3[4];
 	Vox* vox;					// 0xE0
 };
 
+static_assert(offsetof(Shape, density) == 0xBC, "Wrong offset Shape->density");
 static_assert(offsetof(Shape, texture_tile) == 0xC4, "Wrong offset Shape->texture_tile");
 static_assert(offsetof(Shape, vox) == 0xE0, "Wrong offset Shape->vox");
 
@@ -134,7 +137,7 @@ enum LightType : int {
 
 class Light : public Entity {
 public:
-	uint8_t padding1[0x4];
+	uint8_t padding1[4];
 	int type;					// 0x34
 	uint8_t padding2[0x74];
 	float radius;				// 0xAC for sphere, capsule and cone
@@ -322,12 +325,15 @@ struct Game {
 	Scene* scene;					// 0x50
 	uint8_t padding2[0x70];
 	td_vector<Palette>* palettes;	// 0xC8
-	uint8_t padding3[0x8];
+	uint8_t padding3[8];
 	ModData* mod_data;				// 0xD8
+	uint8_t padding4[0xCC];
+	float time_scale;				// 0x1AC
 };
 
 static_assert(offsetof(Game, scene) == 0x50, "Wrong offset game->scene");
 static_assert(offsetof(Game, palettes) == 0xC8, "Wrong offset game->palette");
 static_assert(offsetof(Game, mod_data) == 0xD8, "Wrong offset game->mod_data");
+static_assert(offsetof(Game, time_scale) == 0x1AC, "Wrong offset game->time_scale");
 
 #endif

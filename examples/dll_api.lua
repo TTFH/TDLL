@@ -11,6 +11,16 @@ function Tick(index) end
 ---@return number elapsed Time elapsed since Tick was called in nanoseconds
 function Tock(index) return 0 end
 
+---@return number hour Current hour
+---@return number minute Current minute
+---@return number second Current second
+function GetSystemTime() return 0, 0, 0 end
+
+---@return number year Current year
+---@return number month Current month
+---@return number day Current day
+function GetSystemDate() return 0, 0, 0 end
+
 ---@param method string HTTP method to use
 ---@param endpoint string URL to send the request
 ---@param headers any Table with headers to send
@@ -20,6 +30,9 @@ function Tock(index) return 0 end
 ---@return string response Response body
 function HttpRequest(method, endpoint, headers, request, cookies) return 0, "" end
 
+
+---@return number scale Current time scale
+function GetTimeScale() return 0 end
 
 ---@return any size Vector with the size of the shadow volume
 function GetShadowVolumeSize() return nil end
@@ -87,6 +100,10 @@ function GetPaletteMaterial(palette, index) return "", 0, 0, 0, 0, 0, 0, 0, 0 en
 ---@param shape number Shape handle
 ---@param palette number Palette index
 function SetShapePalette(shape, palette) end
+
+---@param shape number Shape handle
+---@return number density Density
+function GetShapeDensity(shape) return 0 end
 
 ---@param shape number Shape handle
 ---@return number palette Palette index

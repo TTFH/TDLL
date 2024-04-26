@@ -41,6 +41,22 @@ index (number) – Index of the clock, between 0 and 15, default is 0 if not pro
 Return value
 elapsed (number) – Time elapsed since Tick was called in nanoseconds
 
+hour, minute, second = GetSystemTime()
+Arguments
+none
+Return value
+hour (number) – Current hour
+minute (number) – Current minute
+second (number) – Current second
+
+year, month, day = GetSystemDate()
+Arguments
+none
+Return value
+year (number) – Current year
+month (number) – Current month
+day (number) – Current day
+
 status, response = HttpRequest(method, endpoint, headers, request, cookies)
 Arguments
 method (string) – HTTP method to use
@@ -51,6 +67,12 @@ cookies (string) – Filename where to store and read cookies from
 Return value
 status (number) – HTTP status code
 response (string) – Response body
+
+scale = GetTimeScale()
+Arguments
+none
+Return value
+scale (number) – Current time scale
 
 size = GetShadowVolumeSize()
 Arguments
@@ -137,6 +159,12 @@ reflectivity (number) – Range 0 to 1
 shininess (number) – Range 0 to 1
 metallic (number) – Range 0 to 1
 emissive (number) – Range 0 to 32
+
+density = GetShapeDensity(shape)
+Arguments
+shape (number) – Shape handle
+Return value
+density (number) – Density
 
 palette = GetShapePaletteId(shape)
 Arguments
