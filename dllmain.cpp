@@ -1,6 +1,12 @@
 #include <stdio.h>
-#include "pros_override.h"
+
 #include "extended_api.h"
+#include "pros_override.h"
+
+#include "imgui/imgui.h"
+#include "imgui/imgui_internal.h"
+#include "imgui/backends/imgui_impl_win32.h"
+#include "imgui/backends/imgui_impl_opengl3.h"
 
 #ifdef _MSC_VER
 #include "MinHook/include/MinHook.h"
@@ -9,28 +15,25 @@
 #include <MinHook.h>
 #endif
 
-#include "imgui/imgui.h"
-#include "imgui/imgui_internal.h"
-#include "imgui/backends/imgui_impl_win32.h"
-#include "imgui/backends/imgui_impl_opengl3.h"
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-typedef BOOL (WINAPI* t_wglSwapBuffers)(HDC hDc);
+typedef BOOL WINAPI (*t_wglSwapBuffers) (HDC hDc);
 t_wglSwapBuffers td_wglSwapBuffers = nullptr;
 
 typedef void (*t_RegisterGameFunctions) (ScriptCore* core);
 t_RegisterGameFunctions td_RegisterGameFunctions = nullptr;
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 uintptr_t moduleBase;
 WNDPROC hGameWindowProc;
 bool show_menu = false;
 bool awwnb = false;
 
-void Patch(BYTE* dst, BYTE* src, size_t size) {
+template<typename T>
+void Patch(T* dst, const T* src) {
 	DWORD oldProtect;
-	VirtualProtect(dst, size, PAGE_EXECUTE_READWRITE, &oldProtect);
-	memcpy(dst, src, size);
-	VirtualProtect(dst, size, oldProtect, &oldProtect);
+	VirtualProtect(dst, sizeof(T), PAGE_EXECUTE_READWRITE, &oldProtect);
+	*dst = *src;
+	VirtualProtect(dst, sizeof(T), oldProtect, &oldProtect);
 }
 
 LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -38,20 +41,17 @@ LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		show_menu = !show_menu;
 	if (show_menu) {
 		CallWindowProc(ImGui_ImplWin32_WndProcHandler, hWnd, uMsg, wParam, lParam);
-		return true; // disable teardown input while menu is open
+		return true; // Disable teardown input while menu is open
 	}
 	return CallWindowProc(hGameWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
 void RegisterGameFunctionsHook(ScriptCore* script_core) {
 	td_RegisterGameFunctions(script_core);
-	const char* script_name = script_core->path.c_str();
-	//if (strstr(script_name, "DLL") != nullptr) {
-		printf("Extending API for script: %s\n", script_name);
-		lua_State* L = script_core->state_info->state;
-		RegisterLuaCFunctions(L);
-	//}
-	awwnb = false; // reset remove boundary checkbox
+	//const char* script_name = script_core->path.c_str();
+	lua_State* L = script_core->state_info->state;
+	RegisterLuaCFunctions(L);
+	awwnb = false; // Reset remove boundary checkbox
 	for (int i = 0; i < 16; i++)
 		clock_init[i] = false;
 }
@@ -85,9 +85,8 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		ImGui::InputFloat("##render_dist_input", &render_dist, 1.0f, 10.0f, "%.0f");
 		if (ImGui::Button("Set render distance")) {
 			float* render_addr = (float*)Teardown::GetReferenceTo(MEM_OFFSET::RenderDist);
-			Patch((BYTE*)render_addr, (BYTE*)&render_dist, sizeof(float));
+			Patch(render_addr, &render_dist);
 		}
-
 		if (ImGui::Checkbox("Remove boundaries", &awwnb) && awwnb) {
 			Game* game = (Game*)Teardown::GetGame();
 			game->scene->boundary.setSize(0);
@@ -104,49 +103,41 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 	return td_wglSwapBuffers(hDc);
 }
 
+class Hook {
+public:
+	Hook() {
+		MH_Initialize();
+	}
+	template<typename T>
+	void Create(T target, T hook, T* original) {
+		MH_CreateHook((LPVOID)target, (LPVOID)hook, (LPVOID*)original);
+		MH_EnableHook((LPVOID)target);
+	}
+	template<typename T>
+	void Create(LPCWSTR module, const char* target, T hook, T* original) {
+		LPVOID target_addr;
+		MH_CreateHookApiEx(module, target, (LPVOID)hook, (LPVOID*)original, &target_addr);
+		MH_EnableHook(target_addr);
+	}
+};
+
 DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
+	Sleep(5000);
 #ifdef DEBUGCONSOLE
 	AllocConsole();
-	FILE* stream;
-	freopen_s(&stream, "CONIN$", "r", stdin);
-	freopen_s(&stream, "CONOUT$", "w", stdout);
-	freopen_s(&stream, "CONOUT$", "w", stderr);
-	printf("DLL Loaded\n");
+	freopen("CONIN$", "r", stdin);
+	freopen("CONOUT$", "w", stdout);
+	freopen("CONOUT$", "w", stderr);
+	printf("TDLL Loaded\n");
 #endif
-	/*bool init = false;
-	while (!init) {
-		if (GetAsyncKeyState(VK_F1) & 1) {
-			init = true;
-			break;
-		}
-		Sleep(100);
-	}*/
-	Sleep(5000); // wait for Steam DRM to load the game
 
-	if (MH_Initialize() != MH_OK)
-		printf("Failed to initialize MinHook\n");
-
+	Hook hook;
 	moduleBase = (uintptr_t)GetModuleHandleA("teardown.exe");
-	//HMODULE openglModule = GetModuleHandleA("opengl32.dll");
-	//t_wglSwapBuffers wglSwapBuffers = (t_wglSwapBuffers)GetProcAddress(openglModule, "wglSwapBuffers");
-	//MH_CreateHook((void*)wglSwapBuffers, (void*)wglSwapBuffersHook, (void**)&td_wglSwapBuffers);
-
-	LPVOID target = nullptr;
-	if (MH_CreateHookApiEx(L"opengl32.dll", "wglSwapBuffers", (void*)wglSwapBuffersHook, (void**)&td_wglSwapBuffers, &target) != MH_OK)
-		printf("Failed to create hook for wglSwapBuffers\n");
-	uintptr_t rgf_addr = Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions);
-	MH_STATUS status = MH_CreateHook((void*)rgf_addr, (void*)RegisterGameFunctionsHook, (void**)&td_RegisterGameFunctions);
-	if (status != MH_OK) {
-		printf("Failed to create hook for RegisterGameFunctions\n");
-		printf("Error code: %d\n", status);
-	}
-	if (MH_EnableHook((void*)target) != MH_OK)
-		printf("Failed to enable hook for wglSwapBuffers\n");
-	if (MH_EnableHook((void*)rgf_addr) != MH_OK)
-		printf("Failed to enable hook for RegisterGameFunctions\n");
-
-	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable);
 	td_lua_pushstring = (t_lua_pushstring)Teardown::GetReferenceTo(MEM_OFFSET::LuaPushString);
+	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable);
+	t_RegisterGameFunctions rgf_addr = (t_RegisterGameFunctions)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions);
+	hook.Create(L"opengl32.dll", "wglSwapBuffers", wglSwapBuffersHook, &td_wglSwapBuffers);
+	hook.Create(rgf_addr, RegisterGameFunctionsHook, &td_RegisterGameFunctions);
 	return 0;
 }
 

@@ -1,9 +1,10 @@
-#ifndef _LUA_H
-#define _LUA_H
+#ifndef _LUA_UTILS_H
+#define _LUA_UTILS_H
 
 #include <map>
 #include <string>
 #include <vector>
+
 #include "lua5.1.4/lua.hpp"
 #include "teardown_structs.h"
 

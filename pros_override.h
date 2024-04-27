@@ -90,7 +90,7 @@ EXPORT int prosdk_mods_unsubscribe_from_mod(uint64_t* param1, uint64_t param2, u
 	return HYDRA_OK;
 }
 
-EXPORT prosdk_mods_submit_mod_complaint(uint64_t* param1, uint64_t* param2, uint64_t* param3, uint64_t param4, uint64_t param5) {
+EXPORT int prosdk_mods_submit_mod_complaint(uint64_t* param1, uint64_t* param2, uint64_t* param3, uint64_t param4, uint64_t param5) {
 	return HYDRA_OK;
 }
 
