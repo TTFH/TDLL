@@ -15,6 +15,9 @@
 #include <MinHook.h>
 #endif
 
+#define PSAPI_VERSION 2
+#include <psapi.h>
+
 typedef BOOL WINAPI (*t_wglSwapBuffers) (HDC hDc);
 t_wglSwapBuffers td_wglSwapBuffers = nullptr;
 
@@ -23,7 +26,7 @@ t_RegisterGameFunctions td_RegisterGameFunctions = nullptr;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-uintptr_t moduleBase;
+HMODULE moduleBase;
 WNDPROC hGameWindowProc;
 bool show_menu = false;
 bool awwnb = false;
@@ -121,6 +124,26 @@ public:
 	}
 };
 
+uintptr_t FindPattern(uintptr_t dwAddress, size_t dwLen, const char* pattern, const char* mask) {
+	for (size_t i = 0; i < dwLen - strlen(mask); i++) {
+		bool found = true;
+		for (size_t j = 0; j < strlen(mask); j++) {
+			if (mask[j] != '?' && pattern[j] != *(char*)(dwAddress + i + j)) {
+				found = false;
+				break;
+			}
+		}
+		if (found) return i;
+	}
+	return 0;
+}
+
+uintptr_t FindPatternInModule(HMODULE hModule, const char* pattern, const char* mask) {
+	MODULEINFO moduleInfo;
+	GetModuleInformation(GetCurrentProcess(), hModule, &moduleInfo, sizeof(MODULEINFO));
+	return FindPattern((uintptr_t)hModule, (size_t)moduleInfo.SizeOfImage, pattern, mask);
+}
+
 DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	Sleep(5000);
 #ifdef DEBUGCONSOLE
@@ -132,7 +155,7 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 #endif
 
 	Hook hook;
-	moduleBase = (uintptr_t)GetModuleHandleA("teardown.exe");
+	moduleBase = GetModuleHandleA("teardown.exe");
 	td_lua_pushstring = (t_lua_pushstring)Teardown::GetReferenceTo(MEM_OFFSET::LuaPushString);
 	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable);
 	t_RegisterGameFunctions rgf_addr = (t_RegisterGameFunctions)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions);

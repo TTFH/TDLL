@@ -7,9 +7,6 @@
 
 #include "extended_api.h"
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 const double PI = 3.14159265358979323846;
 
 using std::chrono::duration_cast;
@@ -43,10 +40,10 @@ namespace MEM_OFFSET {				// Addr		// Type
 
 namespace Teardown {
 	uintptr_t GetReferenceTo(uintptr_t offset) {
-		return moduleBase + offset;
+		return (uintptr_t)moduleBase + offset;
 	}
 	uintptr_t GetPointerTo(uintptr_t offset) {
-		return FindDMAAddy(moduleBase + offset, { 0x00 });
+		return FindDMAAddy((uintptr_t)moduleBase + offset, { 0x00 });
 	}
 	Game* GetGame() {
 		return (Game*)GetPointerTo(MEM_OFFSET::Game);

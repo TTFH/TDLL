@@ -1,9 +1,12 @@
 #ifndef _EXTENDED_API_H
 #define _EXTENDED_API_H
 
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
 #include "lua_utils.h"
 
-extern uintptr_t moduleBase;
+extern HMODULE moduleBase;
 
 namespace MEM_OFFSET {
 	extern uintptr_t RegisterGameFunctions;
