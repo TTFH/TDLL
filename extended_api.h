@@ -10,6 +10,7 @@ extern HMODULE moduleBase;
 
 namespace MEM_OFFSET {
 	extern uintptr_t RegisterGameFunctions;
+	extern uintptr_t RegisterLuaFunction;
 	extern uintptr_t LuaCreateTable;
 	extern uintptr_t LuaPushString;
 	extern uintptr_t RenderDist;

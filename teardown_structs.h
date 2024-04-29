@@ -23,6 +23,17 @@ class td_string {
 		char StackBuffer[32] = { 0 };
 	};
 public:
+	td_string() {}
+	td_string(const char* str) {
+		size_t len = strlen(str);
+		if (len < 32) {
+			memcpy(StackBuffer, str, len);
+		} else {
+			HeapBuffer = new char[len + 1];
+			memcpy(HeapBuffer, str, len);
+			StackBuffer[31] = 1;
+		}
+	}
 	const char* c_str() const {
 		return StackBuffer[31] != '\0' ? HeapBuffer : &StackBuffer[0];
 	}
@@ -49,7 +60,7 @@ public:
 	T& operator[](uint32_t index) {
 		return data[index];
 	}
-};
+}; // 0x10
 
 struct Vertex {
 	float x, y;
@@ -228,8 +239,25 @@ public:
 static_assert(offsetof(Trigger, type) == 0x4C, "Wrong offset Trigger->type");
 static_assert(offsetof(Trigger, polygon_size) == 0xF0, "Wrong offset Trigger->polygon_size");
 
+struct ReturnInfo {
+	lua_State* L;
+	int ret_count;
+	int max_ret;
+};
+
 struct LuaStateInfo {
 	lua_State* state;
+};
+
+struct ScriptCoreInner {
+	uint8_t padding[0x40];
+	LuaStateInfo* state_info;		// 0x98
+};
+
+struct ScriptUiStatus {
+	uint8_t padding1[0x348];
+	int align_h;			// 0x348
+	int align_v;			// 0x34C
 };
 
 struct ScriptCore {
@@ -238,15 +266,17 @@ struct ScriptCore {
 	float dt;
 	td_string path;					// 0x10
 	td_string location;				// 0x30
-	uint8_t padding2[0x48];
-	LuaStateInfo* state_info;		// 0x98
+	uint8_t padding2[8];
+	ScriptCoreInner inner_core;
 	uint8_t padding3[0x1E8];
 	td_vector<uint32_t> entities;	// 0x288
+	uint8_t padding4[0x10];
+	ScriptUiStatus ui_status;		// 0x2A8
 };
 
 static_assert(offsetof(ScriptCore, path) == 0x10, "Wrong offset ScriptCore->path");
-static_assert(offsetof(ScriptCore, state_info) == 0x98, "Wrong offset ScriptCore->state_info");
 static_assert(offsetof(ScriptCore, entities) == 0x288, "Wrong offset ScriptCore->entities");
+static_assert(offsetof(ScriptCore, ui_status) == 0x2A8, "Wrong offset ScriptCore->ui_status");
 
 class Script : public Entity {
 public:

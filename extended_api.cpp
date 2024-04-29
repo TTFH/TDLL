@@ -32,6 +32,7 @@ uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 // TODO: Find by signature
 namespace MEM_OFFSET {				// Addr		// Type
 	uintptr_t RegisterGameFunctions	= 0x230C90; // void fn(ScriptCore*)
+	uintptr_t RegisterLuaFunction	= 0x3AD580; // void fn(SCI*, char*, void*)
 	uintptr_t LuaCreateTable		= 0x39A800; // void fn(lua_State*, int, int)
 	uintptr_t LuaPushString			= 0x39BA50; // void fn(lua_State*, const char*)
 	uintptr_t RenderDist			= 0x6D9E28; // float
@@ -61,7 +62,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.4.0426");
+	td_lua_pushstring(L, "v1.5.4.0429");
 	return 1;
 }
 
