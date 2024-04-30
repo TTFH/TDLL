@@ -127,9 +127,9 @@ public:
 	float density;				// 0xBC
 	uint8_t padding2[4];
 	uint16_t texture_tile;		// 0xC4
-	uint16_t blendtexture_tile = 0;
+	uint16_t blendtexture_tile;
 	float texture_weight;
-	float blendtexture_weight = 1;
+	float blendtexture_weight;
 	Vector texture_offset;
 	uint8_t padding3[4];
 	Vox* vox;					// 0xE0
@@ -241,8 +241,8 @@ static_assert(offsetof(Trigger, polygon_size) == 0xF0, "Wrong offset Trigger->po
 
 struct ReturnInfo {
 	lua_State* L;
-	int ret_count;
-	int max_ret;
+	int count;
+	int max;
 };
 
 struct LuaStateInfo {
@@ -250,12 +250,12 @@ struct LuaStateInfo {
 };
 
 struct ScriptCoreInner {
-	uint8_t padding[0x40];
-	LuaStateInfo* state_info;		// 0x98
+	uint8_t padding[0x30];
+	LuaStateInfo* state_info;
 };
 
 struct ScriptUiStatus {
-	uint8_t padding1[0x348];
+	uint8_t padding[0x348];
 	int align_h;			// 0x348
 	int align_v;			// 0x34C
 };
@@ -266,23 +266,24 @@ struct ScriptCore {
 	float dt;
 	td_string path;					// 0x10
 	td_string location;				// 0x30
-	uint8_t padding2[8];
-	ScriptCoreInner inner_core;
+	uint8_t padding2[0x18];
+	ScriptCoreInner inner_core;		// 0x68
 	uint8_t padding3[0x1E8];
 	td_vector<uint32_t> entities;	// 0x288
 	uint8_t padding4[0x10];
-	ScriptUiStatus ui_status;		// 0x2A8
+	ScriptUiStatus* ui_status;		// 0x2A8
 };
 
 static_assert(offsetof(ScriptCore, path) == 0x10, "Wrong offset ScriptCore->path");
+static_assert(offsetof(ScriptCore, inner_core) == 0x68, "Wrong offset ScriptCore->inner_core");
 static_assert(offsetof(ScriptCore, entities) == 0x288, "Wrong offset ScriptCore->entities");
 static_assert(offsetof(ScriptCore, ui_status) == 0x2A8, "Wrong offset ScriptCore->ui_status");
 
 class Script : public Entity {
 public:
-	td_string name;			// 0x30
-	td_string path;			// 0x50
-	ScriptCore core;		// 0x70
+	td_string name;		// 0x30
+	td_string path;		// 0x50
+	ScriptCore core;	// 0x70
 };
 
 static_assert(offsetof(Script, name) == 0x30, "Wrong offset Script->name");

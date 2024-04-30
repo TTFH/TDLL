@@ -24,7 +24,7 @@ t_wglSwapBuffers td_wglSwapBuffers = nullptr;
 typedef void (*t_RegisterGameFunctions) (ScriptCore* core);
 t_RegisterGameFunctions td_RegisterGameFunctions = nullptr;
 
-typedef void (*LuaCFunctionEx) (ScriptCore* core, lua_State*& L, ReturnInfo* ret);
+typedef void (*LuaCFunctionEx) (ScriptCore* core, lua_State* &L, ReturnInfo* ret);
 typedef void (*t_RegisterLuaFunction) (ScriptCoreInner* inner_core, td_string* func_name, LuaCFunctionEx func_addr);
 t_RegisterLuaFunction td_RegisterLuaFunction = nullptr;
 
@@ -53,35 +53,46 @@ LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	return CallWindowProc(hGameWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
-void Print(ScriptCore* core, lua_State*& L, ReturnInfo* ret) {
+void Print(ScriptCore* core, lua_State* &L, ReturnInfo* ret) {
 	const char* text = lua_tostring(L, 1);
-	lua_getglobal(L, "DebugPrint");
-	lua_pushstring(L, text);
-	lua_call(L, 1, 0);
+	//lua_getglobal(L, "DebugPrint");
+	//td_lua_pushstring(L, text);
+	//lua_call(L, 1, 0);
+	printf("%s\n", text);
 }
 
-void UiGetAlign(ScriptCore* core, lua_State*& L, ReturnInfo* ret) {
-	static const char* H_ALIGNS[] = { "left", "center", "right" };
-	static const char* V_ALIGNS[] = { "top", "center", "bottom" };
-	char alignment[16];
-	int horizontal = core->ui_status.align_h;
-	int vertical = core->ui_status.align_v;
-	sprintf(alignment, "%s %s", H_ALIGNS[horizontal], V_ALIGNS[vertical]);
-	lua_pushstring(L, alignment);
-	ret->ret_count = 1;
+void UiGetAlign(ScriptCore* core, lua_State* &L, ReturnInfo* ret) {
+	static const char* V_ALIGNS[] = { "bottom", "top", "middle" };
+	static const char* H_ALIGNS[] = { "right", "left", "center" };
+	char alignment[32];
+	int vertical = core->ui_status->align_v % 3;
+	int horizontal = core->ui_status->align_h % 3;
+	sprintf(alignment, "%s %s", V_ALIGNS[vertical], H_ALIGNS[horizontal]);
+	td_lua_pushstring(L, alignment);
+	ret->count = 1;
 }
 
-void RegisterGameFunctionsHook(ScriptCore* script_core) {
-	td_RegisterGameFunctions(script_core);
-	//const char* script_name = script_core->path.c_str();
-	lua_State* L = script_core->inner_core.state_info->state;
+void RegisterLuaFunctionHook(ScriptCoreInner* inner_core, td_string* func_name, LuaCFunctionEx func_addr) {
+	lua_State* L = inner_core->state_info->state;
+	printf("%p | Function: %s\n", (void*)L, func_name->c_str());
+	td_RegisterLuaFunction(inner_core, func_name, func_addr);
+}
+
+void RegisterLuaFunctionProxy(ScriptCore* core, const char* func_name, LuaCFunctionEx func_addr) {
+	td_string name(func_name);
+	td_RegisterLuaFunction(&core->inner_core, &name, func_addr);
+}
+
+void RegisterGameFunctionsHook(ScriptCore* core) {
+	td_RegisterGameFunctions(core);
+	lua_State* L = core->inner_core.state_info->state;
+	//const char* script_name = core->path.c_str();
+	//printf("%p | Script: %s\n", (void*)L, script_name);
 	RegisterLuaCFunctions(L);
-/*
-	td_string print("Print");
-	td_string ui_get_align("UiGetAlign");
-	td_RegisterLuaFunction(&script_core->inner_core, &print, Print);
-	td_RegisterLuaFunction(&script_core->inner_core, &ui_get_align, UiGetAlign);
-*/
+
+	RegisterLuaFunctionProxy(core, "Print", Print);
+	RegisterLuaFunctionProxy(core, "UiGetAlign", UiGetAlign);
+
 	awwnb = false; // Reset remove boundary checkbox
 	for (int i = 0; i < 16; i++)
 		clock_init[i] = false;
@@ -182,14 +193,17 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	printf("TDLL Loaded\n");
 #endif
 
-	Hook hook;
 	moduleBase = GetModuleHandleA("teardown.exe");
 	td_lua_pushstring = (t_lua_pushstring)Teardown::GetReferenceTo(MEM_OFFSET::LuaPushString);
 	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable);
 	td_RegisterLuaFunction = (t_RegisterLuaFunction)Teardown::GetReferenceTo(MEM_OFFSET::RegisterLuaFunction);
 	t_RegisterGameFunctions rgf_addr = (t_RegisterGameFunctions)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions);
+	//t_RegisterLuaFunction rlf_addr = (t_RegisterLuaFunction)Teardown::GetReferenceTo(MEM_OFFSET::RegisterLuaFunction);
+
+	Hook hook;
 	hook.Create(L"opengl32.dll", "wglSwapBuffers", wglSwapBuffersHook, &td_wglSwapBuffers);
 	hook.Create(rgf_addr, RegisterGameFunctionsHook, &td_RegisterGameFunctions);
+	//hook.Create(rlf_addr, RegisterLuaFunctionHook, &td_RegisterLuaFunction);
 	return 0;
 }
 

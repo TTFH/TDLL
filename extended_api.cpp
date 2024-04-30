@@ -62,7 +62,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.4.0429");
+	td_lua_pushstring(L, "v1.5.4.0430");
 	return 1;
 }
 
