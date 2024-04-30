@@ -9,12 +9,14 @@
 
 const double PI = 3.14159265358979323846;
 
+// TODO: clocks per script
 using std::chrono::duration_cast;
 using std::chrono::nanoseconds;
 using hrc = std::chrono::high_resolution_clock;
 hrc::time_point clocks[16];
 bool clock_init[16] = { false };
 
+// TODO: code clean up
 t_lua_createtable td_lua_createtable = nullptr;
 t_lua_pushstring td_lua_pushstring = nullptr;
 

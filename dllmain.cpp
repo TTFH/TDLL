@@ -18,6 +18,7 @@
 #define PSAPI_VERSION 2
 #include <psapi.h>
 
+// TODO: code clean up
 typedef BOOL WINAPI (*t_wglSwapBuffers) (HDC hDc);
 t_wglSwapBuffers td_wglSwapBuffers = nullptr;
 
@@ -55,9 +56,6 @@ LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 void Print(ScriptCore* core, lua_State* &L, ReturnInfo* ret) {
 	const char* text = lua_tostring(L, 1);
-	//lua_getglobal(L, "DebugPrint");
-	//td_lua_pushstring(L, text);
-	//lua_call(L, 1, 0);
 	printf("%s\n", text);
 }
 
@@ -70,6 +68,20 @@ void UiGetAlign(ScriptCore* core, lua_State* &L, ReturnInfo* ret) {
 	sprintf(alignment, "%s %s", V_ALIGNS[vertical], H_ALIGNS[horizontal]);
 	td_lua_pushstring(L, alignment);
 	ret->count = 1;
+}
+
+void UiPlayVideo(ScriptCore* core, lua_State* &L, ReturnInfo* ret) {
+	// TODO: Implement video playback
+	/*
+	local frame = GetTime() * FPS
+	frame = frame % FRAMES + 1
+	local path = string.format("MOD/frames/%04d.png", frame)
+	-- TODO: play audio
+	*/
+	const char* path = lua_tostring(L, 1);
+	lua_getglobal(L, "UiImage");
+	td_lua_pushstring(L, path);
+	lua_call(L, 1, 0);
 }
 
 void RegisterLuaFunctionHook(ScriptCoreInner* inner_core, td_string* func_name, LuaCFunctionEx func_addr) {
@@ -92,6 +104,7 @@ void RegisterGameFunctionsHook(ScriptCore* core) {
 
 	RegisterLuaFunctionProxy(core, "Print", Print);
 	RegisterLuaFunctionProxy(core, "UiGetAlign", UiGetAlign);
+	RegisterLuaFunctionProxy(core, "UiPlayVideo", UiPlayVideo);
 
 	awwnb = false; // Reset remove boundary checkbox
 	for (int i = 0; i < 16; i++)
