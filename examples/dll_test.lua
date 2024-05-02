@@ -257,6 +257,16 @@ function ScaleWorld(FACTOR)
 		local body_tr = GetBodyTransform(body)
 		body_tr.pos = VecScale(body_tr.pos, FACTOR)
 		SetBodyTransform(body, body_tr)
+		SetBodyActive(body, false)
+	end
+	local wheels = FindEntities("", true, "wheel")
+	for i = 1, #wheels do
+		local wheel = wheels[i]
+		local wheel_tr = GetWheelTransform(wheel)
+		wheel_tr.pos = VecScale(wheel_tr.pos, FACTOR)
+		SetWheelTransform(wheel, wheel_tr)
+		local radius = GetWheelRadius(wheel)
+		SetWheelRadius(wheel, radius * FACTOR)
 	end
 end
 

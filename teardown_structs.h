@@ -214,8 +214,15 @@ class Vehicle : public Entity { };
 
 class Wheel : public Entity {
 public:
-	Vehicle* vehicle;	// 0x30
+	Vehicle* vehicle;		// 0x30
+	uint8_t padding1[0x30];
+	Transform transform;	// 0x68
+	uint8_t padding2[0x2C];
+	float radius;			// 0xB0
 };
+
+static_assert(offsetof(Wheel, transform) == 0x68, "Wrong offset Wheel->transform");
+static_assert(offsetof(Wheel, radius) == 0xB0, "Wrong offset Wheel->radius");
 
 class Screen : public Entity { };
 

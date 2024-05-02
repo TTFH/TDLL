@@ -19,6 +19,8 @@ void LuaPushVector(lua_State* L, Vector v);
 void LuaPushQuat(lua_State* L, Quat q);
 void LuaPushTransform(lua_State* L, Transform transform);
 Vector LuaToVector(lua_State* L, int index);
+Quat LuaToQuat(lua_State* L, int index);
+Transform LuaToTransform(lua_State* L, int index);
 void LuaPushFuntion(lua_State* L, const char* name, lua_CFunction func);
 bool LuaIsGlobalDefined(lua_State* L, const char* name);
 

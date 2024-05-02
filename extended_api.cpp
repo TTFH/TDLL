@@ -64,7 +64,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.4.0430");
+	td_lua_pushstring(L, "v1.5.4.502");
 	return 1;
 }
 
@@ -132,42 +132,6 @@ int GetSystemTime(lua_State* L) {
 	return 3;
 }
 
-int GetWaters(lua_State* L) {
-	Game* game = Teardown::GetGame();
-	unsigned int n = game->scene->waters.getSize();
-	td_lua_createtable(L, n, 0);
-	for (unsigned int i = 0; i < n; i++) {
-		Water* water = game->scene->waters[i];
-		lua_pushinteger(L, water->handle);
-		lua_rawseti(L, -2, i + 1);
-	}
-	return 1;
-}
-
-int GetScripts(lua_State* L) {
-	Game* game = Teardown::GetGame();
-	unsigned int n = game->scene->scripts.getSize();
-	td_lua_createtable(L, n, 0);
-	for (unsigned int i = 0; i < n; i++) {
-		Script* script = game->scene->scripts[i];
-		lua_pushinteger(L, script->handle);
-		lua_rawseti(L, -2, i + 1);
-	}
-	return 1;
-}
-
-int GetWheels(lua_State* L) {
-	Game* game = Teardown::GetGame();
-	unsigned int n = game->scene->wheels.getSize();
-	td_lua_createtable(L, n, 0);
-	for (unsigned int i = 0; i < n; i++) {
-		Wheel* wheel = game->scene->wheels[i];
-		lua_pushinteger(L, wheel->handle);
-		lua_rawseti(L, -2, i + 1);
-	}
-	return 1;
-}
-
 int GetBoundaryVertices(lua_State* L) {
 	Game* game = Teardown::GetGame();
 	unsigned int n = game->scene->boundary.getSize();
@@ -180,17 +144,32 @@ int GetBoundaryVertices(lua_State* L) {
 	return 1;
 }
 
-int GetVehicleWheels(lua_State* L) {
+int GetWheelTransform(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
-	std::vector<int> wheels;
 	Game* game = Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->wheels.getSize(); i++) {
 		Wheel* wheel = game->scene->wheels[i];
-		if (wheel->vehicle->handle == handle)
-			wheels.push_back(wheel->handle);
+		if (wheel->handle == handle) {
+			LuaPushTransform(L, wheel->transform);
+			return 1;
+		}
 	}
-	LuaPushList(L, wheels);
+	LuaPushTransform(L, Transform());
 	return 1;
+}
+
+int SetWheelTransform(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Transform transform = LuaToTransform(L, 2);
+	Game* game = Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->wheels.getSize(); i++) {
+		Wheel* wheel = game->scene->wheels[i];
+		if (wheel->handle == handle) {
+			wheel->transform = transform;
+			return 0;
+		}
+	}
+	return 0;
 }
 
 int GetScriptEntities(lua_State* L) {
@@ -213,20 +192,6 @@ int GetScriptEntities(lua_State* L) {
 	return 1;
 }
 
-int GetWheelVehicle(lua_State* L) {
-	unsigned int handle = lua_tointeger(L, 1);
-	Game* game = Teardown::GetGame();
-	for (unsigned int i = 0; i < game->scene->wheels.getSize(); i++) {
-		Wheel* wheel = game->scene->wheels[i];
-		if (wheel->handle == handle) {
-			lua_pushinteger(L, wheel->vehicle->handle);
-			return 1;
-		}
-	}
-	lua_pushinteger(L, 0);
-	return 1;
-}
-
 int GetScriptPath(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = Teardown::GetGame();
@@ -238,12 +203,6 @@ int GetScriptPath(lua_State* L) {
 		}
 	}
 	td_lua_pushstring(L, "");
-	return 1;
-}
-
-int GetPlayerFlashlight(lua_State* L) {
-	Game* game = Teardown::GetGame();
-	lua_pushinteger(L, game->scene->flashlight->handle);
 	return 1;
 }
 
@@ -273,6 +232,20 @@ int GetWaterTransform(lua_State* L) {
 	return 1;
 }
 
+int SetWaterTransform(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Transform transform = LuaToTransform(L, 2);
+	Game* game = Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->waters.getSize(); i++) {
+		Water* water = game->scene->waters[i];
+		if (water->handle == handle) {
+			water->transform = transform;
+			return 0;
+		}
+	}
+	return 0;
+}
+
 int GetWaterVertices(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = Teardown::GetGame();
@@ -290,54 +263,6 @@ int GetWaterVertices(lua_State* L) {
 		}
 	}
 	td_lua_createtable(L, 0, 0);
-	return 1;
-}
-
-int GetTriggerType(lua_State* L) {
-	unsigned int handle = lua_tointeger(L, 1);
-	Game* game = Teardown::GetGame();
-	for (unsigned int i = 0; i < game->scene->triggers.getSize(); i++) {
-		Trigger* trigger = game->scene->triggers[i];
-		if (trigger->handle == handle) {
-			switch (trigger->type) {
-			case TrSphere:
-				td_lua_pushstring(L, "sphere");
-				break;
-			case TrBox:
-				td_lua_pushstring(L, "box");
-				break;
-			case TrPolygon:
-				td_lua_pushstring(L, "polygon");
-				break;
-			}
-			return 1;
-		}
-	}
-	td_lua_pushstring(L, "");
-	return 1;
-}
-
-int GetTriggerSize(lua_State* L) {
-	unsigned int handle = lua_tointeger(L, 1);
-	Game* game = Teardown::GetGame();
-	for (unsigned int i = 0; i < game->scene->triggers.getSize(); i++) {
-		Trigger* trigger = game->scene->triggers[i];
-		if (trigger->handle == handle) {
-			switch (trigger->type) {
-			case TrSphere:
-				lua_pushnumber(L, trigger->sphere_size);
-				break;
-			case TrBox:
-				LuaPushVector(L, trigger->half_box_size * 2);
-				break;
-			case TrPolygon:
-				lua_pushnumber(L, trigger->polygon_size);
-				break;
-			}
-			return 1;
-		}
-	}
-	lua_pushnumber(L, 0);
 	return 1;
 }
 
@@ -417,6 +342,24 @@ int GetJointLocalPosAndAxis(lua_State* L) {
 	return 2;
 }
 
+int SetJointLocalPos(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	unsigned int index = lua_tointeger(L, 2);
+	Vector pos = LuaToVector(L, 3);
+	Game* game = Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->joints.getSize(); i++) {
+		Joint* joint = game->scene->joints[i];
+		if (joint->handle == handle) {
+			if (index == 1)
+				joint->local_pos1 = pos;
+			else
+				joint->local_pos2 = pos;
+			return 0;
+		}
+	}
+	return 0;
+}
+
 int GetJointSize(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = Teardown::GetGame();
@@ -446,24 +389,6 @@ int GetJointParams(lua_State* L) {
 	lua_pushboolean(L, false);
 	lua_pushboolean(L, false);
 	lua_pushboolean(L, false);
-	return 3;
-}
-
-int GetRopeColor(lua_State* L) {
-	unsigned int handle = lua_tointeger(L, 1);
-	Game* game = Teardown::GetGame();
-	for (unsigned int i = 0; i < game->scene->joints.getSize(); i++) {
-		Joint* joint = game->scene->joints[i];
-		if (joint->handle == handle && joint->type == _Rope) {
-			lua_pushnumber(L, joint->rope->color.r);
-			lua_pushnumber(L, joint->rope->color.g);
-			lua_pushnumber(L, joint->rope->color.b);
-			return 3;
-		}
-	}
-	lua_pushnumber(L, 0);
-	lua_pushnumber(L, 0);
-	lua_pushnumber(L, 0);
 	return 3;
 }
 
@@ -733,29 +658,29 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFuntion(L, "GetTimeScale", GetTimeScale);
 	LuaPushFuntion(L, "GetShadowVolumeSize", GetShadowVolumeSize);
 	LuaPushFuntion(L, "GetBoundaryVertices", GetBoundaryVertices);
-	//LuaPushFuntion(L, "GetPlayerFlashlight", GetPlayerFlashlight); // GetFlashlight()
+	// TODO: RemoveBoundary
+	// TODO: SetBoundaryVertex
 
-	//LuaPushFuntion(L, "GetWaters", GetWaters); // FindEntities("", true, "water")
 	LuaPushFuntion(L, "GetWaterTransform", GetWaterTransform);
+	LuaPushFuntion(L, "SetWaterTransform", SetWaterTransform); // may not work
 	LuaPushFuntion(L, "GetWaterVertices", GetWaterVertices);
+	// TODO: SetWaterVertex
 
-	//LuaPushFuntion(L, "GetScripts", GetScripts); // FindEntities("", true, "script")
 	LuaPushFuntion(L, "GetScriptPath", GetScriptPath);
 	LuaPushFuntion(L, "GetScriptEntities", GetScriptEntities);
 
-	//LuaPushFuntion(L, "GetWheels", GetWheels); // FindEntities("", true, "wheel")
-	//LuaPushFuntion(L, "GetWheelVehicle", GetWheelVehicle); // GetEntityParent(wheel, "", "vehicle")
-	//LuaPushFuntion(L, "GetVehicleWheels", GetVehicleWheels); // GetEntityChildren(vehicle, "", true, "wheel")
+	LuaPushFuntion(L, "GetWheelTransform", GetWheelTransform);
+	LuaPushFuntion(L, "SetWheelTransform", SetWheelTransform);
+	// TODO: GetWheelRadius
+	// TODO: SetWheelRadius
 
-	//LuaPushFuntion(L, "GetTriggerType", GetTriggerType); // GetProperty(trigger, "type")
-	//LuaPushFuntion(L, "GetTriggerSize", GetTriggerSize); // GetProperty(trigger, "size")
 	LuaPushFuntion(L, "GetLightSize", GetLightSize);
 	LuaPushFuntion(L, "GetTriggerVertices", GetTriggerVertices);
 
+	LuaPushFuntion(L, "SetJointLocalPos", SetJointLocalPos); // may not work
 	LuaPushFuntion(L, "GetJointLocalPosAndAxis", GetJointLocalPosAndAxis);
 	LuaPushFuntion(L, "GetJointSize", GetJointSize);
 	LuaPushFuntion(L, "GetJointParams", GetJointParams);
-	//LuaPushFuntion(L, "GetRopeColor", GetRopeColor); // GetProperty(rope, "ropecolor")
 
 	LuaPushFuntion(L, "GetPaletteMaterial", GetPaletteMaterial);
 	LuaPushFuntion(L, "GetShapeDensity", GetShapeDensity);
@@ -767,6 +692,4 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFuntion(L, "SetShapePalette", SetShapePalette);
 	LuaPushFuntion(L, "SetShapeTexture", SetShapeTexture);
 	LuaPushFuntion(L, "SetTextureOffset", SetTextureOffset);
-
-	// TODO: SetWaterTransform, Get/SetWheelTransform, SetJointLocalPosition
 }

@@ -45,7 +45,7 @@ void Patch(T* dst, const T* src) {
 }
 
 LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-	if (uMsg == WM_KEYDOWN && wParam == VK_F1)
+	if (uMsg == WM_KEYDOWN && wParam == VK_F13)
 		show_menu = !show_menu;
 	if (show_menu) {
 		CallWindowProc(ImGui_ImplWin32_WndProcHandler, hWnd, uMsg, wParam, lParam);

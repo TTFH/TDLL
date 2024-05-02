@@ -69,6 +69,38 @@ Vector LuaToVector(lua_State* L, int index) {
 	return v;
 }
 
+Quat LuaToQuat(lua_State* L, int index) {
+	Quat q;
+	lua_rawgeti(L, index, 1);
+	q.x = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	lua_rawgeti(L, index, 2);
+	q.y = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	lua_rawgeti(L, index, 3);
+	q.z = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	lua_rawgeti(L, index, 4);
+	q.w = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+	return q;
+}
+
+Transform LuaToTransform(lua_State* L, int index) {
+	Transform transform;
+	lua_getfield(L, index, "pos");
+	transform.pos = LuaToVector(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "rot");
+	transform.rot = LuaToQuat(L, -1);
+	lua_pop(L, 1);
+	return transform;
+}
+
 void LuaPushFuntion(lua_State* L, const char* name, lua_CFunction func) {
 	lua_pushcfunction(L, func);
 	lua_setglobal(L, name);
