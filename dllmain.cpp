@@ -54,11 +54,6 @@ LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	return CallWindowProc(hGameWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
-void Print(ScriptCore* core, lua_State* &L, ReturnInfo* ret) {
-	const char* text = lua_tostring(L, 1);
-	printf("%s\n", text);
-}
-
 void UiGetAlign(ScriptCore* core, lua_State* &L, ReturnInfo* ret) {
 	static const char* V_ALIGNS[] = { "bottom", "top", "middle" };
 	static const char* H_ALIGNS[] = { "right", "left", "center" };
@@ -69,21 +64,21 @@ void UiGetAlign(ScriptCore* core, lua_State* &L, ReturnInfo* ret) {
 	td_lua_pushstring(L, alignment);
 	ret->count = 1;
 }
-
+/*
 void UiPlayVideo(ScriptCore* core, lua_State* &L, ReturnInfo* ret) {
 	// TODO: Implement video playback
-	/*
+	/
 	local frame = GetTime() * FPS
 	frame = frame % FRAMES + 1
 	local path = string.format("MOD/frames/%04d.png", frame)
 	-- TODO: play audio
-	*/
+	/
 	const char* path = lua_tostring(L, 1);
 	lua_getglobal(L, "UiImage");
 	td_lua_pushstring(L, path);
 	lua_call(L, 1, 0);
 }
-
+*/
 void RegisterLuaFunctionHook(ScriptCoreInner* inner_core, td_string* func_name, LuaCFunctionEx func_addr) {
 	lua_State* L = inner_core->state_info->state;
 	printf("%p | Function: %s\n", (void*)L, func_name->c_str());
@@ -102,9 +97,7 @@ void RegisterGameFunctionsHook(ScriptCore* core) {
 	//printf("%p | Script: %s\n", (void*)L, script_name);
 	RegisterLuaCFunctions(L);
 
-	RegisterLuaFunctionProxy(core, "Print", Print);
 	RegisterLuaFunctionProxy(core, "UiGetAlign", UiGetAlign);
-	RegisterLuaFunctionProxy(core, "UiPlayVideo", UiPlayVideo);
 
 	awwnb = false; // Reset remove boundary checkbox
 	for (int i = 0; i < 16; i++)

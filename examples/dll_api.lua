@@ -98,6 +98,10 @@ function GetLightSize(light) return 0, 0 end
 function GetPaletteMaterial(palette, index) return "", 0, 0, 0, 0, 0, 0, 0, 0 end
 
 ---@param shape number Shape handle
+---@param scale number Scale
+function SetShapeScale(shape, scale) end
+
+---@param shape number Shape handle
 ---@param palette number Palette index
 function SetShapePalette(shape, palette) end
 
@@ -130,6 +134,10 @@ function SetShapeTexture(shape, texture, weight, blendTexture, blendTextureWeigh
 ---@param shape number Shape handle
 ---@param offset any Vector with the texture offset
 function SetTextureOffset(shape, offset) end
+
+
+---@return string align UI alignment
+function UiGetAlign() return "" end
 
 
 ---@param file string File path

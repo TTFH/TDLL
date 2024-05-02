@@ -172,6 +172,13 @@ shape (number) – Shape handle
 Return value
 palette (number) – Palette index
 
+SetShapeScale(shape, scale)
+Arguments
+shape (number) – Shape handle
+scale (number) – Scale
+Return value
+none
+
 SetShapePalette(shape, palette)
 Arguments
 shape (number) – Shape handle
@@ -210,6 +217,12 @@ shape (number) – Shape handle
 offset (table) – Vector with the texture offset
 Return value
 none
+
+align = UiGetAlign()
+Arguments
+none
+Return value
+align (string) – UI alignment
 
 ZlibSaveCompressed(file, str)
 Arguments

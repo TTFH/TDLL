@@ -33,12 +33,12 @@ uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 
 // TODO: Find by signature
 namespace MEM_OFFSET {				// Addr		// Type
-	uintptr_t RegisterGameFunctions	= 0x230C90; // void fn(ScriptCore*)
-	uintptr_t RegisterLuaFunction	= 0x3AD580; // void fn(SCI*, char*, void*)
-	uintptr_t LuaCreateTable		= 0x39A800; // void fn(lua_State*, int, int)
-	uintptr_t LuaPushString			= 0x39BA50; // void fn(lua_State*, const char*)
-	uintptr_t RenderDist			= 0x6D9E28; // float
-	uintptr_t Game					= 0x92C100; // Game*
+	uintptr_t RegisterGameFunctions	= 0x231380; // void fn(ScriptCore*)
+	uintptr_t RegisterLuaFunction	= 0x3ADC90; // void fn(SCI*, td_string*, void*)
+	uintptr_t LuaCreateTable		= 0x39AF10; // void fn(lua_State*, int, int)
+	uintptr_t LuaPushString			= 0x39C160; // void fn(lua_State*, const char*)
+	uintptr_t RenderDist			= 0x6DAE28; // float
+	uintptr_t Game					= 0x92D100; // Game*
 }
 
 namespace Teardown {
@@ -572,6 +572,21 @@ int GetTextureOffset(lua_State* L) {
 	return 1;
 }
 
+int SetShapeScale(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	float scale = lua_tonumber(L, 2);
+
+	Game* game = Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
+		Shape* shape = game->scene->shapes[i];
+		if (shape->handle == handle) {
+			shape->vox->scale = scale;
+			return 0;
+		}
+	}
+	return 0;
+}
+
 int SetShapePalette(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	unsigned int palette = lua_tointeger(L, 2);
@@ -747,7 +762,11 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFuntion(L, "GetShapePaletteId", GetShapePaletteId);
 	LuaPushFuntion(L, "GetShapeTexture", GetShapeTexture);
 	LuaPushFuntion(L, "GetTextureOffset", GetTextureOffset);
+
+	LuaPushFuntion(L, "SetShapeScale", SetShapeScale);
 	LuaPushFuntion(L, "SetShapePalette", SetShapePalette);
 	LuaPushFuntion(L, "SetShapeTexture", SetShapeTexture);
 	LuaPushFuntion(L, "SetTextureOffset", SetTextureOffset);
+
+	// TODO: SetWaterTransform, Get/SetWheelTransform, SetJointLocalPosition
 }
