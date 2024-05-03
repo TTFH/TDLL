@@ -230,8 +230,8 @@ end
 function GetWheelRadius(wheel)
 	local shape = GetWheelShape(wheel)
 	local sizex, sizey, sizez, scale = GetShapeSize(shape)
-	local radius = math.max(sizex, math.max(sizey, sizez))
-	return radius * scale
+	local width = math.max(sizex, math.max(sizey, sizez))
+	return width * scale / 2
 end
 
 function ScaleWorld(FACTOR)
@@ -249,6 +249,15 @@ function ScaleWorld(FACTOR)
 		local water = waters[i]
 		Delete(water)
 	end
+	local wheels = FindEntities("", true, "wheel")
+	for i = 1, #wheels do
+		local wheel = wheels[i]
+		local wheel_tr = GetWheelTransform(wheel)
+		wheel_tr.pos = VecScale(wheel_tr.pos, FACTOR)
+		SetWheelTransform(wheel, wheel_tr)
+		local radius = GetWheelRadius(wheel)
+		SetWheelRadius(wheel, radius * FACTOR)
+	end
 	local shapes = FindShapes("", true)
 	for i = 1, #shapes do
 		local shape = shapes[i]
@@ -265,15 +274,6 @@ function ScaleWorld(FACTOR)
 		body_tr.pos = VecScale(body_tr.pos, FACTOR)
 		SetBodyTransform(body, body_tr)
 		SetBodyActive(body, false)
-	end
-	local wheels = FindEntities("", true, "wheel")
-	for i = 1, #wheels do
-		local wheel = wheels[i]
-		local wheel_tr = GetWheelTransform(wheel)
-		wheel_tr.pos = VecScale(wheel_tr.pos, FACTOR)
-		SetWheelTransform(wheel, wheel_tr)
-		local radius = GetWheelRadius(wheel)
-		SetWheelRadius(wheel, radius * FACTOR)
 	end
 end
 
