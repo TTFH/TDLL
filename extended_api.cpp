@@ -16,10 +16,6 @@ using hrc = std::chrono::high_resolution_clock;
 hrc::time_point clocks[16];
 bool clock_init[16] = { false };
 
-// TODO: code clean up
-t_lua_createtable td_lua_createtable = nullptr;
-t_lua_pushstring td_lua_pushstring = nullptr;
-
 uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 	uintptr_t addr = ptr;
 	for (size_t i = 0; i < offsets.size(); i++) {
@@ -64,7 +60,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.4.502");
+	td_lua_pushstring(L, "v1.5.4.503");
 	return 1;
 }
 
@@ -674,50 +670,50 @@ int ZlibLoadCompressed(lua_State* L) {
 }
 
 void RegisterLuaCFunctions(lua_State* L) {
-	LuaPushFuntion(L, "GetDllVersion", GetDllVersion);
-	LuaPushFuntion(L, "Tick", Tick);
-	LuaPushFuntion(L, "Tock", Tock);
-	LuaPushFuntion(L, "GetSystemTime", GetSystemTime);
-	LuaPushFuntion(L, "GetSystemDate", GetSystemDate);
-	LuaPushFuntion(L, "HttpRequest", HttpRequest);
-	LuaPushFuntion(L, "SaveToFile", SaveToFile);
-	LuaPushFuntion(L, "ZlibSaveCompressed", ZlibSaveCompressed);
-	LuaPushFuntion(L, "ZlibLoadCompressed", ZlibLoadCompressed);
+	LuaPushFunction(L, "GetDllVersion", GetDllVersion);
+	LuaPushFunction(L, "Tick", Tick);
+	LuaPushFunction(L, "Tock", Tock);
+	LuaPushFunction(L, "GetSystemTime", GetSystemTime);
+	LuaPushFunction(L, "GetSystemDate", GetSystemDate);
+	LuaPushFunction(L, "HttpRequest", HttpRequest);
+	LuaPushFunction(L, "SaveToFile", SaveToFile);
+	LuaPushFunction(L, "ZlibSaveCompressed", ZlibSaveCompressed);
+	LuaPushFunction(L, "ZlibLoadCompressed", ZlibLoadCompressed);
 
-	LuaPushFuntion(L, "AllowInternalFunctions", AllowInternalFunctions);
+	LuaPushFunction(L, "AllowInternalFunctions", AllowInternalFunctions);
 
-	LuaPushFuntion(L, "GetTimeScale", GetTimeScale);
-	LuaPushFuntion(L, "GetShadowVolumeSize", GetShadowVolumeSize);
-	LuaPushFuntion(L, "GetBoundaryVertices", GetBoundaryVertices);
-	LuaPushFuntion(L, "RemoveBoundary", RemoveBoundary);
-	LuaPushFuntion(L, "SetBoundaryVertex", SetBoundaryVertex);
+	LuaPushFunction(L, "GetTimeScale", GetTimeScale);
+	LuaPushFunction(L, "GetShadowVolumeSize", GetShadowVolumeSize);
+	LuaPushFunction(L, "GetBoundaryVertices", GetBoundaryVertices);
+	LuaPushFunction(L, "RemoveBoundary", RemoveBoundary);
+	LuaPushFunction(L, "SetBoundaryVertex", SetBoundaryVertex);
 
-	LuaPushFuntion(L, "GetWaterTransform", GetWaterTransform);
-	LuaPushFuntion(L, "GetWaterVertices", GetWaterVertices);
-	LuaPushFuntion(L, "SetWaterVertex", SetWaterVertex);
+	LuaPushFunction(L, "GetWaterTransform", GetWaterTransform);
+	LuaPushFunction(L, "GetWaterVertices", GetWaterVertices);
+	LuaPushFunction(L, "SetWaterVertex", SetWaterVertex);
 
-	LuaPushFuntion(L, "GetScriptPath", GetScriptPath);
-	LuaPushFuntion(L, "GetScriptEntities", GetScriptEntities);
+	LuaPushFunction(L, "GetScriptPath", GetScriptPath);
+	LuaPushFunction(L, "GetScriptEntities", GetScriptEntities);
 
-	LuaPushFuntion(L, "GetWheelTransform", GetWheelTransform);
-	LuaPushFuntion(L, "SetWheelTransform", SetWheelTransform);
-	LuaPushFuntion(L, "SetWheelRadius", SetWheelRadius);
+	LuaPushFunction(L, "GetWheelTransform", GetWheelTransform);
+	LuaPushFunction(L, "SetWheelTransform", SetWheelTransform);
+	LuaPushFunction(L, "SetWheelRadius", SetWheelRadius);
 
-	LuaPushFuntion(L, "GetLightSize", GetLightSize);
-	LuaPushFuntion(L, "GetTriggerVertices", GetTriggerVertices);
+	LuaPushFunction(L, "GetLightSize", GetLightSize);
+	LuaPushFunction(L, "GetTriggerVertices", GetTriggerVertices);
 
-	LuaPushFuntion(L, "GetJointLocalPosAndAxis", GetJointLocalPosAndAxis);
-	LuaPushFuntion(L, "GetJointSize", GetJointSize);
-	LuaPushFuntion(L, "GetJointParams", GetJointParams);
+	LuaPushFunction(L, "GetJointLocalPosAndAxis", GetJointLocalPosAndAxis);
+	LuaPushFunction(L, "GetJointSize", GetJointSize);
+	LuaPushFunction(L, "GetJointParams", GetJointParams);
 
-	LuaPushFuntion(L, "GetPaletteMaterial", GetPaletteMaterial);
-	LuaPushFuntion(L, "GetShapeDensity", GetShapeDensity);
-	LuaPushFuntion(L, "GetShapePaletteId", GetShapePaletteId);
-	LuaPushFuntion(L, "GetShapeTexture", GetShapeTexture);
-	LuaPushFuntion(L, "GetTextureOffset", GetTextureOffset);
+	LuaPushFunction(L, "GetPaletteMaterial", GetPaletteMaterial);
+	LuaPushFunction(L, "GetShapeDensity", GetShapeDensity);
+	LuaPushFunction(L, "GetShapePaletteId", GetShapePaletteId);
+	LuaPushFunction(L, "GetShapeTexture", GetShapeTexture);
+	LuaPushFunction(L, "GetTextureOffset", GetTextureOffset);
 
-	LuaPushFuntion(L, "SetShapeScale", SetShapeScale);
-	LuaPushFuntion(L, "SetShapePalette", SetShapePalette);
-	LuaPushFuntion(L, "SetShapeTexture", SetShapeTexture);
-	LuaPushFuntion(L, "SetTextureOffset", SetTextureOffset);
+	LuaPushFunction(L, "SetShapeScale", SetShapeScale);
+	LuaPushFunction(L, "SetShapePalette", SetShapePalette);
+	LuaPushFunction(L, "SetShapeTexture", SetShapeTexture);
+	LuaPushFunction(L, "SetTextureOffset", SetTextureOffset);
 }

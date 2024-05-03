@@ -16,9 +16,11 @@
 #endif
 
 #define PSAPI_VERSION 2
-#include <psapi.h>
+#include <psapi.h> // Used to get .exe size
 
-// TODO: code clean up
+t_lua_createtable td_lua_createtable = nullptr;
+t_lua_pushstring td_lua_pushstring = nullptr;
+
 typedef BOOL WINAPI (*t_wglSwapBuffers) (HDC hDc);
 t_wglSwapBuffers td_wglSwapBuffers = nullptr;
 
@@ -45,7 +47,7 @@ void Patch(T* dst, const T* src) {
 }
 
 LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-	if (uMsg == WM_KEYDOWN && wParam == VK_F13)
+	if (uMsg == WM_KEYDOWN && wParam == VK_F1)
 		show_menu = !show_menu;
 	if (show_menu) {
 		CallWindowProc(ImGui_ImplWin32_WndProcHandler, hWnd, uMsg, wParam, lParam);
@@ -64,21 +66,21 @@ void UiGetAlign(ScriptCore* core, lua_State* &L, ReturnInfo* ret) {
 	td_lua_pushstring(L, alignment);
 	ret->count = 1;
 }
-/*
+
 void UiPlayVideo(ScriptCore* core, lua_State* &L, ReturnInfo* ret) {
 	// TODO: Implement video playback
-	/
+	/*
 	local frame = GetTime() * FPS
 	frame = frame % FRAMES + 1
 	local path = string.format("MOD/frames/%04d.png", frame)
 	-- TODO: play audio
-	/
+	*/
 	const char* path = lua_tostring(L, 1);
 	lua_getglobal(L, "UiImage");
 	td_lua_pushstring(L, path);
 	lua_call(L, 1, 0);
 }
-*/
+
 void RegisterLuaFunctionHook(ScriptCoreInner* inner_core, td_string* func_name, LuaCFunctionEx func_addr) {
 	lua_State* L = inner_core->state_info->state;
 	printf("%p | Function: %s\n", (void*)L, func_name->c_str());
@@ -95,10 +97,11 @@ void RegisterGameFunctionsHook(ScriptCore* core) {
 	lua_State* L = core->inner_core.state_info->state;
 	//const char* script_name = core->path.c_str();
 	//printf("%p | Script: %s\n", (void*)L, script_name);
-	RegisterLuaCFunctions(L);
 
+	RegisterLuaCFunctions(L);
 	RegisterLuaFunctionProxy(core, "UiGetAlign", UiGetAlign);
 
+	// TODO: improve, this may break if a script is spawned
 	awwnb = false; // Reset remove boundary checkbox
 	for (int i = 0; i < 16; i++)
 		clock_init[i] = false;

@@ -8,7 +8,7 @@
 
 ### How to install:
 Download `pros.sdk.x64.dll` and copy it to the Teardown directory, overwrite the existing file.  
-Create a script that contains the text "DLL" on it's path, for example: `DLL Global Mod\main.lua` or `Content Mod\DLL_main.lua` to access the new API functions. Check the `examples` folder for examples.
+Check the `examples` folder for examples.
 Press 'F1' on the pause menu to access the DLL menu (only on OpenGL), it contains options to change the render distance and remove the boundary.
 
 ### How to uninstall:

@@ -101,7 +101,7 @@ Transform LuaToTransform(lua_State* L, int index) {
 	return transform;
 }
 
-void LuaPushFuntion(lua_State* L, const char* name, lua_CFunction func) {
+void LuaPushFunction(lua_State* L, const char* name, lua_CFunction func) {
 	lua_pushcfunction(L, func);
 	lua_setglobal(L, name);
 }
