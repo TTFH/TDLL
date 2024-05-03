@@ -227,6 +227,13 @@ function GetWheelShape(wheel)
 	return wheel + 1 -- magic
 end
 
+function GetWheelRadius(wheel)
+	local shape = GetWheelShape(wheel)
+	local sizex, sizey, sizez, scale = GetShapeSize(shape)
+	local radius = math.max(sizex, math.max(sizey, sizez))
+	return radius * scale
+end
+
 function ScaleWorld(FACTOR)
 	local player_tr = GetPlayerTransform()
 	player_tr.pos = VecScale(player_tr.pos, FACTOR)
@@ -275,12 +282,10 @@ function init()
 	DebugPrint(version)
 	AllowInternalFunctions()
 	DebugPrint("Hello from script " .. GetScriptId())
---[[
 	local current_map = GetString("game.levelid")
 	if current_map ~= "" then
 		ZlibSaveCompressed(current_map .. ".z", "Hello, World!")
 	end
-]]
 	rainbow = 0
 	g_shape = 0
 end

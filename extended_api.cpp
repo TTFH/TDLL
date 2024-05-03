@@ -144,6 +144,21 @@ int GetBoundaryVertices(lua_State* L) {
 	return 1;
 }
 
+int RemoveBoundary(lua_State* L) {
+	Game* game = Teardown::GetGame();
+	game->scene->boundary.setSize(0);
+	return 0;
+}
+
+int SetBoundaryVertex(lua_State* L) {
+	unsigned int index = lua_tointeger(L, 1);
+	Vector pos = LuaToVector(L, 2);
+	Game* game = Teardown::GetGame();
+	if (index < game->scene->boundary.getSize())
+		game->scene->boundary[index] = Vertex(pos.x, pos.z);
+	return 0;
+}
+
 int GetWheelTransform(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = Teardown::GetGame();
@@ -166,6 +181,20 @@ int SetWheelTransform(lua_State* L) {
 		Wheel* wheel = game->scene->wheels[i];
 		if (wheel->handle == handle) {
 			wheel->transform = transform;
+			return 0;
+		}
+	}
+	return 0;
+}
+
+int SetWheelRadius(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	float radius = lua_tonumber(L, 2);
+	Game* game = Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->wheels.getSize(); i++) {
+		Wheel* wheel = game->scene->wheels[i];
+		if (wheel->handle == handle) {
+			wheel->radius = radius;
 			return 0;
 		}
 	}
@@ -232,20 +261,6 @@ int GetWaterTransform(lua_State* L) {
 	return 1;
 }
 
-int SetWaterTransform(lua_State* L) {
-	unsigned int handle = lua_tointeger(L, 1);
-	Transform transform = LuaToTransform(L, 2);
-	Game* game = Teardown::GetGame();
-	for (unsigned int i = 0; i < game->scene->waters.getSize(); i++) {
-		Water* water = game->scene->waters[i];
-		if (water->handle == handle) {
-			water->transform = transform;
-			return 0;
-		}
-	}
-	return 0;
-}
-
 int GetWaterVertices(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = Teardown::GetGame();
@@ -264,6 +279,22 @@ int GetWaterVertices(lua_State* L) {
 	}
 	td_lua_createtable(L, 0, 0);
 	return 1;
+}
+
+int SetWaterVertex(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	unsigned int index = lua_tointeger(L, 2);
+	Vector pos = LuaToVector(L, 3);
+	Game* game = Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->waters.getSize(); i++) {
+		Water* water = game->scene->waters[i];
+		if (water->handle == handle) {
+			if (index < water->vertices.getSize())
+				water->vertices[index] = Vertex(pos.x, pos.z);
+			return 0;
+		}
+	}
+	return 0;
 }
 
 int GetLightSize(lua_State* L) {
@@ -340,24 +371,6 @@ int GetJointLocalPosAndAxis(lua_State* L) {
 	LuaPushVector(L, Vector());
 	LuaPushVector(L, Vector(0, 1, 0));
 	return 2;
-}
-
-int SetJointLocalPos(lua_State* L) {
-	unsigned int handle = lua_tointeger(L, 1);
-	unsigned int index = lua_tointeger(L, 2);
-	Vector pos = LuaToVector(L, 3);
-	Game* game = Teardown::GetGame();
-	for (unsigned int i = 0; i < game->scene->joints.getSize(); i++) {
-		Joint* joint = game->scene->joints[i];
-		if (joint->handle == handle) {
-			if (index == 1)
-				joint->local_pos1 = pos;
-			else
-				joint->local_pos2 = pos;
-			return 0;
-		}
-	}
-	return 0;
 }
 
 int GetJointSize(lua_State* L) {
@@ -563,11 +576,27 @@ int SetTextureOffset(lua_State* L) {
 	return 0;
 }
 
+int SaveToFile(lua_State* L) {
+	const char* filename = lua_tostring(L, 1);
+	size_t str_len;
+	const char* str = lua_tolstring(L, 2, &str_len);
+
+	FILE* file = fopen(filename, "wb");
+	if (file == nullptr) {
+		printf("Error opening file %s for writing.\n", filename);
+		return 0;
+	}
+
+	fwrite(str, sizeof(char), str_len, file);
+	fclose(file);
+	return 0;
+}
+
 int ZlibSaveCompressed(lua_State* L) {
 	const char* filename = lua_tostring(L, 1);
-	const char* str = lua_tostring(L, 2);
+	size_t src_length;
+	const char* str = lua_tolstring(L, 2, &src_length);
 
-	unsigned long src_length = strlen(str) + 1;
 	uLong dest_length = compressBound(src_length);
 	Bytef* dest = new Bytef[dest_length];
 	if (dest == nullptr) {
@@ -637,6 +666,7 @@ int ZlibLoadCompressed(lua_State* L) {
 	} while (result == Z_BUF_ERROR);
 
 	delete[] compressed_data;
+	// TODO: use td_lua_pushlstring(lua_State*, const char*, size_t)
 	dest.resize(dest_length + 1);
 	dest[dest_length] = '\0';
 	td_lua_pushstring(L, (const char*)dest.data());
@@ -650,6 +680,7 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFuntion(L, "GetSystemTime", GetSystemTime);
 	LuaPushFuntion(L, "GetSystemDate", GetSystemDate);
 	LuaPushFuntion(L, "HttpRequest", HttpRequest);
+	LuaPushFuntion(L, "SaveToFile", SaveToFile);
 	LuaPushFuntion(L, "ZlibSaveCompressed", ZlibSaveCompressed);
 	LuaPushFuntion(L, "ZlibLoadCompressed", ZlibLoadCompressed);
 
@@ -658,26 +689,23 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFuntion(L, "GetTimeScale", GetTimeScale);
 	LuaPushFuntion(L, "GetShadowVolumeSize", GetShadowVolumeSize);
 	LuaPushFuntion(L, "GetBoundaryVertices", GetBoundaryVertices);
-	// TODO: RemoveBoundary
-	// TODO: SetBoundaryVertex
+	LuaPushFuntion(L, "RemoveBoundary", RemoveBoundary);
+	LuaPushFuntion(L, "SetBoundaryVertex", SetBoundaryVertex);
 
 	LuaPushFuntion(L, "GetWaterTransform", GetWaterTransform);
-	LuaPushFuntion(L, "SetWaterTransform", SetWaterTransform); // may not work
 	LuaPushFuntion(L, "GetWaterVertices", GetWaterVertices);
-	// TODO: SetWaterVertex
+	LuaPushFuntion(L, "SetWaterVertex", SetWaterVertex);
 
 	LuaPushFuntion(L, "GetScriptPath", GetScriptPath);
 	LuaPushFuntion(L, "GetScriptEntities", GetScriptEntities);
 
 	LuaPushFuntion(L, "GetWheelTransform", GetWheelTransform);
 	LuaPushFuntion(L, "SetWheelTransform", SetWheelTransform);
-	// TODO: GetWheelRadius
-	// TODO: SetWheelRadius
+	LuaPushFuntion(L, "SetWheelRadius", SetWheelRadius);
 
 	LuaPushFuntion(L, "GetLightSize", GetLightSize);
 	LuaPushFuntion(L, "GetTriggerVertices", GetTriggerVertices);
 
-	LuaPushFuntion(L, "SetJointLocalPos", SetJointLocalPos); // may not work
 	LuaPushFuntion(L, "GetJointLocalPosAndAxis", GetJointLocalPosAndAxis);
 	LuaPushFuntion(L, "GetJointSize", GetJointSize);
 	LuaPushFuntion(L, "GetJointParams", GetJointParams);

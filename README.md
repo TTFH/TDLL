@@ -86,6 +86,20 @@ none
 Return value
 list (table) – Indexed table with vertices of the boundary
 
+RemoveBoundary()
+Arguments
+none
+Return value
+none
+
+SetBoundaryVertex(index, vertex)
+Arguments
+index (number) – Index of the vertex
+vertex (table) – Vector with the new position of the vertex
+Return value
+none
+
+
 pos, axis = GetJointLocalPosAndAxis(joint, index)
 Arguments
 joint (number) – Joint handle
@@ -120,6 +134,14 @@ water (number) – Water handle
 Return value
 list (table) – Indexed table with vertices of the water
 
+SetWaterVertex(water, index, vertex)
+Arguments
+water (number) – Water handle
+index (number) – Index of the vertex
+vertex (table) – Vector with the new position of the vertex
+Return value
+none
+
 path = GetScriptPath(script)
 Arguments
 script (number) – Script handle
@@ -131,6 +153,26 @@ Arguments
 script (number) – Script handle
 Return value
 list (table) – Indexed table with handles to all entities referenced by the script
+
+transform = GetWheelTransform(wheel)
+Arguments
+wheel (number) – Wheel handle
+Return value
+transform (table) – Transform of the wheel
+
+SetWheelTransform(wheel, transform)
+Arguments
+wheel (number) – Wheel handle
+transform (table) – Transform of the wheel
+Return value
+none
+
+SetWheelRadius(wheel, radius)
+Arguments
+wheel (number) – Wheel handle
+radius (number) – Radius of the wheel
+Return value
+none
 
 list = GetTriggerVertices(trigger)
 Arguments
@@ -223,6 +265,12 @@ Arguments
 none
 Return value
 align (string) – UI alignment
+
+SaveToFile(file, str)
+Arguments
+file (string) – File path
+str (string) – String to save
+Return value
 
 ZlibSaveCompressed(file, str)
 Arguments

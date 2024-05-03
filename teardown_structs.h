@@ -23,7 +23,7 @@ class td_string {
 		char StackBuffer[32] = { 0 };
 	};
 public:
-	td_string() {}
+	td_string() { }
 	td_string(const char* str) {
 		size_t len = strlen(str);
 		if (len < 32) {
@@ -64,6 +64,8 @@ public:
 
 struct Vertex {
 	float x, y;
+	Vertex() : x(0), y(0) { }
+	Vertex(float x, float y) : x(x), y(y) { }
 };
 
 struct RGBA {
@@ -72,8 +74,8 @@ struct RGBA {
 
 struct Vector {
 	float x, y, z;
-	Vector() : x(0), y(0), z(0) {}
-	Vector(float x, float y, float z) : x(x), y(y), z(z) {}
+	Vector() : x(0), y(0), z(0) { }
+	Vector(float x, float y, float z) : x(x), y(y), z(z) { }
 	Vector operator*(float f) const {
 		return Vector(x * f, y * f, z * f);
 	}
@@ -81,7 +83,7 @@ struct Vector {
 
 struct Quat {
 	float x, y, z, w;
-	Quat() : x(0), y(0), z(0), w(1) {}
+	Quat() : x(0), y(0), z(0), w(1) { }
 };
 
 struct Transform {

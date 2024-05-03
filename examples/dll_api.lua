@@ -30,7 +30,6 @@ function GetSystemDate() return 0, 0, 0 end
 ---@return string response Response body
 function HttpRequest(method, endpoint, headers, request, cookies) return 0, "" end
 
-
 ---@return number scale Current time scale
 function GetTimeScale() return 0 end
 
@@ -39,6 +38,12 @@ function GetShadowVolumeSize() return nil end
 
 ---@return any list Indexed table with vertices of the boundary
 function GetBoundaryVertices() return nil end
+
+function RemoveBoundary() end
+
+---@param index number Index of the vertex
+---@param vertex any Vector with the new position of the vertex
+function SetBoundaryVertex(index, vertex) end
 
 ---@param joint number Joint handle
 ---@param index number Index of the body (1 or 2)
@@ -56,7 +61,6 @@ function GetJointSize(joint) return 0 end
 ---@return boolean autodisable Whatever this does
 function GetJointParams(joint) return false, false, false end
 
-
 ---@param water number Water handle
 ---@return any transform Transform of the water
 function GetWaterTransform(water) return nil end
@@ -65,6 +69,10 @@ function GetWaterTransform(water) return nil end
 ---@return any list Indexed table with vertices of the water
 function GetWaterVertices(water) return nil end
 
+---@param water number Water handle
+---@param index number Index of the vertex
+---@param vertex any Vector with the new position of the vertex
+function SetWaterVertex(water, index, vertex) end
 
 ---@param script number Script handle
 ---@return string path Path to the script
@@ -74,6 +82,17 @@ function GetScriptPath(script) return "" end
 ---@return any list Indexed table with handles to all entities referenced by the script
 function GetScriptEntities(script) return nil end
 
+---@param wheel number Wheel handle
+---@return any transform Transform of the wheel
+function GetWheelTransform(wheel) return nil end
+
+---@param wheel number Wheel handle
+---@param transform any Transform of the wheel
+function SetWheelTransform(wheel, transform) end
+
+---@param wheel number Wheel handle
+---@param radius number Radius of the wheel
+function SetWheelRadius(wheel, radius) end
 
 ---@param trigger number Trigger handle
 ---@return any list Indexed table with the vertices of the trigger
@@ -135,10 +154,12 @@ function SetShapeTexture(shape, texture, weight, blendTexture, blendTextureWeigh
 ---@param offset any Vector with the texture offset
 function SetTextureOffset(shape, offset) end
 
-
 ---@return string align UI alignment
 function UiGetAlign() return "" end
 
+---@param file string File path
+---@param str string String to save
+function SaveToFile(file, str) end
 
 ---@param file string File path
 ---@param str string String to compress
