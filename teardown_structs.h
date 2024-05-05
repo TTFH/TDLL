@@ -54,6 +54,9 @@ public:
 	T get(uint32_t index) const {
 		return data[index];
 	}
+	T& get(uint32_t index) {
+		return data[index];
+	}
 	T operator[](uint32_t index) const {
 		return data[index];
 	}

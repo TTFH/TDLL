@@ -116,6 +116,11 @@ function GetLightSize(light) return 0, 0 end
 ---@return number emissive Range 0 to 32
 function GetPaletteMaterial(palette, index) return "", 0, 0, 0, 0, 0, 0, 0, 0 end
 
+---@param palette number Palette index
+---@param index number Material index
+---@param type string Material type
+function SetPaletteMaterialKind(palette, index, type) end
+
 ---@param shape number Shape handle
 ---@param scale number Scale
 function SetShapeScale(shape, scale) end

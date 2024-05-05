@@ -419,6 +419,8 @@ static const char* MaterialKindName[] = {
 	"unphysical"
 };
 
+const int MATERIALS_COUNT = 15;
+
 int GetPaletteMaterial(lua_State* L) {
 	unsigned int palette_id = lua_tointeger(L, 1);
 	unsigned int index = lua_tointeger(L, 2);
@@ -442,6 +444,29 @@ int GetPaletteMaterial(lua_State* L) {
 	lua_pushnumber(L, material.metallic);
 	lua_pushnumber(L, material.emissive);
 	return 9;
+}
+
+int SetPaletteMaterialKind(lua_State* L) {
+	unsigned int palette_id = lua_tointeger(L, 1);
+	unsigned int index = lua_tointeger(L, 2);
+	const char* kind = lua_tostring(L, 3);
+
+	if (index > 255)
+		return 0;
+
+	Game* game = Teardown::GetGame();
+	unsigned int palette_count = game->palettes->getSize();
+	if (palette_id >= palette_count)
+		return 0;
+
+	Material& material = game->palettes->get(palette_id).materials[index];
+	for (int i = 0; i < MATERIALS_COUNT; i++) {
+		if (strcmp(kind, MaterialKindName[i]) == 0) {
+			material.kind = i;
+			break;
+		}
+	}
+	return 0;
 }
 
 int GetShapeDensity(lua_State* L) {
@@ -684,8 +709,8 @@ void RegisterLuaCFunctions(lua_State* L) {
 
 	LuaPushFunction(L, "GetTimeScale", GetTimeScale);
 	LuaPushFunction(L, "GetShadowVolumeSize", GetShadowVolumeSize);
-	LuaPushFunction(L, "GetBoundaryVertices", GetBoundaryVertices);
 	LuaPushFunction(L, "RemoveBoundary", RemoveBoundary);
+	LuaPushFunction(L, "GetBoundaryVertices", GetBoundaryVertices);
 	LuaPushFunction(L, "SetBoundaryVertex", SetBoundaryVertex);
 
 	LuaPushFunction(L, "GetWaterTransform", GetWaterTransform);
@@ -707,6 +732,7 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "GetJointParams", GetJointParams);
 
 	LuaPushFunction(L, "GetPaletteMaterial", GetPaletteMaterial);
+	LuaPushFunction(L, "SetPaletteMaterialKind", SetPaletteMaterialKind);
 	LuaPushFunction(L, "GetShapeDensity", GetShapeDensity);
 	LuaPushFunction(L, "GetShapePaletteId", GetShapePaletteId);
 	LuaPushFunction(L, "GetShapeTexture", GetShapeTexture);
