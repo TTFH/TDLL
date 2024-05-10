@@ -277,6 +277,16 @@ function ScaleWorld(FACTOR)
 	end
 end
 
+function MakeFlamable(shape)
+	local palette = GetShapePaletteId(shape)
+	for i = 1, 255 do
+		local kind = GetPaletteMaterial(palette, i)
+		if kind == "unphysical" or kind == "foliage" then
+			SetPaletteMaterialKind(palette, i, "wood")
+		end
+	end
+end
+
 function init()
 	local version = GetDllVersion()
 	DebugPrint(version)
