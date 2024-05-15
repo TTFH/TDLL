@@ -134,7 +134,7 @@ int GetBoundaryVertices(lua_State* L) {
 	td_lua_createtable(L, n, 0);
 	for (unsigned int i = 0; i < n; i++) {
 		Vertex vertex = game->scene->boundary[i];
-		LuaPushVector(L, Vector(vertex.x, 0, vertex.y));
+		LuaPushVec3(L, Vec3(vertex.x, 0, vertex.y));
 		lua_rawseti(L, -2, i + 1);
 	}
 	return 1;
@@ -148,7 +148,7 @@ int RemoveBoundary(lua_State* L) {
 
 int SetBoundaryVertex(lua_State* L) {
 	unsigned int index = lua_tointeger(L, 1);
-	Vector pos = LuaToVector(L, 2);
+	Vec3 pos = LuaToVec3(L, 2);
 	Game* game = Teardown::GetGame();
 	if (index < game->scene->boundary.getSize())
 		game->scene->boundary[index] = Vertex(pos.x, pos.z);
@@ -239,7 +239,7 @@ int GetTimeScale(lua_State* L) {
 
 int GetShadowVolumeSize(lua_State* L) {
 	Game* game = Teardown::GetGame();
-	LuaPushVector(L, game->scene->sv_size);
+	LuaPushVec3(L, game->scene->sv_size);
 	return 1;
 }
 
@@ -267,7 +267,7 @@ int GetWaterVertices(lua_State* L) {
 			td_lua_createtable(L, n, 0);
 			for (unsigned int j = 0; j < n; j++) {
 				Vertex vertex = water->vertices[j];
-				LuaPushVector(L, Vector(vertex.x, 0, vertex.y));
+				LuaPushVec3(L, Vec3(vertex.x, 0, vertex.y));
 				lua_rawseti(L, -2, j + 1);
 			}
 			return 1;
@@ -280,7 +280,7 @@ int GetWaterVertices(lua_State* L) {
 int SetWaterVertex(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	unsigned int index = lua_tointeger(L, 2);
-	Vector pos = LuaToVector(L, 3);
+	Vec3 pos = LuaToVec3(L, 3);
 	Game* game = Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->waters.getSize(); i++) {
 		Water* water = game->scene->waters[i];
@@ -337,7 +337,7 @@ int GetTriggerVertices(lua_State* L) {
 			td_lua_createtable(L, n, 0);
 			for (unsigned int j = 0; j < n; j++) {
 				Vertex vertex = trigger->vertices[j];
-				LuaPushVector(L, Vector(vertex.x, 0, vertex.y));
+				LuaPushVec3(L, Vec3(vertex.x, 0, vertex.y));
 				lua_rawseti(L, -2, j + 1);
 			}
 			return 1;
@@ -355,17 +355,17 @@ int GetJointLocalPosAndAxis(lua_State* L) {
 		Joint* joint = game->scene->joints[i];
 		if (joint->handle == handle) {
 			if (index == 1) {
-				LuaPushVector(L, joint->local_pos1);
-				LuaPushVector(L, joint->local_rot1);
+				LuaPushVec3(L, joint->local_pos1);
+				LuaPushVec3(L, joint->local_rot1);
 			} else {
-				LuaPushVector(L, joint->local_pos2);
-				LuaPushVector(L, joint->local_rot2);
+				LuaPushVec3(L, joint->local_pos2);
+				LuaPushVec3(L, joint->local_rot2);
 			}
 			return 2;
 		}
 	}
-	LuaPushVector(L, Vector());
-	LuaPushVector(L, Vector(0, 1, 0));
+	LuaPushVec3(L, Vec3());
+	LuaPushVec3(L, Vec3(0, 1, 0));
 	return 2;
 }
 
@@ -523,11 +523,11 @@ int GetTextureOffset(lua_State* L) {
 	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
 		Shape* shape = game->scene->shapes[i];
 		if (shape->handle == handle) {
-			LuaPushVector(L, shape->texture_offset);
+			LuaPushVec3(L, shape->texture_offset);
 			return 1;
 		}
 	}
-	LuaPushVector(L, Vector());
+	LuaPushVec3(L, Vec3());
 	return 1;
 }
 
@@ -584,7 +584,7 @@ int SetShapeTexture(lua_State* L) {
 
 int SetTextureOffset(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
-	Vector offset = LuaToVector(L, 2);
+	Vec3 offset = LuaToVec3(L, 2);
 
 	Game* game = Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {

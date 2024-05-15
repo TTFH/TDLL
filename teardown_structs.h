@@ -75,12 +75,12 @@ struct RGBA {
 	float r, g, b, a;
 };
 
-struct Vector {
+struct Vec3 {
 	float x, y, z;
-	Vector() : x(0), y(0), z(0) { }
-	Vector(float x, float y, float z) : x(x), y(y), z(z) { }
-	Vector operator*(float f) const {
-		return Vector(x * f, y * f, z * f);
+	Vec3() : x(0), y(0), z(0) { }
+	Vec3(float x, float y, float z) : x(x), y(y), z(z) { }
+	Vec3 operator*(float f) const {
+		return Vec3(x * f, y * f, z * f);
 	}
 };
 
@@ -90,20 +90,20 @@ struct Quat {
 };
 
 struct Transform {
-	Vector pos;
+	Vec3 pos;
 	Quat rot;
 };
 
 struct Entity {
-	void* unknown;
+	uint8_t padding1[8];
 	uint8_t kind;
 	uint8_t flags;
-	uint8_t padding1[2];
+	uint8_t padding2[2];
 	uint32_t handle;	// 0x0C
 	Entity* parent;
 	Entity* sibling;
 	Entity* child;
-	uint8_t padding2[8];
+	uint8_t padding3[8];
 }; // 0x30
 
 static_assert(sizeof(Entity) == 0x30, "Wrong size Entity");
@@ -135,7 +135,7 @@ public:
 	uint16_t blendtexture_tile;
 	float texture_weight;
 	float blendtexture_weight;
-	Vector texture_offset;
+	Vec3 texture_offset;
 	uint8_t padding3[4];
 	Vox* vox;					// 0xE0
 };
@@ -199,10 +199,10 @@ public:
 	float size;
 	bool collide;
 	uint8_t padding3[0x17];
-	Vector local_pos1;	// 0x70
-	Vector local_pos2;
-	Vector local_rot1;
-	Vector local_rot2;
+	Vec3 local_pos1;	// 0x70
+	Vec3 local_pos2;
+	Vec3 local_rot1;
+	Vec3 local_rot2;
 	uint8_t padding4[0x28];
 	Rope* rope;			// 0xC8
 	bool sound;			// 0xD0
@@ -242,7 +242,7 @@ public:
 	uint8_t padding1[0x1C];
 	TriggerKind type;			// 0x4C
 	float sphere_size;			// 0x50
-	Vector half_box_size;		// 0x54
+	Vec3 half_box_size;		// 0x54
 	td_vector<Vertex> vertices;	// 0x60
 	uint8_t padding2[0x80];
 	float polygon_size; 		// 0xF0
@@ -305,7 +305,7 @@ struct Scene {
 	uint8_t padding1[0x80];
 	Light* flashlight;				// 0x80
 	uint8_t padding2[0x58];
-	Vector sv_size;					// 0xE0
+	Vec3 sv_size;					// 0xE0
 	uint8_t padding3[0x4C];
 	td_vector<Body*> bodies;		// 0x138
 	td_vector<Shape*> shapes;		// 0x148
@@ -360,21 +360,49 @@ struct Palette {
 
 static_assert(sizeof(Palette) == 0x3440, "Wrong size Palette");
 
+struct Player {
+	Transform transform;
+	uint8_t padding1[0x1C];
+	Vec3 velocity;			// 0x38
+	uint8_t padding2[0xD0];
+	float pitch;			// 0x114
+	float yaw;
+	uint8_t padding3[0x94];
+	float health;			// 0x1B0
+	uint8_t padding4[0x8A4];
+	float time_underwater;	// 0xA58
+	uint8_t padding5[0x3040];
+	float transition_timer;	// 0x3A9C
+	uint8_t padding6[0x354];
+	float bluetide_timer;	// 0x3DF4
+	float bluetide_power;
+};
+
+static_assert(offsetof(Player, velocity) == 0x38, "Wrong offset player->velocity");
+static_assert(offsetof(Player, pitch) == 0x114, "Wrong offset player->pitch");
+static_assert(offsetof(Player, health) == 0x1B0, "Wrong offset player->health");
+static_assert(offsetof(Player, time_underwater) == 0xA58, "Wrong offset player->time_underwater");
+static_assert(offsetof(Player, transition_timer) == 0x3A9C, "Wrong offset player->transition_timer");
+static_assert(offsetof(Player, bluetide_timer) == 0x3DF4, "Wrong offset player->bluetide_timer");
+
 struct Game {
 	int screen_res_x;
 	int screen_res_y;
 	GameState state;
-	uint8_t padding[0x44];
+	uint8_t padding1[0x44];
 	Scene* scene;					// 0x50
-	uint8_t padding2[0x70];
+	uint8_t padding2[0x60];
+	Player* player;					// 0xB8
+	uint8_t padding3[0x8];
 	td_vector<Palette>* palettes;	// 0xC8
-	uint8_t padding3[8];
+	uint8_t padding4[8];
 	ModData* mod_data;				// 0xD8
-	uint8_t padding4[0xCC];
+	uint8_t padding5[0xCC];
 	float time_scale;				// 0x1AC
 };
 
 static_assert(offsetof(Game, scene) == 0x50, "Wrong offset game->scene");
+static_assert(offsetof(Game, player) == 0xB8, "Wrong offset game->player");
 static_assert(offsetof(Game, palettes) == 0xC8, "Wrong offset game->palette");
 static_assert(offsetof(Game, mod_data) == 0xD8, "Wrong offset game->mod_data");
 static_assert(offsetof(Game, time_scale) == 0x1AC, "Wrong offset game->time_scale");

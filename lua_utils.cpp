@@ -12,7 +12,7 @@ void LuaPushList(lua_State* L, std::vector<int> list) {
 	}
 }
 
-void LuaPushVector(lua_State* L, Vector v) {
+void LuaPushVec3(lua_State* L, Vec3 v) {
 	td_lua_createtable(L, 3, 0);
 
 	lua_pushnumber(L, v.x);
@@ -45,7 +45,7 @@ void LuaPushTransform(lua_State* L, Transform transform) {
 	td_lua_createtable(L, 0, 2);
 
 	td_lua_pushstring(L, "pos");
-	LuaPushVector(L, transform.pos);
+	LuaPushVec3(L, transform.pos);
 	lua_settable(L, -3);
 
 	td_lua_pushstring(L, "rot");
@@ -53,8 +53,8 @@ void LuaPushTransform(lua_State* L, Transform transform) {
 	lua_settable(L, -3);
 }
 
-Vector LuaToVector(lua_State* L, int index) {
-	Vector v;
+Vec3 LuaToVec3(lua_State* L, int index) {
+	Vec3 v;
 	lua_rawgeti(L, index, 1);
 	v.x = lua_tonumber(L, -1);
 	lua_pop(L, 1);
@@ -92,7 +92,7 @@ Quat LuaToQuat(lua_State* L, int index) {
 Transform LuaToTransform(lua_State* L, int index) {
 	Transform transform;
 	lua_getfield(L, index, "pos");
-	transform.pos = LuaToVector(L, -1);
+	transform.pos = LuaToVec3(L, -1);
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "rot");

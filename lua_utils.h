@@ -15,10 +15,10 @@ typedef void (*t_lua_pushstring) (lua_State* L, const char* s);
 extern t_lua_pushstring td_lua_pushstring;
 
 void LuaPushList(lua_State* L, std::vector<int> list);
-void LuaPushVector(lua_State* L, Vector v);
+void LuaPushVec3(lua_State* L, Vec3 v);
 void LuaPushQuat(lua_State* L, Quat q);
 void LuaPushTransform(lua_State* L, Transform transform);
-Vector LuaToVector(lua_State* L, int index);
+Vec3 LuaToVec3(lua_State* L, int index);
 Quat LuaToQuat(lua_State* L, int index);
 Transform LuaToTransform(lua_State* L, int index);
 void LuaPushFunction(lua_State* L, const char* name, lua_CFunction func);
