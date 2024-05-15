@@ -531,6 +531,27 @@ int GetTextureOffset(lua_State* L) {
 	return 1;
 }
 
+int GetFireInfo(lua_State* L) {
+	unsigned int index = lua_tointeger(L, 1);
+	index--; // To 0-based index
+	Game* game = Teardown::GetGame();
+	if (index < game->scene->firesystem->fires.getSize()) {
+		Fire fire = game->scene->firesystem->fires[index];
+		lua_pushinteger(L, fire.shape->handle);
+		LuaPushVec3(L, fire.position);
+		lua_pushboolean(L, fire.painted);
+		lua_pushboolean(L, fire.broken);
+		lua_pushnumber(L, fire.spawned_count);
+		return 5;
+	}
+	lua_pushinteger(L, 0);
+	LuaPushVec3(L, Vec3());
+	lua_pushboolean(L, false);
+	lua_pushboolean(L, false);
+	lua_pushnumber(L, 0);
+	return 5;
+}
+
 int SetShapeScale(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	float scale = lua_tonumber(L, 2);
@@ -706,6 +727,7 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "ZlibLoadCompressed", ZlibLoadCompressed);
 
 	LuaPushFunction(L, "AllowInternalFunctions", AllowInternalFunctions);
+	LuaPushFunction(L, "GetFireInfo", GetFireInfo);
 
 	LuaPushFunction(L, "GetTimeScale", GetTimeScale);
 	LuaPushFunction(L, "GetShadowVolumeSize", GetShadowVolumeSize);

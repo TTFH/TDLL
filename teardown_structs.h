@@ -301,12 +301,37 @@ public:
 static_assert(offsetof(Script, name) == 0x30, "Wrong offset Script->name");
 static_assert(offsetof(Script, core) == 0x70, "Wrong offset Script->core");
 
+struct Fire {
+	Shape* shape;
+	Vec3 position;
+	float max_time;
+	float time;
+	bool painted;
+	bool broken;
+	int spawned_count;	// 0x20
+	uint8_t padding[0x24];
+}; // 0x48
+
+static_assert(sizeof(Fire) == 0x48, "Wrong size Fire");
+static_assert(offsetof(Fire, spawned_count) == 0x20, "Wrong offset Fire->spawned_count");
+
+struct FireSystem {
+	uint8_t padding[8];
+	td_vector<Fire> fires;	// 0x08
+};
+
 struct Scene {
-	uint8_t padding1[0x80];
+	uint8_t padding1[0x38];
+	FireSystem* firesystem;			// 0x38
+	uint8_t padding2[0x20];
+	Transform spawnpoint;			// 0x60
+	uint8_t padding3[4];
 	Light* flashlight;				// 0x80
-	uint8_t padding2[0x58];
+	Script* explosion_lua;
+	Script* achievements_lua;
+	uint8_t padding4[0x48];
 	Vec3 sv_size;					// 0xE0
-	uint8_t padding3[0x4C];
+	uint8_t padding5[0x4C];
 	td_vector<Body*> bodies;		// 0x138
 	td_vector<Shape*> shapes;		// 0x148
 	td_vector<Light*> lights;		// 0x158
@@ -318,10 +343,12 @@ struct Scene {
 	td_vector<Screen*> screens;		// 0x1B8
 	td_vector<Trigger*> triggers;	// 0x1C8
 	td_vector<Script*> scripts;		// 0x1D8
-	uint8_t padding4[0x380];
+	uint8_t padding6[0x380];
 	td_vector<Vertex> boundary;		// 0x568
 };
 
+static_assert(offsetof(Scene, firesystem) == 0x38, "Wrong offset Scene->firesystem");
+static_assert(offsetof(Scene, spawnpoint) == 0x60, "Wrong offset Scene->spawnpoint");
 static_assert(offsetof(Scene, flashlight) == 0x80, "Wrong offset Scene->flashlight");
 static_assert(offsetof(Scene, sv_size) == 0xE0, "Wrong offset Scene->sv_size");
 static_assert(offsetof(Scene, bodies) == 0x138, "Wrong offset Scene->bodies");
