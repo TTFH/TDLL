@@ -60,7 +60,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.4.503");
+	td_lua_pushstring(L, "v1.5.4.516");
 	return 1;
 }
 
@@ -531,27 +531,6 @@ int GetTextureOffset(lua_State* L) {
 	return 1;
 }
 
-int GetFireInfo(lua_State* L) {
-	unsigned int index = lua_tointeger(L, 1);
-	index--; // To 0-based index
-	Game* game = Teardown::GetGame();
-	if (index < game->scene->firesystem->fires.getSize()) {
-		Fire fire = game->scene->firesystem->fires[index];
-		lua_pushinteger(L, fire.shape->handle);
-		LuaPushVec3(L, fire.position);
-		lua_pushboolean(L, fire.painted);
-		lua_pushboolean(L, fire.broken);
-		lua_pushnumber(L, fire.spawned_count);
-		return 5;
-	}
-	lua_pushinteger(L, 0);
-	LuaPushVec3(L, Vec3());
-	lua_pushboolean(L, false);
-	lua_pushboolean(L, false);
-	lua_pushnumber(L, 0);
-	return 5;
-}
-
 int SetShapeScale(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	float scale = lua_tonumber(L, 2);
@@ -680,17 +659,17 @@ int ZlibLoadCompressed(lua_State* L) {
 	fseek(file, 0, SEEK_END);
 	long file_size = ftell(file);
 	fseek(file, 0, SEEK_SET);
-	
+
 	Bytef* compressed_data = new Bytef[file_size];
 	if (compressed_data == nullptr) {
 		printf("Memory allocation failed.\n");
 		fclose(file);
 		return 0;
 	}
-	
+
 	fread(compressed_data, 1, file_size, file);
 	fclose(file);
-	
+
 	uLongf dest_length = BLOCK_SIZE;
 	std::vector<Bytef> dest(dest_length);
 
@@ -715,6 +694,78 @@ int ZlibLoadCompressed(lua_State* L) {
 	return 1;
 }
 
+int GetFireShape(lua_State* L) {
+	unsigned int index = lua_tointeger(L, 1);
+	if (index > 0) index--; // To 0-based index
+	Game* game = Teardown::GetGame();
+	if (index < game->scene->firesystem->fires.getSize()) {
+		Fire fire = game->scene->firesystem->fires[index];
+		lua_pushinteger(L, fire.shape->handle);
+		return 1;
+	}
+	lua_pushinteger(L, 0);
+	return 1;
+}
+
+int GetFirePosition(lua_State* L) {
+	unsigned int index = lua_tointeger(L, 1);
+	if (index > 0) index--; // To 0-based index
+	Game* game = Teardown::GetGame();
+	if (index < game->scene->firesystem->fires.getSize()) {
+		Fire fire = game->scene->firesystem->fires[index];
+		LuaPushVec3(L, fire.position);
+		return 1;
+	}
+	LuaPushVec3(L, Vec3());
+	return 1;
+}
+
+int GetPaletteTintArray(lua_State* L) {
+	unsigned int palette_id = lua_tointeger(L, 1);
+	const char* color = lua_tostring(L, 2);
+	unsigned int strength = lua_tointeger(L, 3);
+
+	if (strength < 1) strength = 1;
+	if (strength > 4) strength = 4;
+
+	Game* game = Teardown::GetGame();
+	unsigned int palette_count = game->palettes->getSize();
+	if (palette_id >= palette_count)
+		return 0;
+
+	Palette& palette = game->palettes->get(palette_id);
+
+	std::vector<int> tint_array;
+	tint_array.reserve(256);
+	for (unsigned int i = 1; i < 256; i++) { // Skip first index
+		uint8_t index = 0;
+		if (strcmp(color, "black") == 0)
+			index = palette.black_tint[256 * strength + i];
+		else if (strcmp(color, "yellow") == 0)
+			index = palette.yellow_tint[256 * strength + i];
+		else
+			index = palette.rgba_tint[256 * strength + i];
+		tint_array.push_back(index);
+	}
+
+	LuaPushList(L, tint_array);
+	return 1;
+}
+
+int SetVehicleMaxSteerAngle(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	float angle = lua_tonumber(L, 2);
+	Game* game = Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->vehicles.getSize(); i++) {
+		Vehicle* vehicle = game->scene->vehicles[i];
+		if (vehicle->handle == handle) {
+			vehicle->max_steer_angle = angle * PI / 180.0; // To radians
+			return 0;
+		}
+	}
+	return 0;
+}
+
 void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "GetDllVersion", GetDllVersion);
 	LuaPushFunction(L, "Tick", Tick);
@@ -726,8 +777,11 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "ZlibSaveCompressed", ZlibSaveCompressed);
 	LuaPushFunction(L, "ZlibLoadCompressed", ZlibLoadCompressed);
 
+	LuaPushFunction(L, "GetFireShape", GetFireShape);
+	LuaPushFunction(L, "GetFirePosition", GetFirePosition);
+	LuaPushFunction(L, "GetPaletteTintArray", GetPaletteTintArray);
 	LuaPushFunction(L, "AllowInternalFunctions", AllowInternalFunctions);
-	LuaPushFunction(L, "GetFireInfo", GetFireInfo);
+	LuaPushFunction(L, "SetVehicleMaxSteerAngle", SetVehicleMaxSteerAngle);
 
 	LuaPushFunction(L, "GetTimeScale", GetTimeScale);
 	LuaPushFunction(L, "GetShadowVolumeSize", GetShadowVolumeSize);

@@ -149,7 +149,7 @@ int HttpRequest(const char* method, const char* endpoint, std::map<std::string, 
 			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 		else
 			response = curl_easy_strerror(res);
-		
+
 		curl_slist_free_all(curl_headers);
 		curl_easy_cleanup(curl);
 	} else

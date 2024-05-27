@@ -2,6 +2,8 @@
 
 ## Extended Teardown API - DLL
 
+# This DLL only works on Teardown 1.5.4 public branch Build 14242552 from 2/May/2024 and will stop working after the next game update, make sure to remove it by verifying the game files on Steam.
+
 ### What it does:
 - Provides a DLL that can be used to extend the Teardown API
 - Implements the functions listed below

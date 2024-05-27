@@ -147,7 +147,7 @@ static_assert(offsetof(Voxels, palette) == 0x54, "Wrong offset Voxels->palette")
 
 class Shape : public Entity {
 public:
-	uint8_t z_u8;
+	uint8_t origin;
 	Transform transform;
 	uint8_t padding1[0x68];
 	uint16_t shape_flags;
@@ -205,8 +205,7 @@ public:
 	uint8_t padding3[4];
 	Vec3 position;				// 0xD8
 	uint8_t index;
-	float z_f32;				// 0xE8
-	// sound {path, volume}
+	float flickering;			// 0xE8
 }; // 0x1438
 
 static_assert(offsetof(Light, type) == 0x34, "Wrong offset Light->type");
@@ -215,7 +214,6 @@ static_assert(offsetof(Light, color) == 0x94, "Wrong offset Light->color");
 static_assert(offsetof(Light, radius) == 0xAC, "Wrong offset Light->radius");
 static_assert(offsetof(Light, half_width) == 0xC4, "Wrong offset Light->half_width");
 static_assert(offsetof(Light, position) == 0xD8, "Wrong offset Light->position");
-static_assert(offsetof(Light, z_f32) == 0xE8, "Wrong offset Light->z_f32");
 
 class Location : public Entity {
 	Transform transform;
@@ -280,7 +278,7 @@ public:
 	float acceleration;
 	float strength;
 	float friction;
-	float max_steering_angle;
+	float max_steer_angle;
 	bool handbrake;
 	float antispin;
 	float steerassist;
@@ -297,12 +295,11 @@ public:
 	Vec3 propeller;
 	float smokeintensity;	// 0x198
 	uint8_t padding4[0x24];
-	float z_f32_2;			// 0x1C0
+	float passive_brake;	// 0x1C0
 }; // 0x2F8
 
 static_assert(offsetof(Vehicle, topspeed) == 0x104, "Wrong offset Vehicle->topspeed");
 static_assert(offsetof(Vehicle, smokeintensity) == 0x198, "Wrong offset Vehicle->smokeintensity");
-static_assert(offsetof(Vehicle, z_f32_2) == 0x1C0, "Wrong offset Vehicle->z_f32_2");
 
 class Wheel : public Entity {
 public:
@@ -403,8 +400,8 @@ struct ScriptCore {
 	uint8_t padding2[0x18];
 	ScriptCoreInner inner_core;		// 0x68
 	uint8_t padding3[8];
-	float last_update;				// 0xA8
-	float time2;
+	float tick_time;				// 0xA8
+	float update_time;
 	uint8_t padding4[0x1D8];
 	td_vector<uint32_t> entities;	// 0x288
 	uint8_t padding5[0x10];
@@ -413,7 +410,6 @@ struct ScriptCore {
 
 static_assert(offsetof(ScriptCore, path) == 0x10, "Wrong offset ScriptCore->path");
 static_assert(offsetof(ScriptCore, inner_core) == 0x68, "Wrong offset ScriptCore->inner_core");
-static_assert(offsetof(ScriptCore, last_update) == 0xA8, "Wrong offset ScriptCore->last_update");
 static_assert(offsetof(ScriptCore, entities) == 0x288, "Wrong offset ScriptCore->entities");
 static_assert(offsetof(ScriptCore, ui_status) == 0x2A8, "Wrong offset ScriptCore->ui_status");
 
@@ -450,7 +446,7 @@ struct FireSystem {
 struct Scene {
 	uint8_t padding1[0x38];
 	FireSystem* firesystem;			// 0x38
-	td_vector<void*> z_st1;			// 0x40 Probably not a vec
+	td_vector<void*> projectiles;
 	uint8_t padding2[0x10];
 	Transform spawnpoint;			// 0x60
 	uint8_t padding3[4];
@@ -479,7 +475,7 @@ struct Scene {
 	uint8_t padding8[0x28];
 	bool has_snow;					// 0x940
 	uint8_t padding9[0x23];
-	int z_st2;						// 0x964 This is not a vec, or alignment would end in 8
+	int z_st2;						// 0x964
 };
 
 static_assert(offsetof(Scene, firesystem) == 0x38, "Wrong offset Scene->firesystem");
@@ -574,8 +570,8 @@ static_assert(offsetof(Game, palettes) == 0xC8, "Wrong offset game->palette");
 static_assert(offsetof(Game, mod_data) == 0xD8, "Wrong offset game->mod_data");
 static_assert(offsetof(Game, time_scale) == 0x1AC, "Wrong offset game->time_scale");
 
-struct Environment {
-	
-};
+/*struct Environment {
+	// stuff goes here
+};*/
 
 #endif
