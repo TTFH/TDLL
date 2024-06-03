@@ -57,6 +57,17 @@ public:
 	T& get(uint32_t index) {
 		return data[index];
 	}
+	void set(uint32_t index, T value) {
+		if (index < size)
+			data[index] = value;
+	}
+	void remove(uint32_t index) {
+		if (index < size) {
+			for (uint32_t i = index; i < size - 1; i++)
+				data[i] = data[i + 1];
+			size--;
+		}
+	}
 	T operator[](uint32_t index) const {
 		return data[index];
 	}
@@ -136,9 +147,12 @@ struct Voxels {
 	uint8_t* voxels;
 	void* physics_buffer;
 	float scale;			// 0x20
-	uint8_t unknown1[48];
+	uint32_t light_mask1;	// 0x24
+	uint32_t light_mask2;		// 0x28
+	bool is_disconnected;	// 0x2C
+	uint8_t padding1[0x27];
 	uint32_t palette;		// 0x54
-	uint8_t unknown2[4];
+	uint8_t padding2[4];
 	int32_t voxel_count;
 }; // 0x68
 
@@ -162,18 +176,12 @@ public:
 	Vec3 texture_offset;
 	uint8_t padding3[4];
 	Voxels* vox;				// 0xE0
-	uint8_t padding4[8];
-	float scale;
-	uint32_t z_u32_1;
-	uint32_t z_u32_2;
-	bool is_disconnected;		// 0xFC
 }; // 0x150
 
 static_assert(offsetof(Shape, shape_flags) == 0xB8, "Wrong offset Shape->shape_flags");
 static_assert(offsetof(Shape, density) == 0xBC, "Wrong offset Shape->density");
 static_assert(offsetof(Shape, texture_tile) == 0xC4, "Wrong offset Shape->texture_tile");
 static_assert(offsetof(Shape, vox) == 0xE0, "Wrong offset Shape->vox");
-static_assert(offsetof(Shape, is_disconnected) == 0xFC, "Wrong offset Shape->is_disconnected");
 
 enum LightType : int {
 	Sphere = 1,
@@ -257,13 +265,21 @@ public:
 	Rope* rope;			// 0xC8
 	bool sound;			// 0xD0
 	bool autodisable;	// 0xD1
-	float z_f32_1;
-	float z_f32_2;
+	float connection_strength;	// 0xD4
+	float disconnect_dist;		// 0xD8
 }; // 0xE0
 
 static_assert(offsetof(Joint, type) == 0x50, "Wrong offset Joint->type");
 static_assert(offsetof(Joint, local_pos1) == 0x70, "Wrong offset Joint->local_pos1");
 static_assert(offsetof(Joint, rope) == 0xC8, "Wrong offset Joint->rope");
+
+struct Vital {
+	Entity* body;
+	Vec3 position;
+	float z_f32;	// 0.5
+	int nearby_voxels;
+	// ...
+}; // 0x20
 
 class Vehicle : public Entity {
 public:
@@ -282,7 +298,7 @@ public:
 	bool handbrake;
 	float antispin;
 	float steerassist;
-	float z_f32_1;
+	float assist_multiplier;	// 0x130
 	float antiroll;
 	float difflock;
 	uint8_t padding2[4];
@@ -296,10 +312,13 @@ public:
 	float smokeintensity;	// 0x198
 	uint8_t padding4[0x24];
 	float passive_brake;	// 0x1C0
+	uint8_t padding5[0x94];
+	td_vector<Vital> vitals; // 0x258
 }; // 0x2F8
 
 static_assert(offsetof(Vehicle, topspeed) == 0x104, "Wrong offset Vehicle->topspeed");
 static_assert(offsetof(Vehicle, smokeintensity) == 0x198, "Wrong offset Vehicle->smokeintensity");
+static_assert(offsetof(Vehicle, vitals) == 0x258, "Wrong offset Vehicle->vitals");
 
 class Wheel : public Entity {
 public:
@@ -443,11 +462,16 @@ struct FireSystem {
 	td_vector<Fire> fires;	// 0x08
 };
 
+struct Environment {
+	
+};
+
 struct Scene {
 	uint8_t padding1[0x38];
 	FireSystem* firesystem;			// 0x38
 	td_vector<void*> projectiles;
-	uint8_t padding2[0x10];
+	Environment* environment;		// 0x50
+	uint8_t padding2[8];
 	Transform spawnpoint;			// 0x60
 	uint8_t padding3[4];
 	Light* flashlight;				// 0x80
@@ -475,7 +499,7 @@ struct Scene {
 	uint8_t padding8[0x28];
 	bool has_snow;					// 0x940
 	uint8_t padding9[0x23];
-	int z_st2;						// 0x964
+	int assets;						// 0x964
 };
 
 static_assert(offsetof(Scene, firesystem) == 0x38, "Wrong offset Scene->firesystem");
@@ -486,7 +510,6 @@ static_assert(offsetof(Scene, bodies) == 0x138, "Wrong offset Scene->bodies");
 static_assert(offsetof(Scene, boundary) == 0x568, "Wrong offset Scene->boundary");
 static_assert(offsetof(Scene, entities) == 0x908, "Wrong offset Scene->entities");
 static_assert(offsetof(Scene, has_snow) == 0x940, "Wrong offset Scene->has_snow");
-static_assert(offsetof(Scene, z_st2) == 0x964, "Wrong offset Scene->z_st2");
 
 struct ExternalScript {
 	uint8_t padding[0x38C];
@@ -548,30 +571,51 @@ static_assert(offsetof(Player, time_underwater) == 0xA58, "Wrong offset player->
 static_assert(offsetof(Player, transition_timer) == 0x3A9C, "Wrong offset player->transition_timer");
 static_assert(offsetof(Player, bluetide_timer) == 0x3DF4, "Wrong offset player->bluetide_timer");
 
+enum EditorEntityType : int {
+	Editor_Water = 17,
+	Editor_Voxagon = 19,
+	Editor_Boundary = 21,
+	Editor_Trigger = 25,
+};
+
+struct EditorEntity {
+	uint8_t padding[0x174];
+	int type;					// 0x174
+	td_vector<Vertex> vertices;	// 0x178
+};
+
+static_assert(offsetof(EditorEntity, type) == 0x174, "Wrong offset editor_ent->type");
+
+struct Editor {
+	uint8_t padding[0x28];
+	EditorEntity* selected;	// 0x28
+};
+
+static_assert(offsetof(Editor, selected) == 0x28, "Wrong offset editor->selected");
+
 struct Game {
 	int screen_res_x;
 	int screen_res_y;
 	GameState state;
 	uint8_t padding1[0x44];
 	Scene* scene;					// 0x50
-	uint8_t padding2[0x60];
+	uint8_t padding2[0x10];
+	Editor* editor;					// 0x68
+	uint8_t padding3[0x48];
 	Player* player;					// 0xB8
-	uint8_t padding3[0x8];
+	uint8_t padding4[0x8];
 	td_vector<Palette>* palettes;	// 0xC8
-	uint8_t padding4[8];
+	uint8_t padding5[8];
 	ModData* mod_data;				// 0xD8
-	uint8_t padding5[0xCC];
+	uint8_t padding6[0xCC];
 	float time_scale;				// 0x1AC
 }; // 0x6A8
 
 static_assert(offsetof(Game, scene) == 0x50, "Wrong offset game->scene");
+static_assert(offsetof(Game, editor) == 0x68, "Wrong offset game->editor");
 static_assert(offsetof(Game, player) == 0xB8, "Wrong offset game->player");
 static_assert(offsetof(Game, palettes) == 0xC8, "Wrong offset game->palette");
 static_assert(offsetof(Game, mod_data) == 0xD8, "Wrong offset game->mod_data");
 static_assert(offsetof(Game, time_scale) == 0x1AC, "Wrong offset game->time_scale");
-
-/*struct Environment {
-	// stuff goes here
-};*/
 
 #endif

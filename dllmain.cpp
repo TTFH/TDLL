@@ -46,16 +46,6 @@ void Patch(T* dst, const T* src) {
 	VirtualProtect(dst, sizeof(T), oldProtect, &oldProtect);
 }
 
-LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-	if (uMsg == WM_KEYDOWN && wParam == VK_F1)
-		show_menu = !show_menu;
-	if (show_menu) {
-		CallWindowProc(ImGui_ImplWin32_WndProcHandler, hWnd, uMsg, wParam, lParam);
-		return true; // Disable teardown input while menu is open
-	}
-	return CallWindowProc(hGameWindowProc, hWnd, uMsg, wParam, lParam);
-}
-
 void UiGetAlign(ScriptCore* core, lua_State* &L, ReturnInfo* ret) {
 	static const char* V_ALIGNS[] = { "bottom", "top", "middle" };
 	static const char* H_ALIGNS[] = { "right", "left", "center" };
@@ -107,6 +97,18 @@ void RegisterGameFunctionsHook(ScriptCore* core) {
 		clock_init[i] = false;
 }
 
+LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	if (uMsg == WM_KEYDOWN && wParam == VK_F1)
+		show_menu = !show_menu;
+	if (show_menu) {
+		ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.WantCaptureMouse)
+			return true; // Disable game input while menu is open
+	}
+	return CallWindowProc(hGameWindowProc, hWnd, uMsg, wParam, lParam);
+}
+
 BOOL wglSwapBuffersHook(HDC hDc) {
 	static bool imGuiInitialized = false;
 	if (!imGuiInitialized) {
@@ -121,6 +123,9 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
 		ImGui_ImplWin32_Init(hGameWindow);
 		ImGui_ImplOpenGL3_Init();
+
+		ImGuiStyle& style = ImGui::GetStyle();
+		style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
 	}
 
 	if (show_menu) {
@@ -128,11 +133,19 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::Begin("DLL Utils");
-		ImGui::Text("Render distance:");
+		ImGui::Begin("DLL Utils", &show_menu, ImGuiWindowFlags_MenuBar);
+		static bool show_vertex_editor = false;
+		if (ImGui::BeginMenuBar()) {
+			if (ImGui::BeginMenu("Plugins")) {
+				ImGui::MenuItem("Vertex Editor", NULL, &show_vertex_editor);
+				ImGui::EndMenu();
+			}
+			ImGui::EndMenuBar();
+		}
+
 		static float render_dist = 500;
+		ImGui::Text("Render distance:");
 		ImGui::SliderFloat("##render_dist", &render_dist, 100.0f, 1000.0f, "%.0f");
-		ImGui::SameLine();
 		ImGui::InputFloat("##render_dist_input", &render_dist, 1.0f, 10.0f, "%.0f");
 		if (ImGui::Button("Set render distance")) {
 			float* render_addr = (float*)Teardown::GetReferenceTo(MEM_OFFSET::RenderDist);
@@ -148,6 +161,76 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		ImGui::EndDisabled();
 		ImGui::End();
 
+		if (show_vertex_editor) {
+			Game* game = (Game*)Teardown::GetGame();
+			if (game->editor != NULL && game->editor->selected != NULL) {
+				ImGui::Begin("Vertex Editor", &show_vertex_editor);
+				ImGui::Text("Entity type:");
+				ImGui::SameLine();
+				int type = game->editor->selected->type;
+				bool valid = true;
+				switch (type) {
+				case Editor_Water:
+					ImGui::Text("Water");
+					break;
+				case Editor_Voxagon:
+					ImGui::Text("Voxagon");
+					break;
+				case Editor_Boundary:
+					ImGui::Text("Boundary");
+					break;
+				case Editor_Trigger:
+					ImGui::Text("Trigger");
+					break;
+				default:
+					ImGui::Text("Invalid");
+					valid = false;
+					break;
+				}
+				if (valid) {
+					ImGui::Text("Vertex count:");
+					ImGui::SameLine();
+					td_vector<Vertex>* vertices = &game->editor->selected->vertices;
+					ImGui::Text("%d", vertices->getSize());
+
+					ImGui::PushItemWidth(100);
+					unsigned int i = 0;
+					while (i < vertices->getSize()) {
+						ImGui::PushID(i);
+						ImGui::Text("%2d:", i + 1);
+						ImGui::SameLine();
+						ImGui::InputFloat("##x", &vertices->get(i).x, 0.1f, 10.0f, "%.1f");
+						ImGui::SameLine();
+						ImGui::InputFloat("##y", &vertices->get(i).y, 0.1f, 10.0f, "%.1f");
+						ImGui::SameLine();
+						if (ImGui::ArrowButton("##up", ImGuiDir_Up)) {
+							if (i > 0) {
+								Vertex temp = vertices->get(i);
+								vertices->set(i, vertices->get(i - 1));
+								vertices->set(i - 1, temp);
+							}
+						}
+						ImGui::SameLine();
+						if (ImGui::ArrowButton("##down", ImGuiDir_Down)) {
+							if (i < vertices->getSize() - 1) {
+								Vertex temp = vertices->get(i);
+								vertices->set(i, vertices->get(i + 1));
+								vertices->set(i + 1, temp);
+							}
+						}
+						ImGui::SameLine();
+						if (ImGui::Button("X##remove")) {
+							vertices->remove(i);
+							i--;
+						}
+						i++;
+						ImGui::PopID();
+					}
+					ImGui::PopItemWidth();
+				}
+				ImGui::End();
+			}
+		}
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}

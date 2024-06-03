@@ -60,7 +60,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.4.516");
+	td_lua_pushstring(L, "v1.5.4.603");
 	return 1;
 }
 
@@ -766,6 +766,22 @@ int SetVehicleMaxSteerAngle(lua_State* L) {
 	return 0;
 }
 
+int SetJointStrength(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	float strength = lua_tonumber(L, 2); // 3000.0
+	float size = lua_tonumber(L, 3); // 0.8
+	Game* game = Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->joints.getSize(); i++) {
+		Joint* joint = game->scene->joints[i];
+		if (joint->handle == handle) {
+			joint->connection_strength = strength;
+			joint->disconnect_dist = size;
+			return 0;
+		}
+	}
+	return 0;
+}
+
 void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "GetDllVersion", GetDllVersion);
 	LuaPushFunction(L, "Tick", Tick);
@@ -777,11 +793,14 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "ZlibSaveCompressed", ZlibSaveCompressed);
 	LuaPushFunction(L, "ZlibLoadCompressed", ZlibLoadCompressed);
 
+	LuaPushFunction(L, "AllowInternalFunctions", AllowInternalFunctions);
+
+	// [NEW!]
 	LuaPushFunction(L, "GetFireShape", GetFireShape);
 	LuaPushFunction(L, "GetFirePosition", GetFirePosition);
 	LuaPushFunction(L, "GetPaletteTintArray", GetPaletteTintArray);
-	LuaPushFunction(L, "AllowInternalFunctions", AllowInternalFunctions);
 	LuaPushFunction(L, "SetVehicleMaxSteerAngle", SetVehicleMaxSteerAngle);
+	LuaPushFunction(L, "SetJointStrength", SetJointStrength);
 
 	LuaPushFunction(L, "GetTimeScale", GetTimeScale);
 	LuaPushFunction(L, "GetShadowVolumeSize", GetShadowVolumeSize);
