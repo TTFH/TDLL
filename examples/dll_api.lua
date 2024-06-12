@@ -119,7 +119,7 @@ function GetPaletteMaterial(palette, index) return "", 0, 0, 0, 0, 0, 0, 0, 0 en
 ---@param palette number Palette index
 ---@param index number Material index
 ---@param type string Material type
-function SetPaletteMaterialKind(palette, index, type) end
+function SetPaletteMaterialType(palette, index, type) end
 
 ---@param shape number Shape handle
 ---@param scale number Scale

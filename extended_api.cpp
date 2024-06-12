@@ -401,7 +401,7 @@ int GetJointParams(lua_State* L) {
 	return 3;
 }
 
-static const char* MaterialKindName[] = {
+static const char* MaterialTypeName[] = {
 	"none",
 	"glass",
 	"wood",
@@ -434,7 +434,7 @@ int GetPaletteMaterial(lua_State* L) {
 		return 0;
 
 	Material material = game->palettes->get(palette_id).materials[index];
-	td_lua_pushstring(L, MaterialKindName[material.kind]);
+	td_lua_pushstring(L, MaterialTypeName[material.type]);
 	lua_pushnumber(L, material.color.r);
 	lua_pushnumber(L, material.color.g);
 	lua_pushnumber(L, material.color.b);
@@ -446,10 +446,10 @@ int GetPaletteMaterial(lua_State* L) {
 	return 9;
 }
 
-int SetPaletteMaterialKind(lua_State* L) {
+int SetPaletteMaterialType(lua_State* L) {
 	unsigned int palette_id = lua_tointeger(L, 1);
 	unsigned int index = lua_tointeger(L, 2);
-	const char* kind = lua_tostring(L, 3);
+	const char* type = lua_tostring(L, 3);
 
 	if (index > 255)
 		return 0;
@@ -461,8 +461,8 @@ int SetPaletteMaterialKind(lua_State* L) {
 
 	Material& material = game->palettes->get(palette_id).materials[index];
 	for (int i = 0; i < MATERIALS_COUNT; i++) {
-		if (strcmp(kind, MaterialKindName[i]) == 0) {
-			material.kind = i;
+		if (strcmp(type, MaterialTypeName[i]) == 0) {
+			material.type = i;
 			break;
 		}
 	}
@@ -827,7 +827,7 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "GetJointParams", GetJointParams);
 
 	LuaPushFunction(L, "GetPaletteMaterial", GetPaletteMaterial);
-	LuaPushFunction(L, "SetPaletteMaterialKind", SetPaletteMaterialKind);
+	LuaPushFunction(L, "SetPaletteMaterialType", SetPaletteMaterialType);
 	LuaPushFunction(L, "GetShapeDensity", GetShapeDensity);
 	LuaPushFunction(L, "GetShapePaletteId", GetShapePaletteId);
 	LuaPushFunction(L, "GetShapeTexture", GetShapeTexture);

@@ -40,9 +40,9 @@ end
 
 function DrawOBB(shape)
 	local transf = GetShapeWorldTransform(shape)
-	local size = Vec(GetShapeSize(shape))
+	local sizex, sizey, sizez, scale = GetShapeSize(shape)
 	local pmin = Vec(0, 0, 0)
-	local pmax = VecScale(size, 0.1)
+	local pmax = VecScale(Vec(sizex, sizey, sizez), scale)
 	local points = {
 		TransformToParentPoint(transf, Vec(pmax[1], pmax[2], pmax[3])),
 		TransformToParentPoint(transf, Vec(pmax[1], pmax[2], pmin[3])),
@@ -282,7 +282,7 @@ function MakeFlamable(shape)
 	for i = 1, 255 do
 		local kind = GetPaletteMaterial(palette, i)
 		if kind == "unphysical" or kind == "foliage" then
-			SetPaletteMaterialKind(palette, i, "wood")
+			SetPaletteMaterialType(palette, i, "wood")
 		end
 	end
 end

@@ -204,7 +204,7 @@ shininess (number) – Range 0 to 1
 metallic (number) – Range 0 to 1
 emissive (number) – Range 0 to 32
 
-SetPaletteMaterialKind(palette, index, type)
+SetPaletteMaterialType(palette, index, type)
 Arguments
 palette (number) – Palette index
 index (number) – Material index

@@ -107,7 +107,7 @@ struct Transform {
 
 struct Entity {
 	uint8_t padding1[8];
-	uint8_t kind;
+	uint8_t type;
 	uint8_t padding2;
 	uint16_t flags;
 	uint32_t handle;	// 0x0C
@@ -148,7 +148,7 @@ struct Voxels {
 	void* physics_buffer;
 	float scale;			// 0x20
 	uint32_t light_mask1;	// 0x24
-	uint32_t light_mask2;		// 0x28
+	uint32_t light_mask2;	// 0x28
 	bool is_disconnected;	// 0x2C
 	uint8_t padding1[0x27];
 	uint32_t palette;		// 0x54
@@ -248,7 +248,7 @@ struct Rope {
 	float segment_length;
 	float slack;
 	RGBA color;		// 0xC
-};
+}; // 0x444C
 
 class Joint : public Entity {
 public:
@@ -366,7 +366,7 @@ public:
 static_assert(offsetof(Screen, enabled) == 0xA0, "Wrong offset Screen->enabled");
 static_assert(offsetof(Screen, emissive) == 0xA4, "Wrong offset Screen->emissive");
 
-enum TriggerKind : int {
+enum TriggerType : int {
 	TrSphere = 1,
 	TrBox,
 	TrPolygon,
@@ -375,7 +375,7 @@ enum TriggerKind : int {
 class Trigger : public Entity {
 public:
 	uint8_t padding1[0x1C];
-	TriggerKind type;			// 0x4C
+	TriggerType type;			// 0x4C
 	float sphere_size;			// 0x50
 	Vec3 half_box_size;			// 0x54
 	td_vector<Vertex> vertices;	// 0x60
@@ -387,7 +387,6 @@ public:
 
 static_assert(offsetof(Trigger, type) == 0x4C, "Wrong offset Trigger->type");
 static_assert(offsetof(Trigger, polygon_size) == 0xF0, "Wrong offset Trigger->polygon_size");
-static_assert(offsetof(Trigger, sound_z_u8) == 0x11C, "Wrong offset Trigger->sound_z_u8");
 
 struct ReturnInfo {
 	lua_State* L;
@@ -460,11 +459,11 @@ static_assert(offsetof(Fire, spawned_count) == 0x20, "Wrong offset Fire->spawned
 struct FireSystem {
 	uint8_t padding[8];
 	td_vector<Fire> fires;	// 0x08
-};
+}; // 0x30
 
 struct Environment {
 	
-};
+}; // 0x1A8
 
 struct Scene {
 	uint8_t padding1[0x38];
@@ -500,7 +499,7 @@ struct Scene {
 	bool has_snow;					// 0x940
 	uint8_t padding9[0x23];
 	int assets;						// 0x964
-};
+}; // 0x9A8
 
 static_assert(offsetof(Scene, firesystem) == 0x38, "Wrong offset Scene->firesystem");
 static_assert(offsetof(Scene, spawnpoint) == 0x60, "Wrong offset Scene->spawnpoint");
@@ -522,7 +521,7 @@ struct ModData {
 };
 
 struct Material {
-	uint32_t kind;
+	uint32_t type;
 	RGBA color;
 	float reflectivity;
 	float shininess;
@@ -535,7 +534,7 @@ static_assert(sizeof(Material) == 0x28, "Wrong size Material");
 
 struct Palette {
 	uint32_t padding1[2];
-	uint8_t z_u8;
+	bool has_transparent;
 	uint8_t padding2[3];
 	Material materials[256];
 	uint8_t black_tint[4 * 256];
