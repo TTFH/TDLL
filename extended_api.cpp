@@ -35,6 +35,10 @@ namespace MEM_OFFSET {				// Addr		// Type
 	uintptr_t LuaPushString			= 0x39C160; // void fn(lua_State*, const char*)
 	uintptr_t RenderDist			= 0x6DAE28; // float
 	uintptr_t Game					= 0x92D100; // Game*
+
+	uintptr_t ScreenCaptureThread	= 0x27BB00; // void fn(CaptureThread*)
+	uintptr_t MutexLockWrapper		= 0x293600; // void fn(void*)
+	uintptr_t MutexUnlock			= 0X6D6510; // void fn(void*)
 }
 
 namespace Teardown {
@@ -60,7 +64,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.4.603");
+	td_lua_pushstring(L, "v1.5.4.613");
 	return 1;
 }
 

@@ -1,12 +1,20 @@
+#include <time.h>
 #include <stdio.h>
+
+#include "glad/glad.h"
+//#include <GLFW/glfw3.h>
 
 #include "extended_api.h"
 #include "pros_override.h"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"
+//#define IMGUI_IMPL_OPENGL_LOADER_CUSTOM
 #include "imgui/backends/imgui_impl_win32.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "lib/stb_image_write.h"
 
 #ifdef _MSC_VER
 #include "MinHook/include/MinHook.h"
@@ -26,6 +34,13 @@ t_wglSwapBuffers td_wglSwapBuffers = nullptr;
 
 typedef void (*t_RegisterGameFunctions) (ScriptCore* core);
 t_RegisterGameFunctions td_RegisterGameFunctions = nullptr;
+
+typedef void (*t_ScreenCaptureThread) (CaptureThread* ct);
+t_ScreenCaptureThread td_ScreenCaptureThread = nullptr;
+
+typedef void (*t_mutex) (void* mutex);
+t_mutex td_mtx_lock_wrapper = nullptr;
+t_mutex td_mtx_unlock = nullptr;
 
 typedef void (*LuaCFunctionEx) (ScriptCore* core, lua_State* &L, ReturnInfo* ret);
 typedef void (*t_RegisterLuaFunction) (ScriptCoreInner* inner_core, td_string* func_name, LuaCFunctionEx func_addr);
@@ -97,6 +112,55 @@ void RegisterGameFunctionsHook(ScriptCore* core) {
 		clock_init[i] = false;
 }
 
+void FlipImageVertically(int width, int height, uint8_t* data) {
+	uint8_t rgb[3];
+	for (int y = 0; y < height / 2; y++) {
+		for (int x = 0; x < width; x++) {
+			int top = 3 * (x + y * width);
+			int bottom = 3 * (x + (height - y - 1) * width);
+			memcpy(rgb, data + top, sizeof(rgb));
+			memcpy(data + top, data + bottom, sizeof(rgb));
+			memcpy(data + bottom, rgb, sizeof(rgb));
+		}
+	}
+}
+
+void Screenshot(int width, int height) {
+	uint8_t* pixels = new uint8_t[width * height * 3];
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+	FlipImageVertically(width, height, pixels);
+	std::string filename = "./screenshot_" + std::to_string(time(NULL)) + ".png";
+	stbi_write_png(filename.c_str(), width, height, 3, pixels, 3 * width);
+	delete[] pixels;
+}
+
+void SaveImageJPG(const char* path, int width, int height, uint8_t* pixels) {
+	FlipImageVertically(width, height, pixels);
+	stbi_write_jpg(path, width, height, 3, pixels, 100);
+}
+
+void ScreenCaptureThreadHook(CaptureThread* ct) {
+	printf("%dx%d %s\n", ct->width, ct->height, ct->image_path.c_str());
+	td_ScreenCaptureThread(ct);
+	/*while (!ct->done) {
+		if (ct->save) {
+			td_mtx_lock_wrapper(&ct->mutex);
+			ct->saving = true;
+			td_mtx_unlock(&ct->mutex);
+			//SaveImageJPG(ct->image_path.c_str(), ct->width, ct->height, ct->buffer);
+			printf("%dx%d %s\n", ct->width, ct->height, ct->image_path.c_str());
+
+			td_mtx_lock_wrapper(&ct->mutex);
+			ct->saving = false;
+			ct->save = false;
+			td_mtx_unlock(&ct->mutex);
+		}
+		Sleep(1);
+	}
+	ct->running = false;*/
+}
+
 LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	if (uMsg == WM_KEYDOWN && wParam == VK_F1)
 		show_menu = !show_menu;
@@ -117,14 +181,15 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		hGameWindowProc = (WNDPROC)SetWindowLongPtr(hGameWindow, GWLP_WNDPROC, (LONG_PTR)WindowProcHook);
 
 		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO();
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-		ImGui::StyleColorsDark();
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
 		ImGui_ImplWin32_Init(hGameWindow);
 		ImGui_ImplOpenGL3_Init();
 
+		ImGuiIO& io = ImGui::GetIO();
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+		ImGui::StyleColorsDark();
 		ImGuiStyle& style = ImGui::GetStyle();
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
 		style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
 	}
 
@@ -159,6 +224,10 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		static bool telemetry_disabled = !TELEMETRY_ENABLED;
 		ImGui::Checkbox("Disable Saber Telemetry", &telemetry_disabled);
 		ImGui::EndDisabled();
+		if (ImGui::Button("Screenshot")) {
+			//Game* game = (Game*)Teardown::GetGame();
+			//Screenshot(game->screen_width, game->screen_height);
+		}
 		ImGui::End();
 
 		if (show_vertex_editor) {
@@ -289,13 +358,17 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	td_lua_pushstring = (t_lua_pushstring)Teardown::GetReferenceTo(MEM_OFFSET::LuaPushString);
 	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable);
 	td_RegisterLuaFunction = (t_RegisterLuaFunction)Teardown::GetReferenceTo(MEM_OFFSET::RegisterLuaFunction);
+	td_mtx_lock_wrapper = (t_mutex)Teardown::GetReferenceTo(MEM_OFFSET::MutexLockWrapper);
+	td_mtx_unlock = (t_mutex)Teardown::GetReferenceTo(MEM_OFFSET::MutexUnlock);
 	t_RegisterGameFunctions rgf_addr = (t_RegisterGameFunctions)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions);
 	//t_RegisterLuaFunction rlf_addr = (t_RegisterLuaFunction)Teardown::GetReferenceTo(MEM_OFFSET::RegisterLuaFunction);
+	t_ScreenCaptureThread sct_addr = (t_ScreenCaptureThread)Teardown::GetReferenceTo(MEM_OFFSET::ScreenCaptureThread);
 
 	Hook hook;
 	hook.Create(L"opengl32.dll", "wglSwapBuffers", wglSwapBuffersHook, &td_wglSwapBuffers);
 	hook.Create(rgf_addr, RegisterGameFunctionsHook, &td_RegisterGameFunctions);
 	//hook.Create(rlf_addr, RegisterLuaFunctionHook, &td_RegisterLuaFunction);
+	hook.Create(sct_addr, ScreenCaptureThreadHook, &td_ScreenCaptureThread);
 	return 0;
 }
 

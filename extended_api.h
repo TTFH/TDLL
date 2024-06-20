@@ -15,6 +15,10 @@ namespace MEM_OFFSET {
 	extern uintptr_t LuaPushString;
 	extern uintptr_t RenderDist;
 	extern uintptr_t Game;
+
+	extern uintptr_t ScreenCaptureThread;
+	extern uintptr_t MutexLockWrapper;
+	extern uintptr_t MutexUnlock;
 }
 
 namespace Teardown {

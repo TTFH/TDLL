@@ -1,5 +1,7 @@
 .vscode/
+glad/
 imgui/
+lib/
 lua5.1.4/
 obj/
 

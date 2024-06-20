@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+#include <atomic>
 
 #include "lua_utils.h"
 
@@ -192,7 +193,7 @@ enum LightType : int {
 
 class Light : public Entity {
 public:
-	bool is_on;
+	bool enabled;
 	uint8_t padding1[3];
 	uint8_t type;				// 0x34
 	Transform transform;		// 0x38
@@ -244,7 +245,7 @@ enum JointType : int {
 };
 
 struct Rope {
-	float z_f32;
+	float z_f32;	// 0x0 (0.0)
 	float segment_length;
 	float slack;
 	RGBA color;		// 0xC
@@ -276,7 +277,7 @@ static_assert(offsetof(Joint, rope) == 0xC8, "Wrong offset Joint->rope");
 struct Vital {
 	Entity* body;
 	Vec3 position;
-	float z_f32;	// 0.5
+	float radius;	// 0x14
 	int nearby_voxels;
 	// ...
 }; // 0x20
@@ -312,12 +313,15 @@ public:
 	float smokeintensity;	// 0x198
 	uint8_t padding4[0x24];
 	float passive_brake;	// 0x1C0
-	uint8_t padding5[0x94];
+	uint8_t padding5[0x1C];
+	td_vector<Entity*> bodies; // 0x1E0
+	uint8_t padding6[0x68];
 	td_vector<Vital> vitals; // 0x258
 }; // 0x2F8
 
 static_assert(offsetof(Vehicle, topspeed) == 0x104, "Wrong offset Vehicle->topspeed");
 static_assert(offsetof(Vehicle, smokeintensity) == 0x198, "Wrong offset Vehicle->smokeintensity");
+static_assert(offsetof(Vehicle, bodies) == 0x1E0, "Wrong offset Vehicle->bodies");
 static_assert(offsetof(Vehicle, vitals) == 0x258, "Wrong offset Vehicle->vitals");
 
 class Wheel : public Entity {
@@ -328,7 +332,7 @@ public:
 	Shape* shape;
 	Shape* ground_shape;
 	int ground_voxel_pos[3];
-	bool z_u8;
+	bool on_ground;			// 0x64
 	Transform transform;	// 0x68
 	Transform transform2;
 	float steer;
@@ -337,9 +341,9 @@ public:
 	float travel_down;
 	float radius;			// 0xB0
 	float width;
-	float z_f32_1;			// 0xB8
+	float stance;			// 0xB8
 	uint8_t padding[0x34];
-	float z_f32_2;			// 0xF0
+	float vertical_offset;	// 0xF0
 }; // 0x108
 
 static_assert(offsetof(Wheel, transform) == 0x68, "Wrong offset Wheel->transform");
@@ -382,7 +386,7 @@ public:
 	uint8_t padding2[0x80];
 	float polygon_size; 		// 0xF0
 	uint8_t padding3[0x28];
-	uint8_t sound_z_u8;			// 0x11C
+	uint8_t sound_type;			// 0x11C
 }; // 0x128
 
 static_assert(offsetof(Trigger, type) == 0x4C, "Wrong offset Trigger->type");
@@ -593,8 +597,8 @@ struct Editor {
 static_assert(offsetof(Editor, selected) == 0x28, "Wrong offset editor->selected");
 
 struct Game {
-	int screen_res_x;
-	int screen_res_y;
+	int screen_width;
+	int screen_height;
 	GameState state;
 	uint8_t padding1[0x44];
 	Scene* scene;					// 0x50
@@ -616,5 +620,47 @@ static_assert(offsetof(Game, player) == 0xB8, "Wrong offset game->player");
 static_assert(offsetof(Game, palettes) == 0xC8, "Wrong offset game->palette");
 static_assert(offsetof(Game, mod_data) == 0xD8, "Wrong offset game->mod_data");
 static_assert(offsetof(Game, time_scale) == 0x1AC, "Wrong offset game->time_scale");
+
+struct ScreenCapture {
+	uint8_t padding[8];
+	int width;
+	int height;
+	uint8_t* image_buffer;		// 0x10
+	int frame;
+}; // 0xF8
+
+static_assert(offsetof(ScreenCapture, image_buffer) == 0x10, "Wrong offset sc->image_buffer");
+
+struct CaptureThread {
+	uint8_t padding1[0x30];
+	td_string image_path;	// 0x30
+	bool compress;
+	bool done;
+	bool saving;
+	bool save;
+	uint8_t* buffer;		// 0x58
+	int width;
+	int height;
+	void* mutex;
+	uint8_t padding2[0x48];
+	bool running;			// 0xB8
+}; // 0xC0
+
+static_assert(offsetof(CaptureThread, image_path) == 0x30, "Wrong offset ct->image_path");
+static_assert(offsetof(CaptureThread, buffer) == 0x58, "Wrong offset ct->buffer");
+static_assert(offsetof(CaptureThread, running) == 0xB8, "Wrong offset ct->running");
+
+/*
+0x27B7B0 void ProcessVideoFrameDX12(ScreenCapture* sc);
+teardown.exe+27BA20 - 48 63 C7    - movsxd  rax,edi   // start of while loop, find free thread
+teardown.exe+27BA23 - 48 83 C0 16 - add rax,16 { 22 } // next line
+
+teardown.exe+27BA20 - E9 A2000000 - jmp teardown.exe+27BAC7 // skip save frames
+
+teardown.exe+27BAC7 - 90          - nop 			 // clean up
+TODO:
+	call MyDllCode
+	jmp cleanup
+*/
 
 #endif
