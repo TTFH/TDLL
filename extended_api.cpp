@@ -29,11 +29,12 @@ uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 
 // TODO: Find by signature
 namespace MEM_OFFSET {				// Addr		// Type
-	uintptr_t RegisterGameFunctions	= 0x409290; // void fn(ScriptCore*)
-	uintptr_t LuaCreateTable		= 0x57F780; // void fn(lua_State*, int, int)
-	uintptr_t LuaPushString			= 0x5809E0; // void fn(lua_State*, const char*)
+	uintptr_t Game					= 0xB4A810; // Game*
 	uintptr_t RenderDist			= 0x8BF568; // float
-	uintptr_t Game					= 0XB4A810; // Game*
+	uintptr_t LuaPushString			= 0x5809E0; // void fn(lua_State*, const char*)
+	uintptr_t LuaCreateTable		= 0x57F780; // void fn(lua_State*, int, int)
+	uintptr_t ProcessVideoFrameOGL	= 0x4575C0; // void fn(ScreenCapture*, int)
+	uintptr_t RegisterGameFunctions	= 0x409290; // void fn(ScriptCore*)
 }
 
 namespace Teardown {
@@ -791,7 +792,7 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "SaveToFile", SaveToFile);
 	LuaPushFunction(L, "ZlibSaveCompressed", ZlibSaveCompressed);
 	LuaPushFunction(L, "ZlibLoadCompressed", ZlibLoadCompressed);
-
+/*
 	LuaPushFunction(L, "AllowInternalFunctions", AllowInternalFunctions);
 
 	// [NEW!]
@@ -835,5 +836,5 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "SetShapeScale", SetShapeScale);
 	LuaPushFunction(L, "SetShapePalette", SetShapePalette);
 	LuaPushFunction(L, "SetShapeTexture", SetShapeTexture);
-	LuaPushFunction(L, "SetTextureOffset", SetTextureOffset);
+	LuaPushFunction(L, "SetTextureOffset", SetTextureOffset);*/
 }

@@ -27,16 +27,6 @@ class td_string {
 	};
 public:
 	td_string() { }
-	/*td_string(const char* str) {
-		size_t len = strlen(str);
-		if (len < 32) {
-			memcpy(stack, str, len);
-		} else {
-			heap = new char[len + 1];
-			memcpy(heap, str, len);
-			stack[31] = 1;
-		}
-	}*/
 	const char* c_str() const {
 		return stack[31] != '\0' ? heap : &stack[0];
 	}
@@ -51,8 +41,9 @@ public:
 	uint32_t getSize() const {
 		return size;
 	}
-	void setSize(uint32_t size) {
-		this->size = size;
+	void setSize(uint32_t count) {
+		if (count < size)
+			size = count;
 	}
 	T get(uint32_t index) const {
 		return data[index];
@@ -397,6 +388,11 @@ public:
 	ScriptCore core;	// 0x80
 }; // 0x1B50 + 10 ?
 
+class Animator : public Entity {
+public:
+
+}; // 0x
+
 struct Fire {
 	Shape* shape;
 	Vec3 position;
@@ -431,7 +427,7 @@ struct Scene {
 	Script* achievements_lua;		// 0x90
 	uint8_t padding4[0x48];
 	Vec3 sv_size;					// 0xE0
-	uint8_t padding5[0x4C];
+	uint8_t padding5[0x5C];
 	td_vector<Body*> bodies;		// 0x138
 	td_vector<Shape*> shapes;		// 0x148
 	td_vector<Light*> lights;		// 0x158
@@ -442,17 +438,21 @@ struct Scene {
 	td_vector<Wheel*> wheels;		// 0x1A8
 	td_vector<Screen*> screens;		// 0x1B8
 	td_vector<Trigger*> triggers;	// 0x1C8
-	td_vector<Script*> scripts;		// 0x1D8
-	td_vector<Entity*> top_level;	// 0x1E8
-	uint8_t padding6[0x370];
-	td_vector<Vec2> boundary;		// 0x568
+	td_vector<Script*> scripts;		// 0x1D8	<- This is wrong
+	td_vector<Animator*> animators;	// 0x1F8
+	td_vector<Entity*> top_level;	// 0x208
+	uint8_t padding6[0x378];
+	td_vector<Vec2> boundary;		// 0x590
 	uint8_t padding7[0x390];
-	td_vector<Entity*> entities;	// 0x908
+	td_vector<Entity*> entities;	// 0x???
 	uint8_t padding8[0x28];
-	bool has_snow;					// 0x940
+	bool has_snow;
 	uint8_t padding9[0x23];
-	int assets;						// 0x964
-}; // 0x9A8
+	int assets;
+}; // 0x9A8 ?
+
+static_assert(offsetof(Scene, animators) == 0x1F8, "Wrong offset scene->animators");
+static_assert(offsetof(Scene, boundary) == 0x590, "Wrong offset scene->boundary");
 
 struct ExternalScript {
 	uint8_t padding[0x38C];
@@ -542,42 +542,15 @@ struct Game {
 static_assert(offsetof(Game, scene) == 0x50, "Wrong offset game->scene");
 
 struct ScreenCapture {
-	uint8_t padding[8];
+	uint8_t padding1[8];
 	int width;
 	int height;
 	uint8_t* image_buffer;		// 0x10
 	int frame;
+	uint8_t padding2[4];
+	td_string capture_dir;		// 0x20
 }; // 0xF8
 
-struct CaptureThread {
-	uint8_t padding1[0x30];
-	td_string image_path;	// 0x30
-	bool compress;
-	bool done;
-	bool saving;
-	bool save;
-	uint8_t* buffer;		// 0x58
-	int width;
-	int height;
-	void* mutex;
-	uint8_t padding2[0x48];
-	bool running;			// 0xB8
-}; // 0xC0
-
-/*
-1.5.4_old
-0x27B7B0 void ProcessVideoFrameDX12(ScreenCapture* sc);
-teardown.exe+27BA20 - 48 63 C7    - movsxd  rax,edi   // start of while loop, find free thread
-teardown.exe+27BA23 - 48 83 C0 16 - add rax,16 { 22 } // next line
-
-teardown.exe+27BA20 - E9 A2000000 - jmp teardown.exe+27BAC7 // skip save frames
-
-teardown.exe+27BAC7 - 90          - nop 			 		// clean up
-TODO:
-	push flags, r*x
-	call MyDllCode
-	pop r*x, flags
-	jmp cleanup
-*/
+static_assert(offsetof(ScreenCapture, capture_dir) == 0x20, "Wrong offset sc->capture_dir");
 
 #endif
