@@ -1,5 +1,10 @@
 #include <time.h>
 #include <stdio.h>
+#include <string>
+#include <vector>
+
+#include <atomic>
+#include <thread>
 
 #include "extended_api.h"
 #include "pros_override.h"
@@ -30,6 +35,9 @@ t_wglSwapBuffers td_wglSwapBuffers = nullptr;
 
 typedef void (*t_RegisterGameFunctions) (ScriptCore* core);
 t_RegisterGameFunctions td_RegisterGameFunctions = nullptr;
+
+typedef void (*t_ProcessVideoFrameOGL) (ScreenCapture* sc, int frame);
+t_ProcessVideoFrameOGL td_ProcessVideoFrameOGL = nullptr;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -75,7 +83,81 @@ void FlipImageVertically(int width, int height, uint8_t* data) {
 
 void SaveImageJPG(const char* path, int width, int height, uint8_t* pixels) {
 	FlipImageVertically(width, height, pixels);
-	stbi_write_jpg(path, width, height, 3, pixels, 100);
+	stbi_write_jpg(path, width, height, 3, pixels, 80);
+}
+
+class FastRecorder {
+	int width;
+	int height;
+	std::string capture_dir;
+	std::vector<uint8_t*> video_frames;
+	std::atomic<int> saved_frames;
+	std::thread save_thread;
+
+	void SaveThread() {
+		saved_frames = 0;
+		for (unsigned int i = 0; i < video_frames.size(); i++) {
+			char image_path[256];
+			snprintf(image_path, sizeof(image_path), "%s/%04d.jpg", capture_dir.c_str(), i);
+			if (video_frames[i] != NULL) {
+				SaveImageJPG(image_path, width, height, video_frames[i]);
+				delete[] video_frames[i];
+				video_frames[i] = NULL;
+			}
+			saved_frames++;
+		}
+	}
+public:
+	FastRecorder() {
+		width = 0;
+		height = 0;
+		saved_frames = 0;
+		capture_dir = "mods/screenrecorder";
+	}
+	void SetResolution(int width, int height) {
+		this->width = width;
+		this->height = height;
+	}
+	void SetFolder(const char* dir) {
+		capture_dir = dir;
+	}
+	void AddFrame(uint8_t* pixels) {
+		int size = width * height * 3;
+		uint8_t* frame = new uint8_t[size];
+		memcpy(frame, pixels, size);
+		video_frames.push_back(frame);
+	}
+	int GetSavedFrames() {
+		return saved_frames.load();
+	}
+	int GetTotalFrames() {
+		return video_frames.size();
+	}
+	void SaveFrames() {
+		save_thread = std::thread(&FastRecorder::SaveThread, this);
+		save_thread.detach();
+	}
+	void ClearFrames() {
+		//save_thread.join();
+		for (unsigned int i = 0; i < video_frames.size(); i++) {
+			if (video_frames[i] != NULL)
+				delete[] video_frames[i];
+		}
+		video_frames.clear();
+		saved_frames = 0;
+	}
+	~FastRecorder() {
+		ClearFrames();
+	}
+};
+
+FastRecorder recorder;
+
+void ProcessVideoFrameOGLHook(ScreenCapture* sc, int frame) {
+	recorder.SetResolution(sc->width, sc->height);
+	recorder.SetFolder(sc->capture_dir.c_str());
+	recorder.AddFrame(sc->image_buffer);
+	//td_ProcessVideoFrameOGL(sc, frame);
 }
 
 LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -141,6 +223,19 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		static bool telemetry_disabled = !TELEMETRY_ENABLED;
 		ImGui::Checkbox("Disable Saber Telemetry", &telemetry_disabled);
 		ImGui::EndDisabled();
+
+		ImGui::Text("Saved video frames:");
+		ImGui::SameLine();
+		int saved_frames = recorder.GetSavedFrames();
+		int total_frames = recorder.GetTotalFrames();
+		ImGui::Text("%d / %d", saved_frames, total_frames);
+		ImGui::ProgressBar((float)saved_frames / total_frames);
+		if (ImGui::Button("Save recorded video")) {
+			recorder.SaveFrames();
+		}
+		if (ImGui::Button("Clear")) {
+			recorder.ClearFrames();
+		}
 		ImGui::End();
 
 		if (show_vertex_editor) {
@@ -271,10 +366,12 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	td_lua_pushstring = (t_lua_pushstring)Teardown::GetReferenceTo(MEM_OFFSET::LuaPushString);
 	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable);
 	t_RegisterGameFunctions rgf_addr = (t_RegisterGameFunctions)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions);
+	t_ProcessVideoFrameOGL pvf_addr = (t_ProcessVideoFrameOGL)Teardown::GetReferenceTo(MEM_OFFSET::ProcessVideoFrameOGL);
 
 	Hook hook;
 	hook.Create(L"opengl32.dll", "wglSwapBuffers", wglSwapBuffersHook, &td_wglSwapBuffers);
 	hook.Create(rgf_addr, RegisterGameFunctionsHook, &td_RegisterGameFunctions);
+	hook.Create(pvf_addr, ProcessVideoFrameOGLHook, &td_ProcessVideoFrameOGL);
 	return 0;
 }
 
