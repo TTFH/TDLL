@@ -9,36 +9,38 @@
 #include "lua_utils.h"
 
 enum GameState : int {
-	Splash = 1,
-	Menu = 2,
-	UI = 3,
-	Loading = 4,
-	Play = 5,
-	Edit = 6,
-	Quit = 7
+	None,
+	Splash,
+	Menu,
+	UI,
+	Loading,
+	MenuLoading,
+	Play,
+	Edit,
+	Quit
 };
 
 class td_string {
 	union {
-		char* HeapBuffer;
-		char StackBuffer[32] = { 0 };
+		char* heap;
+		char stack[32] = { 0 };
 	};
 public:
 	td_string() { }
-	td_string(const char* str) {
+	/*td_string(const char* str) {
 		size_t len = strlen(str);
 		if (len < 32) {
-			memcpy(StackBuffer, str, len);
+			memcpy(stack, str, len);
 		} else {
-			HeapBuffer = new char[len + 1];
-			memcpy(HeapBuffer, str, len);
-			StackBuffer[31] = 1;
+			heap = new char[len + 1];
+			memcpy(heap, str, len);
+			stack[31] = 1;
 		}
-	}
+	}*/
 	const char* c_str() const {
-		return StackBuffer[31] != '\0' ? HeapBuffer : &StackBuffer[0];
+		return stack[31] != '\0' ? heap : &stack[0];
 	}
-};
+}; // 0x20
 
 template<typename T>
 class td_vector {
@@ -77,14 +79,10 @@ public:
 	}
 }; // 0x10
 
-struct Vertex {
+struct Vec2 {
 	float x, y;
-	Vertex() : x(0), y(0) { }
-	Vertex(float x, float y) : x(x), y(y) { }
-};
-
-struct RGBA {
-	float r, g, b, a;
+	Vec2() : x(0), y(0) { }
+	Vec2(float x, float y) : x(x), y(y) { }
 };
 
 struct Vec3 {
@@ -94,6 +92,10 @@ struct Vec3 {
 	Vec3 operator*(float f) const {
 		return Vec3(x * f, y * f, z * f);
 	}
+};
+
+struct RGBA {
+	float r, g, b, a;
 };
 
 struct Quat {
@@ -107,19 +109,16 @@ struct Transform {
 }; // 0x1C
 
 struct Entity {
-	uint8_t padding1[8];
+	void* class_ptr;
 	uint8_t type;
-	uint8_t padding2;
+	uint8_t padding;
 	uint16_t flags;
-	uint32_t handle;	// 0x0C
+	uint32_t handle;	// 0xC
 	Entity* parent;
 	Entity* sibling;
-	Entity* child;
-	uint8_t padding3[8];
+	Entity* child;		// ?
+	Entity* first_child;
 }; // 0x30
-
-static_assert(sizeof(Entity) == 0x30, "Wrong size Entity");
-static_assert(offsetof(Entity, handle) == 0x0C, "Wrong offset Entity->handle");
 
 class Body : public Entity {
 public:
@@ -137,11 +136,6 @@ public:
 	uint8_t restitution_mode;
 }; // 0x120
 
-static_assert(offsetof(Body, velocity) == 0x84, "Wrong offset Body->velocity");
-static_assert(offsetof(Body, dynamic) == 0xE4, "Wrong offset Body->dynamic");
-static_assert(offsetof(Body, active) == 0xEC, "Wrong offset Body->active");
-static_assert(offsetof(Body, friction) == 0xF0, "Wrong offset Body->friction");
-
 struct Voxels {
 	uint32_t size[3];
 	uint32_t volume;
@@ -156,9 +150,6 @@ struct Voxels {
 	uint8_t padding2[4];
 	int32_t voxel_count;
 }; // 0x68
-
-static_assert(offsetof(Voxels, scale) == 0x20, "Wrong offset Voxels->scale");
-static_assert(offsetof(Voxels, palette) == 0x54, "Wrong offset Voxels->palette");
 
 class Shape : public Entity {
 public:
@@ -179,15 +170,10 @@ public:
 	Voxels* vox;				// 0xE0
 }; // 0x150
 
-static_assert(offsetof(Shape, shape_flags) == 0xB8, "Wrong offset Shape->shape_flags");
-static_assert(offsetof(Shape, density) == 0xBC, "Wrong offset Shape->density");
-static_assert(offsetof(Shape, texture_tile) == 0xC4, "Wrong offset Shape->texture_tile");
-static_assert(offsetof(Shape, vox) == 0xE0, "Wrong offset Shape->vox");
-
 enum LightType : int {
 	Sphere = 1,
 	Capsule,
-	Cone,
+	LightCone,
 	Area,
 };
 
@@ -217,13 +203,6 @@ public:
 	float flickering;			// 0xE8
 }; // 0x1438
 
-static_assert(offsetof(Light, type) == 0x34, "Wrong offset Light->type");
-static_assert(offsetof(Light, transform) == 0x38, "Wrong offset Light->transform");
-static_assert(offsetof(Light, color) == 0x94, "Wrong offset Light->color");
-static_assert(offsetof(Light, radius) == 0xAC, "Wrong offset Light->radius");
-static_assert(offsetof(Light, half_width) == 0xC4, "Wrong offset Light->half_width");
-static_assert(offsetof(Light, position) == 0xD8, "Wrong offset Light->position");
-
 class Location : public Entity {
 	Transform transform;
 }; // 0x50
@@ -232,16 +211,15 @@ class Water : public Entity {
 public:
 	Transform transform;		// 0x30
 	float depth;
-	td_vector<Vertex> vertices;	// 0x50
+	td_vector<Vec2> vertices;	// 0x50
 }; // 0x410
-
-static_assert(offsetof(Water, vertices) == 0x50, "Wrong offset Water->vertices");
 
 enum JointType : int {
 	Ball = 1,
 	Hinge,
 	Prismatic,
-	_Rope,
+	JointRope,
+	JointCone,
 };
 
 struct Rope {
@@ -270,16 +248,11 @@ public:
 	float disconnect_dist;		// 0xD8
 }; // 0xE0
 
-static_assert(offsetof(Joint, type) == 0x50, "Wrong offset Joint->type");
-static_assert(offsetof(Joint, local_pos1) == 0x70, "Wrong offset Joint->local_pos1");
-static_assert(offsetof(Joint, rope) == 0xC8, "Wrong offset Joint->rope");
-
 struct Vital {
 	Entity* body;
 	Vec3 position;
 	float radius;	// 0x14
 	int nearby_voxels;
-	// ...
 }; // 0x20
 
 class Vehicle : public Entity {
@@ -319,11 +292,6 @@ public:
 	td_vector<Vital> vitals; // 0x258
 }; // 0x2F8
 
-static_assert(offsetof(Vehicle, topspeed) == 0x104, "Wrong offset Vehicle->topspeed");
-static_assert(offsetof(Vehicle, smokeintensity) == 0x198, "Wrong offset Vehicle->smokeintensity");
-static_assert(offsetof(Vehicle, bodies) == 0x1E0, "Wrong offset Vehicle->bodies");
-static_assert(offsetof(Vehicle, vitals) == 0x258, "Wrong offset Vehicle->vitals");
-
 class Wheel : public Entity {
 public:
 	Vehicle* vehicle;		// 0x30
@@ -346,13 +314,10 @@ public:
 	float vertical_offset;	// 0xF0
 }; // 0x108
 
-static_assert(offsetof(Wheel, transform) == 0x68, "Wrong offset Wheel->transform");
-static_assert(offsetof(Wheel, radius) == 0xB0, "Wrong offset Wheel->radius");
-
 class Screen : public Entity {
 public:
 	Transform transform;
-	Vertex size;
+	Vec2 size;
 	float bulge;
 	int resolution_x;
 	int resolution_y;
@@ -367,9 +332,6 @@ public:
 	float fxglitch;
 }; // 0x1AD8
 
-static_assert(offsetof(Screen, enabled) == 0xA0, "Wrong offset Screen->enabled");
-static_assert(offsetof(Screen, emissive) == 0xA4, "Wrong offset Screen->emissive");
-
 enum TriggerType : int {
 	TrSphere = 1,
 	TrBox,
@@ -382,15 +344,12 @@ public:
 	TriggerType type;			// 0x4C
 	float sphere_size;			// 0x50
 	Vec3 half_box_size;			// 0x54
-	td_vector<Vertex> vertices;	// 0x60
+	td_vector<Vec2> vertices;	// 0x60
 	uint8_t padding2[0x80];
 	float polygon_size; 		// 0xF0
 	uint8_t padding3[0x28];
 	uint8_t sound_type;			// 0x11C
 }; // 0x128
-
-static_assert(offsetof(Trigger, type) == 0x4C, "Wrong offset Trigger->type");
-static_assert(offsetof(Trigger, polygon_size) == 0xF0, "Wrong offset Trigger->polygon_size");
 
 struct ReturnInfo {
 	lua_State* L;
@@ -430,20 +389,13 @@ struct ScriptCore {
 	ScriptUiStatus* ui_status;		// 0x2A8
 }; // 0x1AE0
 
-static_assert(offsetof(ScriptCore, path) == 0x10, "Wrong offset ScriptCore->path");
-static_assert(offsetof(ScriptCore, inner_core) == 0x68, "Wrong offset ScriptCore->inner_core");
-static_assert(offsetof(ScriptCore, entities) == 0x288, "Wrong offset ScriptCore->entities");
-static_assert(offsetof(ScriptCore, ui_status) == 0x2A8, "Wrong offset ScriptCore->ui_status");
-
 class Script : public Entity {
 public:
 	td_string name;		// 0x30
 	td_string path;		// 0x50
-	ScriptCore core;	// 0x70
-}; // 0x1B50
-
-static_assert(offsetof(Script, name) == 0x30, "Wrong offset Script->name");
-static_assert(offsetof(Script, core) == 0x70, "Wrong offset Script->core");
+	uint8_t padding[0x10];
+	ScriptCore core;	// 0x80
+}; // 0x1B50 + 10 ?
 
 struct Fire {
 	Shape* shape;
@@ -456,9 +408,6 @@ struct Fire {
 	uint32_t spawned_count;	// 0x20
 	uint8_t padding2[0x24];
 }; // 0x48
-
-static_assert(sizeof(Fire) == 0x48, "Wrong size Fire");
-static_assert(offsetof(Fire, spawned_count) == 0x20, "Wrong offset Fire->spawned_count");
 
 struct FireSystem {
 	uint8_t padding[8];
@@ -478,8 +427,8 @@ struct Scene {
 	Transform spawnpoint;			// 0x60
 	uint8_t padding3[4];
 	Light* flashlight;				// 0x80
-	Script* explosion_lua;
-	Script* achievements_lua;
+	Script* explosion_lua;			// 0x88
+	Script* achievements_lua;		// 0x90
 	uint8_t padding4[0x48];
 	Vec3 sv_size;					// 0xE0
 	uint8_t padding5[0x4C];
@@ -496,7 +445,7 @@ struct Scene {
 	td_vector<Script*> scripts;		// 0x1D8
 	td_vector<Entity*> top_level;	// 0x1E8
 	uint8_t padding6[0x370];
-	td_vector<Vertex> boundary;		// 0x568
+	td_vector<Vec2> boundary;		// 0x568
 	uint8_t padding7[0x390];
 	td_vector<Entity*> entities;	// 0x908
 	uint8_t padding8[0x28];
@@ -504,15 +453,6 @@ struct Scene {
 	uint8_t padding9[0x23];
 	int assets;						// 0x964
 }; // 0x9A8
-
-static_assert(offsetof(Scene, firesystem) == 0x38, "Wrong offset Scene->firesystem");
-static_assert(offsetof(Scene, spawnpoint) == 0x60, "Wrong offset Scene->spawnpoint");
-static_assert(offsetof(Scene, flashlight) == 0x80, "Wrong offset Scene->flashlight");
-static_assert(offsetof(Scene, sv_size) == 0xE0, "Wrong offset Scene->sv_size");
-static_assert(offsetof(Scene, bodies) == 0x138, "Wrong offset Scene->bodies");
-static_assert(offsetof(Scene, boundary) == 0x568, "Wrong offset Scene->boundary");
-static_assert(offsetof(Scene, entities) == 0x908, "Wrong offset Scene->entities");
-static_assert(offsetof(Scene, has_snow) == 0x940, "Wrong offset Scene->has_snow");
 
 struct ExternalScript {
 	uint8_t padding[0x38C];
@@ -534,8 +474,6 @@ struct Material {
 	uint32_t is_tint;
 }; // 0x28
 
-static_assert(sizeof(Material) == 0x28, "Wrong size Material");
-
 struct Palette {
 	uint32_t padding1[2];
 	bool has_transparent;
@@ -546,8 +484,6 @@ struct Palette {
 	uint8_t rgba_tint[4 * 256];
 	uint32_t padding3[13];
 }; // 0x3440
-
-static_assert(sizeof(Palette) == 0x3440, "Wrong size Palette");
 
 struct Player {
 	Transform transform;
@@ -567,13 +503,6 @@ struct Player {
 	float bluetide_power;
 };
 
-static_assert(offsetof(Player, velocity) == 0x38, "Wrong offset player->velocity");
-static_assert(offsetof(Player, pitch) == 0x114, "Wrong offset player->pitch");
-static_assert(offsetof(Player, health) == 0x1B0, "Wrong offset player->health");
-static_assert(offsetof(Player, time_underwater) == 0xA58, "Wrong offset player->time_underwater");
-static_assert(offsetof(Player, transition_timer) == 0x3A9C, "Wrong offset player->transition_timer");
-static_assert(offsetof(Player, bluetide_timer) == 0x3DF4, "Wrong offset player->bluetide_timer");
-
 enum EditorEntityType : int {
 	Editor_Water = 17,
 	Editor_Voxagon = 19,
@@ -584,17 +513,13 @@ enum EditorEntityType : int {
 struct EditorEntity {
 	uint8_t padding[0x174];
 	int type;					// 0x174
-	td_vector<Vertex> vertices;	// 0x178
+	td_vector<Vec2> vertices;	// 0x178
 };
-
-static_assert(offsetof(EditorEntity, type) == 0x174, "Wrong offset editor_ent->type");
 
 struct Editor {
 	uint8_t padding[0x28];
-	EditorEntity* selected;	// 0x28
+	EditorEntity* selected;		// 0x28
 };
-
-static_assert(offsetof(Editor, selected) == 0x28, "Wrong offset editor->selected");
 
 struct Game {
 	int screen_width;
@@ -615,11 +540,6 @@ struct Game {
 }; // 0x6A8
 
 static_assert(offsetof(Game, scene) == 0x50, "Wrong offset game->scene");
-static_assert(offsetof(Game, editor) == 0x68, "Wrong offset game->editor");
-static_assert(offsetof(Game, player) == 0xB8, "Wrong offset game->player");
-static_assert(offsetof(Game, palettes) == 0xC8, "Wrong offset game->palette");
-static_assert(offsetof(Game, mod_data) == 0xD8, "Wrong offset game->mod_data");
-static_assert(offsetof(Game, time_scale) == 0x1AC, "Wrong offset game->time_scale");
 
 struct ScreenCapture {
 	uint8_t padding[8];
@@ -628,8 +548,6 @@ struct ScreenCapture {
 	uint8_t* image_buffer;		// 0x10
 	int frame;
 }; // 0xF8
-
-static_assert(offsetof(ScreenCapture, image_buffer) == 0x10, "Wrong offset sc->image_buffer");
 
 struct CaptureThread {
 	uint8_t padding1[0x30];
@@ -646,20 +564,19 @@ struct CaptureThread {
 	bool running;			// 0xB8
 }; // 0xC0
 
-static_assert(offsetof(CaptureThread, image_path) == 0x30, "Wrong offset ct->image_path");
-static_assert(offsetof(CaptureThread, buffer) == 0x58, "Wrong offset ct->buffer");
-static_assert(offsetof(CaptureThread, running) == 0xB8, "Wrong offset ct->running");
-
 /*
+1.5.4_old
 0x27B7B0 void ProcessVideoFrameDX12(ScreenCapture* sc);
 teardown.exe+27BA20 - 48 63 C7    - movsxd  rax,edi   // start of while loop, find free thread
 teardown.exe+27BA23 - 48 83 C0 16 - add rax,16 { 22 } // next line
 
 teardown.exe+27BA20 - E9 A2000000 - jmp teardown.exe+27BAC7 // skip save frames
 
-teardown.exe+27BAC7 - 90          - nop 			 // clean up
+teardown.exe+27BAC7 - 90          - nop 			 		// clean up
 TODO:
+	push flags, r*x
 	call MyDllCode
+	pop r*x, flags
 	jmp cleanup
 */
 

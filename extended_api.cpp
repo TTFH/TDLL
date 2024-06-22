@@ -29,16 +29,11 @@ uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 
 // TODO: Find by signature
 namespace MEM_OFFSET {				// Addr		// Type
-	uintptr_t RegisterGameFunctions	= 0x231380; // void fn(ScriptCore*)
-	uintptr_t RegisterLuaFunction	= 0x3ADC90; // void fn(SCI*, td_string*, void*)
-	uintptr_t LuaCreateTable		= 0x39AF10; // void fn(lua_State*, int, int)
-	uintptr_t LuaPushString			= 0x39C160; // void fn(lua_State*, const char*)
-	uintptr_t RenderDist			= 0x6DAE28; // float
-	uintptr_t Game					= 0x92D100; // Game*
-
-	uintptr_t ScreenCaptureThread	= 0x27BB00; // void fn(CaptureThread*)
-	uintptr_t MutexLockWrapper		= 0x293600; // void fn(void*)
-	uintptr_t MutexUnlock			= 0X6D6510; // void fn(void*)
+	uintptr_t RegisterGameFunctions	= 0x409290; // void fn(ScriptCore*)
+	uintptr_t LuaCreateTable		= 0x57F780; // void fn(lua_State*, int, int)
+	uintptr_t LuaPushString			= 0x5809E0; // void fn(lua_State*, const char*)
+	uintptr_t RenderDist			= 0x8BF568; // float
+	uintptr_t Game					= 0XB4A810; // Game*
 }
 
 namespace Teardown {
@@ -64,7 +59,7 @@ void SkipIsInternalFunctionCheck() {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.5.4.613");
+	td_lua_pushstring(L, "v1.6.0.622");
 	return 1;
 }
 
@@ -137,7 +132,7 @@ int GetBoundaryVertices(lua_State* L) {
 	unsigned int n = game->scene->boundary.getSize();
 	td_lua_createtable(L, n, 0);
 	for (unsigned int i = 0; i < n; i++) {
-		Vertex vertex = game->scene->boundary[i];
+		Vec2 vertex = game->scene->boundary[i];
 		LuaPushVec3(L, Vec3(vertex.x, 0, vertex.y));
 		lua_rawseti(L, -2, i + 1);
 	}
@@ -155,7 +150,7 @@ int SetBoundaryVertex(lua_State* L) {
 	Vec3 pos = LuaToVec3(L, 2);
 	Game* game = Teardown::GetGame();
 	if (index < game->scene->boundary.getSize())
-		game->scene->boundary[index] = Vertex(pos.x, pos.z);
+		game->scene->boundary[index] = Vec2(pos.x, pos.z);
 	return 0;
 }
 
@@ -270,7 +265,7 @@ int GetWaterVertices(lua_State* L) {
 			unsigned int n = water->vertices.getSize();
 			td_lua_createtable(L, n, 0);
 			for (unsigned int j = 0; j < n; j++) {
-				Vertex vertex = water->vertices[j];
+				Vec2 vertex = water->vertices[j];
 				LuaPushVec3(L, Vec3(vertex.x, 0, vertex.y));
 				lua_rawseti(L, -2, j + 1);
 			}
@@ -290,7 +285,7 @@ int SetWaterVertex(lua_State* L) {
 		Water* water = game->scene->waters[i];
 		if (water->handle == handle) {
 			if (index < water->vertices.getSize())
-				water->vertices[index] = Vertex(pos.x, pos.z);
+				water->vertices[index] = Vec2(pos.x, pos.z);
 			return 0;
 		}
 	}
@@ -312,7 +307,7 @@ int GetLightSize(lua_State* L) {
 				lua_pushnumber(L, light->radius);
 				lua_pushnumber(L, 2.0 * light->half_length);
 				break;
-			case Cone: {
+			case LightCone: {
 				double angle = 2.0 * acos(light->cos_half_angle_rad) * 180.0 / PI;
 				lua_pushnumber(L, light->radius);
 				lua_pushnumber(L, angle);
@@ -340,7 +335,7 @@ int GetTriggerVertices(lua_State* L) {
 			unsigned int n = trigger->vertices.getSize();
 			td_lua_createtable(L, n, 0);
 			for (unsigned int j = 0; j < n; j++) {
-				Vertex vertex = trigger->vertices[j];
+				Vec2 vertex = trigger->vertices[j];
 				LuaPushVec3(L, Vec3(vertex.x, 0, vertex.y));
 				lua_rawseti(L, -2, j + 1);
 			}
