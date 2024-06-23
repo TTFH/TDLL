@@ -155,7 +155,6 @@ function CreateShapeFromData(body, shape)
 	local properties = ShapeData[shape].properties
 	SetShapeDensity(new_shape, properties.density)
 	if extended_api then
-		AllowInternalFunctions()
 		SetShapeStrength(new_shape, properties.strength)
 		SetShapePalette(new_shape, properties.palette)
 		SetShapeTexture(new_shape, properties.t, properties.tw, properties.bt, properties.bw)
@@ -343,7 +342,6 @@ function tick()
 	end
 	if extended_api and vehicle ~= 0 and GetVehicleHealth(vehicle) < 0.1 then
 		-- When the vehicle health reach zero, it is no longer regenerated when adding voxels, this may fix that
-		AllowInternalFunctions()
 		SetVehicleHealth(vehicle, 1.0)
 		SetVehicleEngineHealth(vehicle, 1.0)
 	end

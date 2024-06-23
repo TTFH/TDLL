@@ -49,24 +49,9 @@ namespace Teardown {
 	}
 }
 
-void SkipIsInternalFunctionCheck() {
-	Game* game = Teardown::GetGame();
-	unsigned int n = game->mod_data->external_scripts.getSize();
-	for (unsigned int i = 0; i < n; i++) {
-		ExternalScript* script = game->mod_data->external_scripts[i];
-		if (script->privilege > 1)
-			script->privilege = 1;
-	}
-}
-
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.6.0.622");
+	td_lua_pushstring(L, "v1.6.0.623");
 	return 1;
-}
-
-int AllowInternalFunctions(lua_State* L) {
-	SkipIsInternalFunctionCheck();
-	return 0;
 }
 
 int Tick(lua_State* L) {
@@ -792,8 +777,10 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "SaveToFile", SaveToFile);
 	LuaPushFunction(L, "ZlibSaveCompressed", ZlibSaveCompressed);
 	LuaPushFunction(L, "ZlibLoadCompressed", ZlibLoadCompressed);
-/*
-	LuaPushFunction(L, "AllowInternalFunctions", AllowInternalFunctions);
+
+	LuaPushFunction(L, "RemoveBoundary", RemoveBoundary);
+	LuaPushFunction(L, "GetBoundaryVertices", GetBoundaryVertices);
+	LuaPushFunction(L, "SetBoundaryVertex", SetBoundaryVertex);
 
 	// [NEW!]
 	LuaPushFunction(L, "GetFireShape", GetFireShape);
@@ -804,9 +791,6 @@ void RegisterLuaCFunctions(lua_State* L) {
 
 	LuaPushFunction(L, "GetTimeScale", GetTimeScale);
 	LuaPushFunction(L, "GetShadowVolumeSize", GetShadowVolumeSize);
-	LuaPushFunction(L, "RemoveBoundary", RemoveBoundary);
-	LuaPushFunction(L, "GetBoundaryVertices", GetBoundaryVertices);
-	LuaPushFunction(L, "SetBoundaryVertex", SetBoundaryVertex);
 
 	LuaPushFunction(L, "GetWaterTransform", GetWaterTransform);
 	LuaPushFunction(L, "GetWaterVertices", GetWaterVertices);
@@ -828,13 +812,13 @@ void RegisterLuaCFunctions(lua_State* L) {
 
 	LuaPushFunction(L, "GetPaletteMaterial", GetPaletteMaterial);
 	LuaPushFunction(L, "SetPaletteMaterialType", SetPaletteMaterialType);
+
 	LuaPushFunction(L, "GetShapeDensity", GetShapeDensity);
 	LuaPushFunction(L, "GetShapePaletteId", GetShapePaletteId);
 	LuaPushFunction(L, "GetShapeTexture", GetShapeTexture);
 	LuaPushFunction(L, "GetTextureOffset", GetTextureOffset);
-
 	LuaPushFunction(L, "SetShapeScale", SetShapeScale);
 	LuaPushFunction(L, "SetShapePalette", SetShapePalette);
 	LuaPushFunction(L, "SetShapeTexture", SetShapeTexture);
-	LuaPushFunction(L, "SetTextureOffset", SetTextureOffset);*/
+	LuaPushFunction(L, "SetTextureOffset", SetTextureOffset);
 }

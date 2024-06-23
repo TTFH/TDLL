@@ -61,6 +61,8 @@ void RegisterGameFunctionsHook(ScriptCore* core) {
 	//printf("%p | Script: %s\n", (void*)L, script_name);
 
 	RegisterLuaCFunctions(L);
+	if (core->check_internal->privilege > 1)
+		core->check_internal->privilege = 1;
 
 	// TODO: improve, this may break if a script is spawned
 	awwnb = false; // Reset remove boundary checkbox
@@ -138,7 +140,6 @@ public:
 		save_thread.detach();
 	}
 	void ClearFrames() {
-		//save_thread.join();
 		for (unsigned int i = 0; i < video_frames.size(); i++) {
 			if (video_frames[i] != NULL)
 				delete[] video_frames[i];
@@ -157,7 +158,6 @@ void ProcessVideoFrameOGLHook(ScreenCapture* sc, int frame) {
 	recorder.SetResolution(sc->width, sc->height);
 	recorder.SetFolder(sc->capture_dir.c_str());
 	recorder.AddFrame(sc->image_buffer);
-	//td_ProcessVideoFrameOGL(sc, frame);
 }
 
 LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -371,7 +371,9 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	Hook hook;
 	hook.Create(L"opengl32.dll", "wglSwapBuffers", wglSwapBuffersHook, &td_wglSwapBuffers);
 	hook.Create(rgf_addr, RegisterGameFunctionsHook, &td_RegisterGameFunctions);
+#ifdef TDC
 	hook.Create(pvf_addr, ProcessVideoFrameOGLHook, &td_ProcessVideoFrameOGL);
+#endif
 	return 0;
 }
 

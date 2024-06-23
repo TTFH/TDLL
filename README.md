@@ -25,12 +25,6 @@ none
 Return value
 version (string) – Version of the DLL
 
-AllowInternalFunctions()
-Arguments
-none
-Return value
-none -- Allows all already loaded mods to access internal funtions
-
 Tick(index)
 Arguments
 index (number) – Index of the clock, between 0 and 15, default is 0 if not provided

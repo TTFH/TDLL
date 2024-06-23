@@ -290,7 +290,6 @@ end
 function init()
 	local version = GetDllVersion()
 	DebugPrint(version)
-	AllowInternalFunctions()
 	DebugPrint("Hello from script " .. GetScriptId())
 	local current_map = GetString("game.levelid")
 	if current_map ~= "" then

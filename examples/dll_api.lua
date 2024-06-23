@@ -1,9 +1,6 @@
 ---@return string version Version of the DLL
 function GetDllVersion() return "" end
 
---- Enables all functions that are "only for internal usage"
-function AllowInternalFunctions() end
-
 ---@param index any Index of the clock, between 0 and 15, default is 0 if not provided
 function Tick(index) end
 
