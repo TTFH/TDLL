@@ -223,60 +223,6 @@ function GetJointWorldPosAndAxis(joint, index)
 	return joint_pos, joint_dir
 end
 
-function GetWheelShape(wheel)
-	return wheel + 1 -- magic
-end
-
-function GetWheelRadius(wheel)
-	local shape = GetWheelShape(wheel)
-	local sizex, sizey, sizez, scale = GetShapeSize(shape)
-	local width = math.max(sizex, math.max(sizey, sizez))
-	return width * scale / 2
-end
-
-function ScaleWorld(FACTOR)
-	local player_tr = GetPlayerTransform()
-	player_tr.pos = VecScale(player_tr.pos, FACTOR)
-	SetPlayerTransform(player_tr)
-	SetPlayerSpawnTransform(player_tr)
-	local joints = FindJoints("", true)
-	for i = 1, #joints do
-		local joint = joints[i]
-		Delete(joint)
-	end
-	local waters = FindEntities("", true, "water")
-	for i = 1, #waters do
-		local water = waters[i]
-		Delete(water)
-	end
-	local wheels = FindEntities("", true, "wheel")
-	for i = 1, #wheels do
-		local wheel = wheels[i]
-		local wheel_tr = GetWheelTransform(wheel)
-		wheel_tr.pos = VecScale(wheel_tr.pos, FACTOR)
-		SetWheelTransform(wheel, wheel_tr)
-		local radius = GetWheelRadius(wheel)
-		SetWheelRadius(wheel, radius * FACTOR)
-	end
-	local shapes = FindShapes("", true)
-	for i = 1, #shapes do
-		local shape = shapes[i]
-		local _, _, _, scale = GetShapeSize(shape)
-		SetShapeScale(shape, scale * FACTOR)
-		local shape_tr = GetShapeLocalTransform(shape)
-		shape_tr.pos = VecScale(shape_tr.pos, FACTOR)
-		SetShapeLocalTransform(shape, shape_tr)
-	end
-	local bodies = FindBodies("", true)
-	for i = 1, #bodies do
-		local body = bodies[i]
-		local body_tr = GetBodyTransform(body)
-		body_tr.pos = VecScale(body_tr.pos, FACTOR)
-		SetBodyTransform(body, body_tr)
-		SetBodyActive(body, false)
-	end
-end
-
 function MakeFlamable(shape)
 	local palette = GetShapePaletteId(shape)
 	for i = 1, 255 do

@@ -61,8 +61,8 @@ void RegisterGameFunctionsHook(ScriptCore* core) {
 	//printf("%p | Script: %s\n", (void*)L, script_name);
 
 	RegisterLuaCFunctions(L);
-	if (core->check_internal->privilege > 1)
-		core->check_internal->privilege = 1;
+	//if (core->check_internal != NULL && core->check_internal->privilege > 1)
+	//	core->check_internal->privilege = 1;
 
 	// TODO: improve, this may break if a script is spawned
 	awwnb = false; // Reset remove boundary checkbox

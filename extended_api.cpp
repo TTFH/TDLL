@@ -285,7 +285,7 @@ int GetLightSize(lua_State* L) {
 		Light* light = game->scene->lights[i];
 		if (light->handle == handle) {
 			switch (light->type) {
-			case Sphere:
+			case LightSphere:
 				lua_pushnumber(L, light->radius);
 				lua_pushnumber(L, 0);
 				break;
@@ -340,11 +340,11 @@ int GetJointLocalPosAndAxis(lua_State* L) {
 		Joint* joint = game->scene->joints[i];
 		if (joint->handle == handle) {
 			if (index == 1) {
-				LuaPushVec3(L, joint->local_pos1);
-				LuaPushVec3(L, joint->local_rot1);
+				LuaPushVec3(L, joint->position1);
+				LuaPushVec3(L, joint->axis1);
 			} else {
-				LuaPushVec3(L, joint->local_pos2);
-				LuaPushVec3(L, joint->local_rot2);
+				LuaPushVec3(L, joint->position2);
+				LuaPushVec3(L, joint->axis2);
 			}
 			return 2;
 		}
