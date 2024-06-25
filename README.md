@@ -144,12 +144,6 @@ script (number) – Script handle
 Return value
 path (string) – Path to the script
 
-list = GetScriptEntities(script)
-Arguments
-script (number) – Script handle
-Return value
-list (table) – Indexed table with handles to all entities referenced by the script
-
 transform = GetWheelTransform(wheel)
 Arguments
 wheel (number) – Wheel handle

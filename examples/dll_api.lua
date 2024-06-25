@@ -75,10 +75,6 @@ function SetWaterVertex(water, index, vertex) end
 ---@return string path Path to the script
 function GetScriptPath(script) return "" end
 
----@param script number Script handle
----@return any list Indexed table with handles to all entities referenced by the script
-function GetScriptEntities(script) return nil end
-
 ---@param wheel number Wheel handle
 ---@return any transform Transform of the wheel
 function GetWheelTransform(wheel) return nil end

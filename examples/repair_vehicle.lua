@@ -76,14 +76,14 @@ function InitShapeData(vehicle)
 								tags = GetTags(joint)
 							})
 							if joint_type == "rope" then
-								local r, g, b = GetProperty(joint, "ropecolor")
+								local color = GetProperty(joint, "ropecolor")
 								local slack = GetProperty(joint, "slack")
 								local rope_strength = GetProperty(joint, "strength")
 								local maxstretch = GetProperty(joint, "maxstretch")
 								local other_shape = GetJointOtherShape(joint, shape)
 								local end_pos = GetJointLocalPosAndAxis(joint, 2)
 								-- suddenly the JS spread operator looks nice
-								joint_data[#joint_data].color = { r = r, g = g, b = b }
+								joint_data[#joint_data].color = { r = color[1], g = color[2], b = color[3] }
 								joint_data[#joint_data].slack = slack
 								joint_data[#joint_data].strength = rope_strength
 								joint_data[#joint_data].maxstretch = maxstretch

@@ -182,26 +182,6 @@ int SetWheelRadius(lua_State* L) {
 	return 0;
 }
 
-int GetScriptEntities(lua_State* L) {
-	unsigned int handle = lua_tointeger(L, 1);
-	Game* game = Teardown::GetGame();
-	for (unsigned int i = 0; i < game->scene->scripts.getSize(); i++) {
-		Script* script = game->scene->scripts[i];
-		if (script->handle == handle) {
-			unsigned int n = script->core.entities.getSize();
-			td_lua_createtable(L, n, 0);
-			for (unsigned int j = 0; j < n; j++) {
-				int entity_handle = script->core.entities[j];
-				lua_pushinteger(L, entity_handle);
-				lua_rawseti(L, -2, j + 1);
-			}
-			return 1;
-		}
-	}
-	td_lua_createtable(L, 0, 0);
-	return 1;
-}
-
 int GetScriptPath(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = Teardown::GetGame();
@@ -797,7 +777,6 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "SetWaterVertex", SetWaterVertex);
 
 	LuaPushFunction(L, "GetScriptPath", GetScriptPath);
-	LuaPushFunction(L, "GetScriptEntities", GetScriptEntities);
 
 	LuaPushFunction(L, "GetWheelTransform", GetWheelTransform);
 	LuaPushFunction(L, "SetWheelTransform", SetWheelTransform);

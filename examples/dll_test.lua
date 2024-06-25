@@ -279,7 +279,7 @@ function tick(dt)
 		local script = scripts[i]
 		local script_path = GetScriptPath(script)
 		DebugWatch(script, script_path)
-		local entities = GetScriptEntities(script)
+		local entities = FindEntities("", false)
 		for j = 1, #entities do
 			local entity = entities[j]
 			local entity_type = GetEntityType(entity)
