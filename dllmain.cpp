@@ -89,23 +89,26 @@ void SaveImageJPG(const char* path, int width, int height, uint8_t* pixels) {
 }
 
 class FastRecorder {
+	#define THREAD_COUNT 8
+	#define SUGGESTED_BUFFER_SIZE 60		// Number of frames to save per thread
 	int width;
 	int height;
-	int total_frames;				// The total number of frames
-	int current_buffer;				// The current buffer to write frames to
-	int starting_frame[8];			// The starting frame index for each buffer
+	int total_frames;						// The total number of frames
+	int current_buffer;						// The current buffer to write frames to
 	std::string capture_dir;
-	std::thread save_thread[8];
-	std::atomic<bool> running[8];	// The state of the save thread
-	std::atomic<int> saved_frames;	// The number of frames saved to disk
-	std::vector<uint8_t*> video_frames[8];
+	std::atomic<int> saved_frames;			// The number of frames saved to disk
+	std::atomic<int> sequence_number;		// The current file for raw data
+	int starting_frame[THREAD_COUNT];		// The starting frame index for each buffer
+	std::thread save_thread[THREAD_COUNT];
+	std::atomic<bool> running[THREAD_COUNT];// The state of the save thread
+	std::vector<uint8_t*> video_frames[THREAD_COUNT];
 
 	void SaveThread(int index) {
 		for (unsigned int i = 0; i < video_frames[index].size(); i++) {
 			char image_path[256];
 			snprintf(image_path, sizeof(image_path), "%s/%04d.jpg", capture_dir.c_str(), starting_frame[index] + i);
-			SaveImageJPG(image_path, width, height, video_frames[index][i]);
 			if (video_frames[index][i] != NULL) {
+				SaveImageJPG(image_path, width, height, video_frames[index][i]);
 				delete[] video_frames[index][i];
 				video_frames[index][i] = NULL;
 			}
@@ -114,11 +117,10 @@ class FastRecorder {
 		video_frames[index].clear(); // Clear vector for next batch
 		running[index] = false; // Signal that the thread has finished
 	}
+
 	void DumpRawData(int index) {
 		char file_path[256];
-		// Ehmm, good luck finding the right files
-		// TODO: use sequential numbering or something
-		snprintf(file_path, sizeof(file_path), "%s/%04d.tdc", capture_dir.c_str(), starting_frame[index]);
+		snprintf(file_path, sizeof(file_path), "%s/%04d.tdc", capture_dir.c_str(), sequence_number++);
 		FILE* file = fopen(file_path, "wb");
 		if (file != NULL) {
 			int frame_count = video_frames[index].size();
@@ -127,13 +129,14 @@ class FastRecorder {
 			fwrite(&width, sizeof(int), 1, file);
 			fwrite(&height, sizeof(int), 1, file);
 			for (unsigned int i = 0; i < video_frames[index].size(); i++) {
-				fwrite(video_frames[index][i], 3 * width * height, 1, file);
 				if (video_frames[index][i] != NULL) {
+					fwrite(video_frames[index][i], 3 * width * height, 1, file);
 					delete[] video_frames[index][i];
 					video_frames[index][i] = NULL;
 				}
 				saved_frames++;
 			}
+			video_frames[index].clear();
 			fclose(file);
 		}
 		running[index] = false;
@@ -144,35 +147,42 @@ public:
 		height = 0;
 		saved_frames = 0;
 		current_buffer = 0;
+		sequence_number = 0;
 		capture_dir = "mods/screenrecorder";
-		for (int i = 0; i < 8; i++) {
+		for (int i = 0; i < THREAD_COUNT; i++) {
 			starting_frame[i] = 0;
-			video_frames[i].reserve(60);
+			video_frames[i].reserve(SUGGESTED_BUFFER_SIZE);
 			running[i] = false;
 		}
 	}
+
 	void SetResolution(int width, int height) {
 		this->width = width;
 		this->height = height;
 	}
+
 	void SetFolder(const char* dir) {
 		capture_dir = dir;
 	}
+
 	void AddFrame(uint8_t* pixels) {
 		int size = 3 * width * height;
 		uint8_t* frame = new uint8_t[size];
 		memcpy(frame, pixels, size);
 		video_frames[current_buffer].push_back(frame);
 		total_frames++;
-		if (total_frames % 60 == 0)
+		if (total_frames % SUGGESTED_BUFFER_SIZE == 0)
 			SaveFrames();
 	}
+
 	int GetSavedFrames() {
 		return saved_frames.load();
 	}
+
 	int GetTotalFrames() {
 		return total_frames;
 	}
+
 	// The last buffer needs to be saved manually
 	void SaveFrames() {
 		// Save if there is a thread available
@@ -181,15 +191,17 @@ public:
 				save_thread[current_buffer].join();
 			running[current_buffer] = true;
 			save_thread[current_buffer] = std::thread(&FastRecorder::SaveThread, this, current_buffer);
-			current_buffer = (current_buffer + 1) % 8;
-			starting_frame[current_buffer] = total_frames;
+			current_buffer = (current_buffer + 1) % THREAD_COUNT;
+			starting_frame[current_buffer] = total_frames; // Set starting frame for next buffer
 		}
 	}
+
 	void ClearFrames() {
 		total_frames = 0;
 		saved_frames = 0;
 		current_buffer = 0;
-		for (int i = 0; i < 8; i++) {
+		sequence_number = 0;
+		for (int i = 0; i < THREAD_COUNT; i++) {
 			for (unsigned int j = 0; j < video_frames[i].size(); j++) {
 				if (video_frames[i][j] != NULL) {
 					delete[] video_frames[i][j];
@@ -201,6 +213,7 @@ public:
 			running[i] = false;
 		}
 	}
+
 	~FastRecorder() {
 		ClearFrames();
 	}
