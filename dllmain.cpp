@@ -89,8 +89,8 @@ void SaveImageJPG(const char* path, int width, int height, uint8_t* pixels) {
 }
 
 class FastRecorder {
-	#define THREAD_COUNT 8
-	#define SUGGESTED_BUFFER_SIZE 60		// Number of frames to save per thread
+	#define THREAD_COUNT 5					// One thread is always idle
+	#define SUGGESTED_BUFFER_SIZE 60		// Number of frames to save per thread, can be bigger
 	int width;
 	int height;
 	int total_frames;						// The total number of frames
@@ -104,9 +104,12 @@ class FastRecorder {
 	std::vector<uint8_t*> video_frames[THREAD_COUNT];
 
 	void SaveThread(int index) {
-		for (unsigned int i = 0; i < video_frames[index].size(); i++) {
+		unsigned int start = starting_frame[index];
+		unsigned int count = video_frames[index].size();
+		//printf("Thread %d (%2d frames) [%4d -> %4d]\n", index, count, start, start + count - 1);
+		for (unsigned int i = 0; i < count; i++) {
 			char image_path[256];
-			snprintf(image_path, sizeof(image_path), "%s/%04d.jpg", capture_dir.c_str(), starting_frame[index] + i);
+			snprintf(image_path, sizeof(image_path), "%s/%04d.jpg", capture_dir.c_str(), start + i);
 			if (video_frames[index][i] != NULL) {
 				SaveImageJPG(image_path, width, height, video_frames[index][i]);
 				delete[] video_frames[index][i];
@@ -115,6 +118,8 @@ class FastRecorder {
 			saved_frames++;
 		}
 		video_frames[index].clear(); // Clear vector for next batch
+		//printf("Thread %d finished!\n", index);
+		Sleep(1);
 		running[index] = false; // Signal that the thread has finished
 	}
 
@@ -183,17 +188,24 @@ public:
 		return total_frames;
 	}
 
-	// The last buffer needs to be saved manually
 	void SaveFrames() {
-		// Save if there is a thread available
-		if (!running[current_buffer]) {
-			if (save_thread[current_buffer].joinable())
-				save_thread[current_buffer].join();
-			running[current_buffer] = true;
-			save_thread[current_buffer] = std::thread(&FastRecorder::SaveThread, this, current_buffer);
-			current_buffer = (current_buffer + 1) % THREAD_COUNT;
-			starting_frame[current_buffer] = total_frames; // Set starting frame for next buffer
-		}
+		bool found = false;
+		int next_buffer = current_buffer;
+		do {
+			next_buffer = (next_buffer + 1) % THREAD_COUNT;
+			if (next_buffer != current_buffer && !running[next_buffer]) {
+				if (save_thread[next_buffer].joinable())
+					save_thread[next_buffer].join();
+
+				// Start current thread if the next buffer is available for use
+				running[current_buffer] = true;
+				save_thread[current_buffer] = std::thread(&FastRecorder::SaveThread, this, current_buffer);
+
+				found = true;
+				current_buffer = next_buffer;
+				starting_frame[current_buffer] = total_frames - 1; // Set starting frame for next buffer
+			}
+		} while (!found && next_buffer != current_buffer);
 	}
 
 	void ClearFrames() {
@@ -211,6 +223,8 @@ public:
 			video_frames[i].clear();
 			starting_frame[i] = 0;
 			running[i] = false;
+			if (save_thread[i].joinable())
+				save_thread[i].join();
 		}
 	}
 
