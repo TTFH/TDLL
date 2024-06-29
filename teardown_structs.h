@@ -467,11 +467,15 @@ public:
 	ScriptCore core;
 }; // 0x2228
 
+class AnimatorCore {
+	
+}; // 0x120
+
 class Animator : public Entity {
 public:
 	Transform transform;
 	uint8_t padding[4];
-	void* anim_core;
+	AnimatorCore* anim_core;
 	td_string name;
 	td_string path;
 }; // 0xB0
@@ -494,7 +498,11 @@ struct FireSystem {
 
 struct Environment {
 
-};
+}; // ??
+
+struct Registry {
+	
+}; // 0x60
 
 struct Scene {
 	uint8_t padding1[0x38];
@@ -555,7 +563,7 @@ struct EditorEntity {
 struct Editor {
 	uint8_t padding[0x28];
 	EditorEntity* selected;		// 0x28
-};
+}; // 0xAF58
 
 struct Player {
 	Transform transform;
@@ -564,15 +572,45 @@ struct Player {
 	uint8_t padding2[0xD0];
 	float pitch;			// 0x16C
 	float yaw;
+	
+	//bool is_jumping;	// 0x185
+	
 	uint8_t padding3[0x94];
 	float health;			// 0x208
+
+	//Body* tool_body;		// 0xE08
+
+	//float tool_recoil;	// 0xE70
+
 	uint8_t padding4[0x8A4];
 	float time_underwater;	// 0xFD8
 	uint8_t padding5[0x3040];
 	float transition_timer;	// 0x401C
+	/*
+	Transform tool_tr_override; // 0x4030
+	Vec3 tool_offset;
+	float tool_sway;
+	bool override_tr;
+	bool hand_tr_override;
+	*/
+	//Transform right_hand_tr;	// 0x4098
+	//Transform left_hand_tr;
+	//bool dual_handed;
+
 	uint8_t padding6[0x354];
 	float bluetide_timer;	// 0x43F8
 	float bluetide_power;
+
+	/*
+	bool third_person;	// 0x441D
+	bool transition_3rd;
+	bool first_person;
+	bool transition_1st;
+	*/
+
+	//Animator* animator;	//0x45A0
+
+	//td_string spawn_tool;	//0x45B0
 }; // 0x45E8
 
 struct Material {
@@ -604,6 +642,7 @@ struct Game {
 	Scene* scene;					// 0x50
 	uint8_t padding2[0x10];
 	Editor* editor;					// 0x68
+	//ScriptCore* splash, loading, hud, menu, unk, ui_common
 	uint8_t padding3[0x48];
 	Player* player;					// 0xB8
 	uint8_t padding4[8];
