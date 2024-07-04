@@ -328,16 +328,16 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 				int type = game->editor->selected->type;
 				bool valid = true;
 				switch (type) {
-					case Editor_Water:
+					case EditorEntityTypes::Water:
 						ImGui::Text("Water");
 						break;
-					case Editor_Voxagon:
+					case EditorEntityTypes::Voxagon:
 						ImGui::Text("Voxagon");
 						break;
-					case Editor_Boundary:
+					case EditorEntityTypes::Boundary:
 						ImGui::Text("Boundary");
 						break;
-					case Editor_Trigger:
+					case EditorEntityTypes::Trigger:
 						ImGui::Text("Trigger");
 						break;
 					default:

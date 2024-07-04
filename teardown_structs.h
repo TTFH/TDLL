@@ -26,7 +26,6 @@ class td_string {
 		char stack[32] = { 0 };
 	};
 public:
-	td_string() { }
 	const char* c_str() const {
 		return stack[31] != '\0' ? heap : &stack[0];
 	}
@@ -105,10 +104,11 @@ struct Entity {
 	uint16_t flags;
 	uint32_t handle;	// 0x0C
 	Entity* parent;
-	Entity* sibling;
-	Entity* unk_tree;	// the holy spirit?
-	Entity* child;
-	uint8_t padding[0x10];
+	Entity* next_sibling;
+	Entity* last_sibling;
+	Entity* first_child;
+	Entity* last_child;
+	void* tags;
 }; // 0x40
 
 static_assert(sizeof(Entity) == 0x40, "Wrong Entity size");
@@ -117,12 +117,12 @@ class Body : public Entity {
 public:
 	Transform transform;
 	uint8_t padding1[0x7C];
-	Vec3 velocity;				// 0xD8
-	Vec3 angular_velocity;		// 0xE4
+	Vec3 velocity;			// 0xD8
+	Vec3 angular_velocity;	// 0xE4
 	uint8_t padding2[0x48];
-	bool dynamic;				// 0x138
+	bool dynamic;			// 0x138
 	uint8_t padding3[7];
-	uint8_t active;				// 0x140
+	uint8_t active;			// 0x140
 	float friction;
 	float restitution;
 	uint8_t friction_mode;
@@ -450,8 +450,24 @@ struct ScriptCore {
 	td_string location;
 	uint8_t padding2[0x18];
 	ScriptCoreInner inner_core;		// 0x68
+	/*
+	bool has_init;	// 0xA1
+	bool has_tick;
+	bool has_update;
+	bool has_ppu;
+	bool has_render;
+	bool has_draw;
+	bool has_handle_cmd;
+
+	float tick_time;	// 0xAC
+	float update_time;
+
+	td_vector<> transitions;	// 0x1D8
+	td_vector<> params;			// 0x214
+	*/
 	uint8_t padding4[0x1F8];		// an onion?
 	td_vector<uint32_t> entities;	// 0x298
+	//td_vector<> sounds;
 	uint8_t padding5[0x18];
 	InternalCheck* check_internal;	// 0x2C0
 }; // 0x21A8
@@ -547,11 +563,35 @@ static_assert(offsetof(Scene, animators) == 0x1F8, "Wrong offset scene->animator
 static_assert(offsetof(Scene, boundary) == 0x590, "Wrong offset scene->boundary");
 static_assert(offsetof(Scene, entities) == 0x9C8, "Wrong offset scene->entities");
 
-enum EditorEntityType : int {
-	Editor_Water = 17,
-	Editor_Voxagon = 19,
-	Editor_Boundary = 21,
-	Editor_Trigger = 25,
+namespace EditorEntityTypes {
+	const int Invalid = 0;
+	const int Entity = 1;
+	const int Scene = 2;
+	const int Environment = 3;
+	const int PostProcessing = 4;
+	const int Group = 5;
+	const int Comment = 6;
+	const int Compound = 7;
+	const int Instance = 8;
+	const int Body = 9;
+	const int Shape	= 10;
+	const int Voxels = 11;
+	const int Light = 12;
+	const int Spawnpoint = 13;
+	const int Location = 14;
+	const int Voxscript = 15;
+	const int Joint = 16;
+	const int Water = 17;
+	const int Voxbox = 18;
+	const int Voxagon = 19;
+	const int Rope = 20;
+	const int Boundary = 21;
+	const int Vehicle = 22;
+	const int Wheel = 23;
+	const int Screen = 24;
+	const int Trigger = 25;
+	const int Script = 26;
+	const int Animator = 27;
 };
 
 struct EditorEntity {
@@ -639,7 +679,9 @@ struct Game {
 	uint32_t screen_height;
 	GameState state;
 	uint8_t padding1[0x44];
+	// haptics
 	Scene* scene;					// 0x50
+	// sounds, camera
 	uint8_t padding2[0x10];
 	Editor* editor;					// 0x68
 	//ScriptCore* splash, loading, hud, menu, unk, ui_common
