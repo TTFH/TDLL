@@ -42,6 +42,9 @@ function RemoveBoundary() end
 ---@param vertex any Vector with the new position of the vertex
 function SetBoundaryVertex(index, vertex) end
 
+---@param animator number Animator handle
+---@return boolean If the animator is a ragdoll
+function IsRagdoll(animator) return false end
 
 ---@return number count Number of heats (blowtorch, AddHeat())
 function GetHeatCount() return 0 end

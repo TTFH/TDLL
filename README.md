@@ -95,6 +95,12 @@ vertex (table) – Vector with the new position of the vertex
 Return value
 none
 
+ragdoll = IsRagdoll(animator)
+Arguments
+animator (number) – Animator handle
+Return value
+ragdoll (bool) – If the animator is a ragdoll
+
 count = GetHeatCount()
 Arguments
 none

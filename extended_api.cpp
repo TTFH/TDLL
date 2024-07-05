@@ -783,6 +783,20 @@ int AllowInternalFunctions(lua_State* L) {
 	return 0;
 }
 
+int IsRagdoll(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Game* game = Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->animators.getSize(); i++) {
+		Animator* animator = game->scene->animators[i];
+		if (animator->handle == handle) {
+			lua_pushboolean(L, animator->anim_core->is_ragdoll);
+			return 1;
+		}
+	}
+	lua_pushboolean(L, false);
+	return 1;
+}
+
 void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "GetDllVersion", GetDllVersion);
 	LuaPushFunction(L, "Tick", Tick);
@@ -798,6 +812,7 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "GetBoundaryVertices", GetBoundaryVertices);
 	LuaPushFunction(L, "SetBoundaryVertex", SetBoundaryVertex);
 
+	LuaPushFunction(L, "IsRagdoll", IsRagdoll);
 	LuaPushFunction(L, "GetHeatCount", GetHeatCount);
 	LuaPushFunction(L, "GetHeatInfo", GetHeatInfo);
 	LuaPushFunction(L, "SetSunLength", SetSunLength);

@@ -549,7 +549,7 @@ public:
 	ScriptCore core;
 }; // 0x2228
 
-class AnimatorCore {
+struct AnimatorCore {
 	uint8_t padding[0x119];
 	bool is_ragdoll;	// 0x119	
 }; // 0x120
