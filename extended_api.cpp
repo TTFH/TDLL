@@ -269,7 +269,7 @@ int GetLightSize(lua_State* L) {
 				lua_pushnumber(L, light->radius);
 				lua_pushnumber(L, 0);
 				break;
-			case Capsule:
+			case LightCapsule:
 				lua_pushnumber(L, light->radius);
 				lua_pushnumber(L, 2.0 * light->half_length);
 				break;
@@ -279,7 +279,7 @@ int GetLightSize(lua_State* L) {
 				lua_pushnumber(L, angle);
 			}
 				break;
-			case Area:
+			case LightArea:
 				lua_pushnumber(L, 2.0 * light->half_width);
 				lua_pushnumber(L, 2.0 * light->half_height);
 				break;
@@ -659,30 +659,19 @@ int ZlibLoadCompressed(lua_State* L) {
 	return 1;
 }
 
-int GetFireShape(lua_State* L) {
+int GetFireInfo(lua_State* L) {
 	unsigned int index = lua_tointeger(L, 1);
 	if (index > 0) index--; // To 0-based index
 	Game* game = Teardown::GetGame();
 	if (index < game->scene->firesystem->fires.getSize()) {
 		Fire fire = game->scene->firesystem->fires[index];
 		lua_pushinteger(L, fire.shape->handle);
-		return 1;
+		LuaPushVec3(L, fire.position);
+		return 2;
 	}
 	lua_pushinteger(L, 0);
-	return 1;
-}
-
-int GetFirePosition(lua_State* L) {
-	unsigned int index = lua_tointeger(L, 1);
-	if (index > 0) index--; // To 0-based index
-	Game* game = Teardown::GetGame();
-	if (index < game->scene->firesystem->fires.getSize()) {
-		Fire fire = game->scene->firesystem->fires[index];
-		LuaPushVec3(L, fire.position);
-		return 1;
-	}
 	LuaPushVec3(L, Vec3());
-	return 1;
+	return 2;
 }
 
 int GetPaletteTintArray(lua_State* L) {
@@ -701,7 +690,7 @@ int GetPaletteTintArray(lua_State* L) {
 	Palette& palette = game->palettes->get(palette_id);
 
 	std::vector<int> tint_array;
-	tint_array.reserve(256);
+	tint_array.reserve(255);
 	for (unsigned int i = 1; i < 256; i++) { // Skip first index
 		uint8_t index = 0;
 		if (strcmp(color, "black") == 0)
@@ -720,6 +709,7 @@ int GetPaletteTintArray(lua_State* L) {
 int SetVehicleMaxSteerAngle(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	float angle = lua_tonumber(L, 2);
+	if (angle <= 0) angle = 30.0;
 	Game* game = Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->vehicles.getSize(); i++) {
 		Vehicle* vehicle = game->scene->vehicles[i];
@@ -733,14 +723,60 @@ int SetVehicleMaxSteerAngle(lua_State* L) {
 
 int SetJointStrength(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
-	float strength = lua_tonumber(L, 2); // 3000.0
-	float size = lua_tonumber(L, 3); // 0.8
+	float strength = lua_tonumber(L, 2);
+	float size = lua_tonumber(L, 3);
+	if (strength <= 0) strength = 3000.0;
+	if (size <= 0) size = 0.8;
 	Game* game = Teardown::GetGame();
 	for (unsigned int i = 0; i < game->scene->joints.getSize(); i++) {
 		Joint* joint = game->scene->joints[i];
 		if (joint->handle == handle) {
 			joint->connection_strength = strength;
 			joint->disconnect_dist = size;
+			return 0;
+		}
+	}
+	return 0;
+}
+
+int GetHeatCount(lua_State* L) {
+	Game* game = Teardown::GetGame();
+	lua_pushinteger(L, game->player->heats.getSize());
+	return 1;
+}
+
+int GetHeatInfo(lua_State* L) {
+	unsigned int index = lua_tointeger(L, 1);
+	if (index > 0) index--; // To 0-based index
+	Game* game = Teardown::GetGame();
+	if (index < game->player->heats.getSize()) {
+		Heat& heat = game->player->heats[index];
+		lua_pushinteger(L, heat.shape->handle);
+		LuaPushVec3(L, Vec3(heat.x, heat.y, heat.z));
+		lua_pushnumber(L, heat.amount);
+		return 3;
+	}
+	lua_pushinteger(L, 0);
+	LuaPushVec3(L, Vec3());
+	lua_pushnumber(L, 0);
+	return 3;
+}
+
+int SetSunLength(lua_State* L) {
+	float length = lua_tonumber(L, 1);
+	Game* game = Teardown::GetGame();
+	game->scene->environment->sun_length = length;
+	return 0;
+}
+
+int AllowInternalFunctions(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Game* game = Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->scripts.getSize(); i++) {
+		Script* script = game->scene->scripts[i];
+		if (script->handle == handle) {
+			if (script->core.check_internal->privilege > 1)
+				script->core.check_internal->privilege = 1;
 			return 0;
 		}
 	}
@@ -762,12 +798,14 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "GetBoundaryVertices", GetBoundaryVertices);
 	LuaPushFunction(L, "SetBoundaryVertex", SetBoundaryVertex);
 
-	// [NEW!]
-	LuaPushFunction(L, "GetFireShape", GetFireShape);
-	LuaPushFunction(L, "GetFirePosition", GetFirePosition);
-	LuaPushFunction(L, "GetPaletteTintArray", GetPaletteTintArray);
-	LuaPushFunction(L, "SetVehicleMaxSteerAngle", SetVehicleMaxSteerAngle);
+	LuaPushFunction(L, "GetHeatCount", GetHeatCount);
+	LuaPushFunction(L, "GetHeatInfo", GetHeatInfo);
+	LuaPushFunction(L, "SetSunLength", SetSunLength);
+	LuaPushFunction(L, "GetFireInfo", GetFireInfo);
 	LuaPushFunction(L, "SetJointStrength", SetJointStrength);
+	LuaPushFunction(L, "GetPaletteTintArray", GetPaletteTintArray);
+	LuaPushFunction(L, "AllowInternalFunctions", AllowInternalFunctions);
+	LuaPushFunction(L, "SetVehicleMaxSteerAngle", SetVehicleMaxSteerAngle);
 
 	LuaPushFunction(L, "GetTimeScale", GetTimeScale);
 	LuaPushFunction(L, "GetShadowVolumeSize", GetShadowVolumeSize);

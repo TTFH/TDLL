@@ -42,6 +42,38 @@ function RemoveBoundary() end
 ---@param vertex any Vector with the new position of the vertex
 function SetBoundaryVertex(index, vertex) end
 
+
+---@return number count Number of heats (blowtorch, AddHeat())
+function GetHeatCount() return 0 end
+
+---@param index number Index of the heat
+---@return number shape Shape handle
+---@return any pos Vector with the local position of the heat in voxels
+---@return number amount Amount of heat
+function GetHeatInfo(index) return 0, nil, 0 end
+
+---@param length number Environment sun length
+function SetSunLength(length) end
+
+---@param joint number Joint handle
+---@param strength number Joint strength for detaching (default 3000)
+---@param size number Joint distance for detaching (default 0.8)
+function SetJointStrength(joint, strength, size) end
+
+---@param palette number Palette index
+---@param tint string Tint type ("black", "yellow", "rgba")
+---@param strength number Tint strength (1 to 4)
+---@return any list Array with the palette index association for each of the 255 indexes
+function GetPaletteTintArray(palette, tint, strength) return nil end
+
+---@param script number Script handle
+function AllowInternalFunctions(script) end
+
+---@param vehicle number Vehicle handle
+---@param angle number Maximum steering angle in degrees (default 30)
+function SetVehicleMaxSteerAngle(vehicle, angle) end
+
+
 ---@param joint number Joint handle
 ---@param index number Index of the body (1 or 2)
 ---@return any pos Vector with the position of the joint relative to the index-th body

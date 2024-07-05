@@ -243,6 +243,10 @@ function init()
 	end
 	rainbow = 0
 	g_shape = 0
+
+	SetSunLength(128)
+	local sunlength = GetEnvironmentProperty("sunlength")
+	DebugWatch("Sun length", sunlength)
 end
 
 function tick(dt)
@@ -389,4 +393,14 @@ function tick(dt)
 		local _, red, green, blue = GetPaletteMaterial(palette, i)
 	end
 ]]
+	local count = GetHeatCount()
+	DebugWatch("Heat count", tostring(count))
+	for i = 1, count do
+		local shape, pos, amount = GetHeatInfo(i)
+		local _, _, _, scale = GetShapeSize(shape)
+		local shape_tr = GetShapeWorldTransform(shape)
+		local local_pos = VecScale(pos, scale)
+		local world_pos = TransformToParentPoint(shape_tr, local_pos)
+		DebugCross(world_pos, 1, amount, amount)
+	end
 end

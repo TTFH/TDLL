@@ -98,6 +98,93 @@ struct Transform {
 	Quat rot;
 }; // 0x1C
 
+namespace EntityTypes {
+	const uint8_t Body = 1;
+	const uint8_t Shape = 2;
+	const uint8_t Light = 3;
+	const uint8_t Location = 4;
+	const uint8_t Water = 5;
+	const uint8_t Joint = 6;
+	const uint8_t Vehicle = 7;
+	const uint8_t Wheel = 8;
+	const uint8_t Screen = 9;
+	const uint8_t Trigger = 10;
+	const uint8_t Script = 11;
+	const uint8_t Animator = 12;
+};
+
+namespace EditorEntityTypes {
+	const int Invalid = 0;
+	const int Entity = 1;
+	const int Scene = 2;
+	const int Environment = 3;
+	const int PostProcessing = 4;
+	const int Group = 5;
+	const int Comment = 6;
+	const int Compound = 7;
+	const int Instance = 8;
+	const int Body = 9;
+	const int Shape	= 10;
+	const int Voxels = 11;
+	const int Light = 12;
+	const int Spawnpoint = 13;
+	const int Location = 14;
+	const int Voxscript = 15;
+	const int Joint = 16;
+	const int Water = 17;
+	const int Voxbox = 18;
+	const int Voxagon = 19;
+	const int Rope = 20;
+	const int Boundary = 21;
+	const int Vehicle = 22;
+	const int Wheel = 23;
+	const int Screen = 24;
+	const int Trigger = 25;
+	const int Script = 26;
+	const int Animator = 27;
+};
+
+namespace MaterialTypes {
+	const uint8_t None = 0;
+	const uint8_t Glass = 1;
+	const uint8_t Wood = 2;
+	const uint8_t Masonry = 3;
+	const uint8_t Plaster = 4;
+	const uint8_t Metal = 5;
+	const uint8_t HeavyMetal = 6;
+	const uint8_t Rock = 7;
+	const uint8_t Dirt = 8;
+	const uint8_t Foliage = 9;
+	const uint8_t Plastic = 10;
+	const uint8_t HardMetal = 11;
+	const uint8_t HardMasonry = 12;
+	const uint8_t Ice = 13;
+	const uint8_t Unphysical = 14;
+};
+
+enum LightType : uint8_t {
+	LightSphere = 1,
+	LightCapsule,
+	LightCone,
+	LightArea,
+}; // 0x01
+
+enum JointType : int {
+	JointBall = 1,
+	JointHinge,
+	JointPrismatic,
+	JointRope,
+	JointCone,
+}; // 0x04
+
+enum TriggerType : int {
+	TriggerSphere = 1,
+	TriggerBox,
+	TriggerPolygon,
+}; // 0x04
+
+// ----------------------------------------------------------------------------
+
 struct Entity {
 	void* class_ptr;
 	uint8_t type;
@@ -179,13 +266,6 @@ static_assert(offsetof(Shape, z_u32) == 0xCC, "Wrong offset shape->z_u32");
 static_assert(offsetof(Shape, vox) == 0xF0, "Wrong offset shape->vox");
 static_assert(offsetof(Shape, emissive_scale) == 0x100, "Wrong offset shape->emissive_scale");
 
-enum LightType : uint8_t {
-	LightSphere = 1,
-	Capsule,
-	LightCone,
-	Area,
-}; // 0x01
-
 class Light : public Entity {
 public:
 	bool enabled;
@@ -241,14 +321,6 @@ public:
 
 static_assert(offsetof(Water, vertices) == 0x60, "Wrong offset water->vertices");
 static_assert(offsetof(Water, wave) == 0x3F8, "Wrong offset water->wave");
-
-enum JointType : int {
-	Ball = 1,
-	Hinge,
-	Prismatic,
-	JointRope,
-	JointCone,
-}; // 0x04
 
 struct Rope {
 	float zero;
@@ -400,12 +472,6 @@ public:
 static_assert(offsetof(Screen, script) == 0x70, "Wrong offset screen->script");
 static_assert(offsetof(Screen, enabled) == 0xB0, "Wrong offset screen->enabled");
 
-enum TriggerType : int {
-	TriggerSphere = 1,
-	TriggerBox,
-	TriggerPolygon,
-}; // 0x04
-
 class Trigger : public Entity {
 public:
 	Transform transform;
@@ -484,7 +550,8 @@ public:
 }; // 0x2228
 
 class AnimatorCore {
-	
+	uint8_t padding[0x119];
+	bool is_ragdoll;	// 0x119	
 }; // 0x120
 
 class Animator : public Entity {
@@ -507,18 +574,17 @@ struct Fire {
 	uint8_t padding1[0x24];
 }; // 0x48
 
+static_assert(sizeof(Fire) == 0x48, "Wrong Fire size");
+
 struct FireSystem {
 	uint8_t padding[8];
 	td_vector<Fire> fires;
 };
 
 struct Environment {
-
+	uint8_t padding[0xC8];
+	float sun_length;	// 0xC8
 }; // ??
-
-struct Registry {
-	
-}; // 0x60
 
 struct Scene {
 	uint8_t padding1[0x38];
@@ -563,37 +629,6 @@ static_assert(offsetof(Scene, animators) == 0x1F8, "Wrong offset scene->animator
 static_assert(offsetof(Scene, boundary) == 0x590, "Wrong offset scene->boundary");
 static_assert(offsetof(Scene, entities) == 0x9C8, "Wrong offset scene->entities");
 
-namespace EditorEntityTypes {
-	const int Invalid = 0;
-	const int Entity = 1;
-	const int Scene = 2;
-	const int Environment = 3;
-	const int PostProcessing = 4;
-	const int Group = 5;
-	const int Comment = 6;
-	const int Compound = 7;
-	const int Instance = 8;
-	const int Body = 9;
-	const int Shape	= 10;
-	const int Voxels = 11;
-	const int Light = 12;
-	const int Spawnpoint = 13;
-	const int Location = 14;
-	const int Voxscript = 15;
-	const int Joint = 16;
-	const int Water = 17;
-	const int Voxbox = 18;
-	const int Voxagon = 19;
-	const int Rope = 20;
-	const int Boundary = 21;
-	const int Vehicle = 22;
-	const int Wheel = 23;
-	const int Screen = 24;
-	const int Trigger = 25;
-	const int Script = 26;
-	const int Animator = 27;
-};
-
 struct EditorEntity {
 	uint8_t padding[0x174];
 	uint32_t type;				// 0x174
@@ -605,26 +640,33 @@ struct Editor {
 	EditorEntity* selected;		// 0x28
 }; // 0xAF58
 
+struct Heat {
+	Shape* shape;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	float amount;
+}; // 0x18
+
+static_assert(sizeof(Heat) == 0x18, "Wrong Heat size");
+
 struct Player {
 	Transform transform;
-	uint8_t padding1[0x1C];
+	uint8_t padding1[0x70];
 	Vec3 velocity;			// 0x8C
-	uint8_t padding2[0xD0];
+	uint8_t padding2[0xD4];
 	float pitch;			// 0x16C
 	float yaw;
-	
 	//bool is_jumping;	// 0x185
-	
 	uint8_t padding3[0x94];
 	float health;			// 0x208
-
 	//Body* tool_body;		// 0xE08
-
 	//float tool_recoil;	// 0xE70
-
-	uint8_t padding4[0x8A4];
+	uint8_t padding4[0xDCC];
 	float time_underwater;	// 0xFD8
-	uint8_t padding5[0x3040];
+	uint8_t padding5[0x14];
+	td_vector<Heat> heats;	// 0xFF0
+	uint8_t padding6[0x301C];
 	float transition_timer;	// 0x401C
 	/*
 	Transform tool_tr_override; // 0x4030
@@ -636,22 +678,25 @@ struct Player {
 	//Transform right_hand_tr;	// 0x4098
 	//Transform left_hand_tr;
 	//bool dual_handed;
-
-	uint8_t padding6[0x354];
+	uint8_t padding7[0x3D8];
 	float bluetide_timer;	// 0x43F8
 	float bluetide_power;
-
 	/*
 	bool third_person;	// 0x441D
 	bool transition_3rd;
 	bool first_person;
 	bool transition_1st;
 	*/
-
 	//Animator* animator;	//0x45A0
-
 	//td_string spawn_tool;	//0x45B0
 }; // 0x45E8
+
+static_assert(offsetof(Player, velocity) == 0x8C, "Wrong offset player->velocity");
+static_assert(offsetof(Player, pitch) == 0x16C, "Wrong offset player->pitch");
+static_assert(offsetof(Player, health) == 0x208, "Wrong offset player->health");
+static_assert(offsetof(Player, time_underwater) == 0xFD8, "Wrong offset player->time_underwater");
+static_assert(offsetof(Player, heats) == 0xFF0, "Wrong offset player->heats");
+static_assert(offsetof(Player, transition_timer) == 0x401C, "Wrong offset player->transition_timer");
 
 struct Material {
 	uint32_t type;
@@ -673,6 +718,8 @@ struct Palette {
 	uint8_t rgba_tint[4 * 256];
 	uint32_t padding3[13];
 }; // 0x3440
+
+static_assert(sizeof(Palette) == 0x3440, "Wrong Palette size");
 
 struct Game {
 	uint32_t screen_width;

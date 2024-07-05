@@ -61,8 +61,6 @@ void RegisterGameFunctionsHook(ScriptCore* core) {
 	//printf("%p | Script: %s\n", (void*)L, script_name);
 
 	RegisterLuaCFunctions(L);
-	if (core->check_internal != NULL && core->check_internal->privilege > 1)
-		core->check_internal->privilege = 1;
 
 	// TODO: improve, this may break if a script is spawned
 	awwnb = false; // Reset remove boundary checkbox
@@ -89,7 +87,7 @@ void SaveImageJPG(const char* path, int width, int height, uint8_t* pixels) {
 }
 
 class FastRecorder {
-	#define THREAD_COUNT 5					// One thread is always idle
+	#define THREAD_COUNT 4					// One thread is always idle
 	#define SUGGESTED_BUFFER_SIZE 60		// Number of frames to save per thread, can be bigger
 	int width;
 	int height;
@@ -446,13 +444,13 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	moduleBase = GetModuleHandleA("teardown.exe");
 	td_lua_pushstring = (t_lua_pushstring)Teardown::GetReferenceTo(MEM_OFFSET::LuaPushString);
 	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable);
-	t_RegisterGameFunctions rgf_addr = (t_RegisterGameFunctions)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions);
-	t_ProcessVideoFrameOGL pvf_addr = (t_ProcessVideoFrameOGL)Teardown::GetReferenceTo(MEM_OFFSET::ProcessVideoFrameOGL);
 
 	Hook hook;
 	hook.Create(L"opengl32.dll", "wglSwapBuffers", wglSwapBuffersHook, &td_wglSwapBuffers);
+	t_RegisterGameFunctions rgf_addr = (t_RegisterGameFunctions)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions);
 	hook.Create(rgf_addr, RegisterGameFunctionsHook, &td_RegisterGameFunctions);
 #ifdef TDC
+	t_ProcessVideoFrameOGL pvf_addr = (t_ProcessVideoFrameOGL)Teardown::GetReferenceTo(MEM_OFFSET::ProcessVideoFrameOGL);
 	hook.Create(pvf_addr, ProcessVideoFrameOGLHook, &td_ProcessVideoFrameOGL);
 #endif
 	return 0;

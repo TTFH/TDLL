@@ -95,6 +95,60 @@ vertex (table) – Vector with the new position of the vertex
 Return value
 none
 
+count = GetHeatCount()
+Arguments
+none
+Return value
+count (number) – Number of heats (blowtorch, AddHeat())
+
+shape, pos, amount = GetHeatInfo(index)
+Arguments
+index (number) – Index of the heat
+Return value
+shape (number) – Shape handle
+pos (table) – Local position of the heat in voxels
+amount (number) – Amount of heat
+
+SetSunLength(length)
+Arguments
+length (number) – Environment sun length
+Return value
+none
+
+shape, pos = GetFireInfo(index)
+Arguments
+index (number) – Index of the fire
+Return value
+shape (number) – Shape handle
+pos (table) – Local position of the fire
+
+SetJointStrength(joint, strength, size)
+Arguments
+joint (number) – Joint handle
+strength (number) – Joint strength for detaching (default 3000)
+size (number) – Joint distance for detaching (default 0.8)
+Return value
+none
+
+list = GetPaletteTintArray(palette, tint, strength)
+Arguments
+palette (number) – Palette index
+tint (string) – Tint type ("black", "yellow", "rgba")
+strength (number) – Tint strength (1 to 4)
+Return value
+list (table) – Array with the palette index asocition for each of the 255 indexes
+
+AllowInternalFunctions(script)
+Arguments
+script (number) – Script handle
+Return value
+
+SetVehicleMaxSteerAngle(vehicle, angle)
+Arguments
+vehicle (number) – Vehicle handle
+angle (number) – Maximum steering angle in degrees (default 30)
+Return value
+none
 
 pos, axis = GetJointLocalPosAndAxis(joint, index)
 Arguments
