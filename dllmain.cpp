@@ -246,7 +246,7 @@ LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.WantCaptureMouse)
-			return true; // Disable game input while menu is open
+			return true;
 	}
 	return CallWindowProc(hGameWindowProc, hWnd, uMsg, wParam, lParam);
 }

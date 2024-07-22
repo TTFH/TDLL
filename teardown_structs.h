@@ -98,7 +98,8 @@ struct Transform {
 	Quat rot;
 }; // 0x1C
 
-namespace EntityTypes {
+namespace EntityType {
+	const uint8_t Unknown = 0;
 	const uint8_t Body = 1;
 	const uint8_t Shape = 2;
 	const uint8_t Light = 3;
@@ -113,7 +114,7 @@ namespace EntityTypes {
 	const uint8_t Animator = 12;
 };
 
-namespace EditorEntityTypes {
+namespace EditorEntityType {
 	const int Invalid = 0;
 	const int Entity = 1;
 	const int Scene = 2;
@@ -144,7 +145,7 @@ namespace EditorEntityTypes {
 	const int Animator = 27;
 };
 
-namespace MaterialTypes {
+namespace MaterialType {
 	const uint8_t None = 0;
 	const uint8_t Glass = 1;
 	const uint8_t Wood = 2;
@@ -247,7 +248,7 @@ public:
 	uint16_t shape_flags;		// 0xC8
 	uint8_t collision_layer;
 	uint8_t collision_mask;
-	uint32_t z_u32;				// 0xCC
+	uint32_t animator;			// 0xCC
 	float density;
 	float strength;
 	uint16_t texture_tile;
@@ -262,7 +263,6 @@ public:
 }; // 0x178
 
 static_assert(offsetof(Shape, shape_flags) == 0xC8, "Wrong offset shape->shape_flags");
-static_assert(offsetof(Shape, z_u32) == 0xCC, "Wrong offset shape->z_u32");
 static_assert(offsetof(Shape, vox) == 0xF0, "Wrong offset shape->vox");
 static_assert(offsetof(Shape, emissive_scale) == 0x100, "Wrong offset shape->emissive_scale");
 
@@ -726,7 +726,8 @@ struct Game {
 	uint32_t screen_height;
 	GameState state;
 	uint8_t padding1[0x44];
-	// haptics
+	// haptics 40
+	// dev_menu 48 (light mesh 96B)
 	Scene* scene;					// 0x50
 	// sounds, camera
 	uint8_t padding2[0x10];

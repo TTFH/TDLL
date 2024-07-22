@@ -38,7 +38,7 @@ function DrawAABB(pmin, pmax)
 	DrawLine(points[7], points[8])
 end
 
-function DrawOBB(shape)
+function GetOBB(shape)
 	local transf = GetShapeWorldTransform(shape)
 	local sizex, sizey, sizez, scale = GetShapeSize(shape)
 	local pmin = Vec(0, 0, 0)
@@ -53,6 +53,11 @@ function DrawOBB(shape)
 		TransformToParentPoint(transf, Vec(pmin[1], pmin[2], pmax[3])),
 		TransformToParentPoint(transf, Vec(pmin[1], pmin[2], pmin[3])),
 	}
+	return points
+end
+
+function DrawOBB(points)
+	if #points ~= 8 then return end
 	DrawLine(points[1], points[2])
 	DrawLine(points[1], points[3])
 	DrawLine(points[1], points[5])

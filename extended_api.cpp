@@ -797,6 +797,36 @@ int IsRagdoll(lua_State* L) {
 	return 1;
 }
 
+const int Physical = 1 << 4;
+
+int HasCollision(lua_State* L) {
+	/*unsigned int handle = lua_tointeger(L, 1);
+	Game* game = Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
+		Shape* shape = game->scene->shapes[i];
+		if (shape->handle == handle) {
+			lua_pushinteger(L, shape->origin);
+			return 1;
+		}
+	}
+	lua_pushinteger(L, 0);
+	return 1;*/
+}
+
+int SetCollision(lua_State* L) {
+	/*unsigned int handle = lua_tointeger(L, 1);
+	Game* game = Teardown::GetGame();
+	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
+		Shape* shape = game->scene->shapes[i];
+		if (shape->handle == handle) {
+			lua_pushinteger(L, shape->flags);
+			return 1;
+		}
+	}
+	lua_pushinteger(L, 0);
+	return 1;*/
+}
+
 void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "GetDllVersion", GetDllVersion);
 	LuaPushFunction(L, "Tick", Tick);
@@ -811,6 +841,9 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "RemoveBoundary", RemoveBoundary);
 	LuaPushFunction(L, "GetBoundaryVertices", GetBoundaryVertices);
 	LuaPushFunction(L, "SetBoundaryVertex", SetBoundaryVertex);
+
+	LuaPushFunction(L, "HasCollision", HasCollision);
+	LuaPushFunction(L, "SetCollision", SetCollision);
 
 	LuaPushFunction(L, "IsRagdoll", IsRagdoll);
 	LuaPushFunction(L, "GetHeatCount", GetHeatCount);
