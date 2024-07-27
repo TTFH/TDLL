@@ -189,7 +189,7 @@ enum TriggerType : int {
 struct Entity {
 	void* class_ptr;
 	uint8_t type;
-	uint16_t flags;
+	uint16_t entity_flags;
 	uint32_t handle;	// 0x0C
 	Entity* parent;
 	Entity* next_sibling;
@@ -239,6 +239,10 @@ static_assert(offsetof(Voxels, voxels) == 0x10, "Wrong offset vox->voxels");
 static_assert(offsetof(Voxels, is_disconnected) == 0x2C, "Wrong offset vox->is_disconnected");
 static_assert(offsetof(Voxels, palette) == 0x54, "Wrong offset vox->palette");
 static_assert(offsetof(Voxels, voxel_count) == 0x5C, "Wrong offset vox->voxel_count");
+
+namespace ShapeFlags {
+	const int Physical = 1 << 4;
+}
 
 class Shape : public Entity {
 public:

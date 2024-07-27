@@ -1,10 +1,9 @@
+#include <atomic>
+#include <string>
+#include <thread>
+#include <vector>
 #include <time.h>
 #include <stdio.h>
-#include <string>
-#include <vector>
-
-#include <atomic>
-#include <thread>
 
 #include "extended_api.h"
 #include "pros_override.h"
@@ -13,6 +12,7 @@
 #include "imgui/imgui_internal.h"
 #include "imgui/backends/imgui_impl_win32.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
+#include "imgui/backends/imgui_impl_dx12.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "lib/stb_image_write.h"
@@ -26,6 +26,8 @@
 
 #define PSAPI_VERSION 2
 #include <psapi.h> // Used to get .exe size
+#include <d3d12.h>
+#include <dxgi1_4.h>
 
 t_lua_createtable td_lua_createtable = nullptr;
 t_lua_pushstring td_lua_pushstring = nullptr;
@@ -38,6 +40,26 @@ t_RegisterGameFunctions td_RegisterGameFunctions = nullptr;
 
 typedef void (*t_ProcessVideoFrameOGL) (ScreenCapture* sc, int frame);
 t_ProcessVideoFrameOGL td_ProcessVideoFrameOGL = nullptr;
+
+typedef HRESULT (*t_CreateDXGIFactory1) (REFIID riid, void** ppFactory);
+t_CreateDXGIFactory1 td_CreateDXGIFactory1 = nullptr;
+
+typedef DWORD* (*t_InitRenderer) (DWORD* a1, int* a2);
+t_InitRenderer td_InitRenderer = nullptr;
+
+typedef HRESULT (*t_CreateSwapChainForHwnd) (
+	IDXGIFactory* pFactory,
+	IUnknown* pDevice,
+	HWND hWnd,
+	const DXGI_SWAP_CHAIN_DESC1* pDesc,
+	const DXGI_SWAP_CHAIN_FULLSCREEN_DESC* pFullscreenDesc,
+	IDXGIOutput* pRestrictToOutput,
+	IDXGISwapChain1** ppSwapChain
+);
+t_CreateSwapChainForHwnd td_CreateSwapChainForHwnd = nullptr;
+
+typedef HRESULT (*t_Present) (IDXGISwapChain3* swapChain, UINT syncInterval, UINT flags);
+t_Present td_Present = nullptr;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -52,6 +74,47 @@ void Patch(T* dst, const T* src) {
 	VirtualProtect(dst, sizeof(T), PAGE_EXECUTE_READWRITE, &oldProtect);
 	*dst = *src;
 	VirtualProtect(dst, sizeof(T), oldProtect, &oldProtect);
+}
+
+namespace Hook {
+	void Init() {
+		MH_Initialize();
+	}
+	template<typename T>
+	void Create(T target, T hook, T* original) {
+		MH_STATUS status = MH_CreateHook((LPVOID)target, (LPVOID)hook, (LPVOID*)original);
+		if (status != MH_OK)
+			printf("Failed to create hook: %p -> %p\n", (void*)target, (void*)hook);
+		status = MH_EnableHook((LPVOID)target);
+		if (status != MH_OK)
+			printf("Failed to enable hook: %p\n", (void*)target);
+	}
+	template<typename T>
+	void Create(LPCWSTR module, const char* target, T hook, T* original) {
+		LPVOID target_addr;
+		MH_CreateHookApiEx(module, target, (LPVOID)hook, (LPVOID*)original, &target_addr);
+		MH_EnableHook(target_addr);
+	}
+};
+
+uintptr_t FindPattern(uintptr_t dwAddress, size_t dwLen, const char* pattern, const char* mask) {
+	for (size_t i = 0; i < dwLen - strlen(mask); i++) {
+		bool found = true;
+		for (size_t j = 0; j < strlen(mask); j++) {
+			if (mask[j] != '?' && pattern[j] != *(char*)(dwAddress + i + j)) {
+				found = false;
+				break;
+			}
+		}
+		if (found) return i;
+	}
+	return 0;
+}
+
+uintptr_t FindPatternInModule(HMODULE hModule, const char* pattern, const char* mask) {
+	MODULEINFO moduleInfo;
+	GetModuleInformation(GetCurrentProcess(), hModule, &moduleInfo, sizeof(MODULEINFO));
+	return FindPattern((uintptr_t)hModule, (size_t)moduleInfo.SizeOfImage, pattern, mask);
 }
 
 void RegisterGameFunctionsHook(ScriptCore* core) {
@@ -251,6 +314,120 @@ LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	return CallWindowProc(hGameWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
+void RenderImGui() {
+	ImGui::NewFrame();
+	ImGui::Begin("DLL Utils", &show_menu, ImGuiWindowFlags_MenuBar);
+	static bool show_vertex_editor = false;
+	if (ImGui::BeginMenuBar()) {
+		if (ImGui::BeginMenu("Plugins")) {
+			ImGui::MenuItem("Vertex Editor", NULL, &show_vertex_editor);
+			ImGui::EndMenu();
+		}
+		ImGui::EndMenuBar();
+	}
+
+	static float render_dist = 500;
+	ImGui::Text("Render distance:");
+	ImGui::SliderFloat("##render_dist", &render_dist, 100.0f, 1000.0f, "%.0f");
+	ImGui::InputFloat("##render_dist_input", &render_dist, 1.0f, 10.0f, "%.0f");
+	if (ImGui::Button("Set render distance")) {
+		float* render_addr = (float*)Teardown::GetReferenceTo(MEM_OFFSET::RenderDist);
+		Patch(render_addr, &render_dist);
+	}
+	if (ImGui::Checkbox("Remove boundaries", &awwnb) && awwnb) {
+		Game* game = (Game*)Teardown::GetGame();
+		game->scene->boundary.setSize(0);
+	}
+	ImGui::BeginDisabled();
+	static bool telemetry_disabled = !TELEMETRY_ENABLED;
+	ImGui::Checkbox("Disable Saber Telemetry", &telemetry_disabled);
+	ImGui::EndDisabled();
+
+	ImGui::Text("Saved video frames:");
+	ImGui::SameLine();
+	int saved_frames = recorder.GetSavedFrames();
+	int total_frames = recorder.GetTotalFrames();
+	ImGui::Text("%d / %d", saved_frames, total_frames);
+	ImGui::ProgressBar((float)saved_frames / total_frames);
+	if (ImGui::Button("Save recorded video"))
+		recorder.SaveFrames();
+	if (ImGui::Button("Clear"))
+		recorder.ClearFrames();
+	ImGui::End();
+
+	if (show_vertex_editor) {
+		Game* game = (Game*)Teardown::GetGame();
+		if (game->editor != NULL && game->editor->selected != NULL) {
+			ImGui::Begin("Vertex Editor", &show_vertex_editor);
+			ImGui::Text("Entity type:");
+			ImGui::SameLine();
+			int type = game->editor->selected->type;
+			bool valid = true;
+			switch (type) {
+				case EditorEntityType::Water:
+					ImGui::Text("Water");
+					break;
+				case EditorEntityType::Voxagon:
+					ImGui::Text("Voxagon");
+					break;
+				case EditorEntityType::Boundary:
+					ImGui::Text("Boundary");
+					break;
+				case EditorEntityType::Trigger:
+					ImGui::Text("Trigger");
+					break;
+				default:
+					ImGui::Text("Invalid");
+					valid = false;
+					break;
+			}
+			if (valid) {
+				ImGui::Text("Vertex count:");
+				ImGui::SameLine();
+				td_vector<Vec2>* vertices = &game->editor->selected->vertices;
+				ImGui::Text("%d", vertices->getSize());
+
+				ImGui::PushItemWidth(100);
+				unsigned int i = 0;
+				while (i < vertices->getSize()) {
+					ImGui::PushID(i);
+					ImGui::Text("%2d:", i + 1);
+					ImGui::SameLine();
+					ImGui::InputFloat("##x", &vertices->get(i).x, 0.1f, 10.0f, "%.1f");
+					ImGui::SameLine();
+					ImGui::InputFloat("##y", &vertices->get(i).y, 0.1f, 10.0f, "%.1f");
+					ImGui::SameLine();
+					if (ImGui::ArrowButton("##up", ImGuiDir_Up)) {
+						if (i > 0) {
+							Vec2 temp = vertices->get(i);
+							vertices->set(i, vertices->get(i - 1));
+							vertices->set(i - 1, temp);
+						}
+					}
+					ImGui::SameLine();
+					if (ImGui::ArrowButton("##down", ImGuiDir_Down)) {
+						if (i < vertices->getSize() - 1) {
+							Vec2 temp = vertices->get(i);
+							vertices->set(i, vertices->get(i + 1));
+							vertices->set(i + 1, temp);
+						}
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("X##remove")) {
+						vertices->remove(i);
+						i--;
+					}
+					i++;
+					ImGui::PopID();
+				}
+				ImGui::PopItemWidth();
+			}
+			ImGui::End();
+		}
+	}
+	ImGui::Render();
+}
+
 BOOL wglSwapBuffersHook(HDC hDc) {
 	static bool imGuiInitialized = false;
 	if (!imGuiInitialized) {
@@ -262,11 +439,10 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		ImGui_ImplWin32_Init(hGameWindow);
 		ImGui_ImplOpenGL3_Init();
 
-		ImGuiIO& io = ImGui::GetIO();
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-
 		ImGui::StyleColorsDark();
+		ImGuiIO& io = ImGui::GetIO();
 		ImGuiStyle& style = ImGui::GetStyle();
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
 		style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
 	}
@@ -274,165 +450,56 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 	if (show_menu) {
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
-
-		ImGui::Begin("DLL Utils", &show_menu, ImGuiWindowFlags_MenuBar);
-		static bool show_vertex_editor = false;
-		if (ImGui::BeginMenuBar()) {
-			if (ImGui::BeginMenu("Plugins")) {
-				ImGui::MenuItem("Vertex Editor", NULL, &show_vertex_editor);
-				ImGui::EndMenu();
-			}
-			ImGui::EndMenuBar();
-		}
-
-		static float render_dist = 500;
-		ImGui::Text("Render distance:");
-		ImGui::SliderFloat("##render_dist", &render_dist, 100.0f, 1000.0f, "%.0f");
-		ImGui::InputFloat("##render_dist_input", &render_dist, 1.0f, 10.0f, "%.0f");
-		if (ImGui::Button("Set render distance")) {
-			float* render_addr = (float*)Teardown::GetReferenceTo(MEM_OFFSET::RenderDist);
-			Patch(render_addr, &render_dist);
-		}
-		if (ImGui::Checkbox("Remove boundaries", &awwnb) && awwnb) {
-			Game* game = (Game*)Teardown::GetGame();
-			game->scene->boundary.setSize(0);
-		}
-		ImGui::BeginDisabled();
-		static bool telemetry_disabled = !TELEMETRY_ENABLED;
-		ImGui::Checkbox("Disable Saber Telemetry", &telemetry_disabled);
-		ImGui::EndDisabled();
-
-		ImGui::Text("Saved video frames:");
-		ImGui::SameLine();
-		int saved_frames = recorder.GetSavedFrames();
-		int total_frames = recorder.GetTotalFrames();
-		ImGui::Text("%d / %d", saved_frames, total_frames);
-		ImGui::ProgressBar((float)saved_frames / total_frames);
-		if (ImGui::Button("Save recorded video")) {
-			recorder.SaveFrames();
-		}
-		if (ImGui::Button("Clear")) {
-			recorder.ClearFrames();
-		}
-		ImGui::End();
-
-		if (show_vertex_editor) {
-			Game* game = (Game*)Teardown::GetGame();
-			if (game->editor != NULL && game->editor->selected != NULL) {
-				ImGui::Begin("Vertex Editor", &show_vertex_editor);
-				ImGui::Text("Entity type:");
-				ImGui::SameLine();
-				int type = game->editor->selected->type;
-				bool valid = true;
-				switch (type) {
-					case EditorEntityTypes::Water:
-						ImGui::Text("Water");
-						break;
-					case EditorEntityTypes::Voxagon:
-						ImGui::Text("Voxagon");
-						break;
-					case EditorEntityTypes::Boundary:
-						ImGui::Text("Boundary");
-						break;
-					case EditorEntityTypes::Trigger:
-						ImGui::Text("Trigger");
-						break;
-					default:
-						ImGui::Text("Invalid");
-						valid = false;
-						break;
-				}
-				if (valid) {
-					ImGui::Text("Vertex count:");
-					ImGui::SameLine();
-					td_vector<Vec2>* vertices = &game->editor->selected->vertices;
-					ImGui::Text("%d", vertices->getSize());
-
-					ImGui::PushItemWidth(100);
-					unsigned int i = 0;
-					while (i < vertices->getSize()) {
-						ImGui::PushID(i);
-						ImGui::Text("%2d:", i + 1);
-						ImGui::SameLine();
-						ImGui::InputFloat("##x", &vertices->get(i).x, 0.1f, 10.0f, "%.1f");
-						ImGui::SameLine();
-						ImGui::InputFloat("##y", &vertices->get(i).y, 0.1f, 10.0f, "%.1f");
-						ImGui::SameLine();
-						if (ImGui::ArrowButton("##up", ImGuiDir_Up)) {
-							if (i > 0) {
-								Vec2 temp = vertices->get(i);
-								vertices->set(i, vertices->get(i - 1));
-								vertices->set(i - 1, temp);
-							}
-						}
-						ImGui::SameLine();
-						if (ImGui::ArrowButton("##down", ImGuiDir_Down)) {
-							if (i < vertices->getSize() - 1) {
-								Vec2 temp = vertices->get(i);
-								vertices->set(i, vertices->get(i + 1));
-								vertices->set(i + 1, temp);
-							}
-						}
-						ImGui::SameLine();
-						if (ImGui::Button("X##remove")) {
-							vertices->remove(i);
-							i--;
-						}
-						i++;
-						ImGui::PopID();
-					}
-					ImGui::PopItemWidth();
-				}
-				ImGui::End();
-			}
-		}
-		ImGui::Render();
+		RenderImGui();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
 	return td_wglSwapBuffers(hDc);
 }
 
-class Hook {
-public:
-	Hook() {
-		MH_Initialize();
-	}
-	template<typename T>
-	void Create(T target, T hook, T* original) {
-		MH_CreateHook((LPVOID)target, (LPVOID)hook, (LPVOID*)original);
-		MH_EnableHook((LPVOID)target);
-	}
-	template<typename T>
-	void Create(LPCWSTR module, const char* target, T hook, T* original) {
-		LPVOID target_addr;
-		MH_CreateHookApiEx(module, target, (LPVOID)hook, (LPVOID*)original, &target_addr);
-		MH_EnableHook(target_addr);
-	}
-};
-
-uintptr_t FindPattern(uintptr_t dwAddress, size_t dwLen, const char* pattern, const char* mask) {
-	for (size_t i = 0; i < dwLen - strlen(mask); i++) {
-		bool found = true;
-		for (size_t j = 0; j < strlen(mask); j++) {
-			if (mask[j] != '?' && pattern[j] != *(char*)(dwAddress + i + j)) {
-				found = false;
-				break;
-			}
-		}
-		if (found) return i;
-	}
-	return 0;
+HRESULT PresentHook(IDXGISwapChain3* swapChain, UINT syncInterval, UINT flags) {
+	return td_Present(swapChain, syncInterval, flags);
 }
 
-uintptr_t FindPatternInModule(HMODULE hModule, const char* pattern, const char* mask) {
-	MODULEINFO moduleInfo;
-	GetModuleInformation(GetCurrentProcess(), hModule, &moduleInfo, sizeof(MODULEINFO));
-	return FindPattern((uintptr_t)hModule, (size_t)moduleInfo.SizeOfImage, pattern, mask);
+HWND gHwnd = nullptr;
+ID3D12CommandQueue* d3d12CommandQueue = nullptr;
+
+HRESULT CreateSwapChainForHwndHook(
+	IDXGIFactory* pFactory,
+	IUnknown* pDevice,
+	HWND hWnd,
+	const DXGI_SWAP_CHAIN_DESC1* pDesc,
+	const DXGI_SWAP_CHAIN_FULLSCREEN_DESC* pFullscreenDesc,
+	IDXGIOutput* pRestrictToOutput,
+	IDXGISwapChain1** ppSwapChain
+) {
+	gHwnd = hWnd;
+	d3d12CommandQueue = (ID3D12CommandQueue*)pDevice;
+	HRESULT result = td_CreateSwapChainForHwnd(pFactory, pDevice, hWnd, pDesc, pFullscreenDesc, pRestrictToOutput, ppSwapChain);
+	void** vTable = *reinterpret_cast<void***>(*ppSwapChain);
+	t_Present present_addr = (t_Present)vTable[8];
+	Hook::Create(present_addr, PresentHook, &td_Present);
+	return result;
+}
+
+HRESULT CreateDXGIFactory1Hook(REFIID riid, void** ppFactory) {
+	HRESULT result = td_CreateDXGIFactory1(riid, ppFactory);
+	void** factoryVTable = *reinterpret_cast<void***>(*ppFactory);
+	t_CreateSwapChainForHwnd cscfh_addr = (t_CreateSwapChainForHwnd)factoryVTable[15];
+	Hook::Create(cscfh_addr, CreateSwapChainForHwndHook, &td_CreateSwapChainForHwnd);
+	return result;
+}
+
+DWORD* InitRendererHook(DWORD* param1, int* param2) {
+	static const char* RENDERER_NAMES[] = {
+		"OpenGL",
+		"DirectX 12"
+	};
+	int index = *param2;
+	printf("Current Renderer is %s\n", RENDERER_NAMES[index]);
+	return td_InitRenderer(param1, param2);
 }
 
 DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
-	Sleep(1000);
 #ifdef DEBUGCONSOLE
 	AllocConsole();
 	freopen("CONIN$", "r", stdin);
@@ -440,23 +507,25 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	freopen("CONOUT$", "w", stderr);
 	printf("TDLL Loaded\n");
 #endif
-
 	moduleBase = GetModuleHandleA("teardown.exe");
 	td_lua_pushstring = (t_lua_pushstring)Teardown::GetReferenceTo(MEM_OFFSET::LuaPushString);
 	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable);
 
-	Hook hook;
-	hook.Create(L"opengl32.dll", "wglSwapBuffers", wglSwapBuffersHook, &td_wglSwapBuffers);
+	Hook::Init();
+	Hook::Create(L"opengl32.dll", "wglSwapBuffers", wglSwapBuffersHook, &td_wglSwapBuffers);
+	Hook::Create(L"dxgi.dll", "CreateDXGIFactory1", CreateDXGIFactory1Hook, &td_CreateDXGIFactory1);
 	t_RegisterGameFunctions rgf_addr = (t_RegisterGameFunctions)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions);
-	hook.Create(rgf_addr, RegisterGameFunctionsHook, &td_RegisterGameFunctions);
+	Hook::Create(rgf_addr, RegisterGameFunctionsHook, &td_RegisterGameFunctions);
 #ifdef TDC
 	t_ProcessVideoFrameOGL pvf_addr = (t_ProcessVideoFrameOGL)Teardown::GetReferenceTo(MEM_OFFSET::ProcessVideoFrameOGL);
-	hook.Create(pvf_addr, ProcessVideoFrameOGLHook, &td_ProcessVideoFrameOGL);
+	Hook::Create(pvf_addr, ProcessVideoFrameOGLHook, &td_ProcessVideoFrameOGL);
 #endif
+	t_InitRenderer ir_addr = (t_InitRenderer)Teardown::GetReferenceTo(MEM_OFFSET::InitRenderer);
+	Hook::Create(ir_addr, InitRendererHook, &td_InitRenderer);
 	return 0;
 }
 
-BOOL APIENTRY DllMain(HMODULE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
 	if (fdwReason == DLL_PROCESS_ATTACH)
 		CreateThread(nullptr, 0, MainThread, hinstDLL, 0, nullptr);
 	return TRUE;

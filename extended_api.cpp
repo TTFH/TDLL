@@ -27,10 +27,11 @@ uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 	return addr;
 }
 
-// TODO: Find by signature
+// TODO: Find by signature (not gonna happen)
 namespace MEM_OFFSET {				// Addr		// Type
 	uintptr_t Game					= 0xB45550; // Game*
 	uintptr_t RenderDist			= 0x8BB568; // float
+	uintptr_t InitRenderer			= 0x530910; // ll* fn(ll, int*)
 	uintptr_t LuaPushString			= 0x57DB50; // void fn(lua_State*, const char*)
 	uintptr_t LuaCreateTable		= 0x57C8F0; // void fn(lua_State*, int, int)
 	uintptr_t ProcessVideoFrameOGL	= 0x454720; // void fn(ScreenCapture*, int)
@@ -50,7 +51,7 @@ namespace Teardown {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.6.0.704");
+	td_lua_pushstring(L, "v1.6.0.726");
 	return 1;
 }
 
@@ -797,34 +798,36 @@ int IsRagdoll(lua_State* L) {
 	return 1;
 }
 
-const int Physical = 1 << 4;
-
 int HasCollision(lua_State* L) {
-	/*unsigned int handle = lua_tointeger(L, 1);
+	unsigned int handle = lua_tointeger(L, 1);
 	Game* game = Teardown::GetGame();
-	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
-		Shape* shape = game->scene->shapes[i];
-		if (shape->handle == handle) {
-			lua_pushinteger(L, shape->origin);
+	if (handle > 0 && handle < game->scene->entities.getSize()) {
+		Entity* entity = game->scene->entities[handle];
+		if (entity->type == EntityType::Shape) {
+			Shape* shape = (Shape*)entity;
+			lua_pushboolean(L, shape->shape_flags & ShapeFlags::Physical);
 			return 1;
 		}
 	}
-	lua_pushinteger(L, 0);
-	return 1;*/
+	lua_pushboolean(L, false);
+	return 1;
 }
 
 int SetCollision(lua_State* L) {
-	/*unsigned int handle = lua_tointeger(L, 1);
+	unsigned int handle = lua_tointeger(L, 1);
+	bool enable = lua_toboolean(L, 2);
 	Game* game = Teardown::GetGame();
-	for (unsigned int i = 0; i < game->scene->shapes.getSize(); i++) {
-		Shape* shape = game->scene->shapes[i];
-		if (shape->handle == handle) {
-			lua_pushinteger(L, shape->flags);
-			return 1;
+	if (handle > 0 && handle < game->scene->entities.getSize()) {
+		Entity* entity = game->scene->entities[handle];
+		if (entity->type == EntityType::Shape) {
+			Shape* shape = (Shape*)entity;
+			if (enable)
+				shape->shape_flags |= ShapeFlags::Physical;
+			else
+				shape->shape_flags &= ~ShapeFlags::Physical;
 		}
 	}
-	lua_pushinteger(L, 0);
-	return 1;*/
+	return 0;
 }
 
 void RegisterLuaCFunctions(lua_State* L) {
