@@ -48,12 +48,8 @@ t_CreateSwapChainForHwnd td_CreateSwapChainForHwnd = nullptr;
 typedef HRESULT (*t_Present) (IDXGISwapChain3* swapChain, UINT syncInterval, UINT flags);
 t_Present td_Present = nullptr;
 
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
 HMODULE moduleBase;
-WNDPROC hGameWindowProc;
 bool awwnb = false;
-bool show_menu = false;
 FastRecorder recorder;
 ID3D12CommandQueue* d3d12CommandQueue = nullptr;
 
@@ -77,6 +73,12 @@ void ProcessVideoFrameOGLHook(ScreenCapture* sc, int frame) {
 	recorder.AddFrame(sc->image_buffer);
 }
 
+// ----------------------------------------------------------------------------
+
+bool show_menu = false;
+WNDPROC hGameWindowProc;
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	if (uMsg == WM_KEYDOWN && wParam == VK_F1)
 		show_menu = !show_menu;
@@ -89,7 +91,9 @@ LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	return CallWindowProc(hGameWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
-void ImGuiFrame() {
+// ----------------------------------------------------------------------------
+
+void ImGuiRenderFrame() {
 	ImGui::NewFrame();
 	ImGui::Begin("DLL Utils", &show_menu, ImGuiWindowFlags_MenuBar);
 	static bool show_vertex_editor = false;
@@ -201,6 +205,7 @@ void ImGuiFrame() {
 			ImGui::End();
 		}
 	}
+	ImGui::Render();
 }
 
 BOOL wglSwapBuffersHook(HDC hDc) {
@@ -225,8 +230,7 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 	if (show_menu) {
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplWin32_NewFrame();
-		ImGuiFrame();
-		ImGui::Render();
+		ImGuiRenderFrame();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
 	return td_wglSwapBuffers(hDc);
@@ -239,13 +243,13 @@ struct FrameContext {
 };
 
 HRESULT PresentHook(IDXGISwapChain3* swapChain, UINT syncInterval, UINT flags) {
-	static ID3D12Device* d3d12Device = nullptr;
-	static ID3D12GraphicsCommandList* d3d12CommandList = nullptr;
-	static ID3D12DescriptorHeap* d3d12DescriptorHeapBackBuffers = nullptr;
-	static ID3D12DescriptorHeap* d3d12DescriptorHeapImGuiRender = nullptr;
-	static HWND hGameWindow = nullptr;
 	static UINT buffersCounts = 0;
+	static HWND hGameWindow = nullptr;
+	static ID3D12Device* d3d12Device = nullptr;
 	static FrameContext* frameContext = nullptr;
+	static ID3D12GraphicsCommandList* d3d12CommandList = nullptr;
+	static ID3D12DescriptorHeap* d3d12DescriptorHeapImGuiRender = nullptr;
+	static ID3D12DescriptorHeap* d3d12DescriptorHeapBackBuffers = nullptr;
 
 	static bool imGuiInitialized = false;
 	if (!imGuiInitialized) {
@@ -320,7 +324,6 @@ HRESULT PresentHook(IDXGISwapChain3* swapChain, UINT syncInterval, UINT flags) {
 	if (show_menu) {
 		ImGui_ImplDX12_NewFrame();
 		ImGui_ImplWin32_NewFrame();
-		ImGuiFrame();
 
 		FrameContext& currentFrameContext = frameContext[swapChain->GetCurrentBackBufferIndex()];
 		currentFrameContext.commandAllocator->Reset();
@@ -338,7 +341,7 @@ HRESULT PresentHook(IDXGISwapChain3* swapChain, UINT syncInterval, UINT flags) {
 		d3d12CommandList->OMSetRenderTargets(1, &currentFrameContext.main_render_target_descriptor, FALSE, nullptr);
 		d3d12CommandList->SetDescriptorHeaps(1, &d3d12DescriptorHeapImGuiRender);
 
-		ImGui::Render();
+		ImGuiRenderFrame();
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), d3d12CommandList);
 
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -361,6 +364,7 @@ HRESULT CreateSwapChainForHwndHook(
 	IDXGIOutput* pRestrictToOutput,
 	IDXGISwapChain1** ppSwapChain
 ) {
+	printf("CreateSwapChainForHwnd Hook called!\n");
 	d3d12CommandQueue = (ID3D12CommandQueue*)pDevice;
 	HRESULT result = td_CreateSwapChainForHwnd(pFactory, pDevice, hWnd, pDesc, pFullscreenDesc, pRestrictToOutput, ppSwapChain);
 	void** vTable = *reinterpret_cast<void***>(*ppSwapChain);
