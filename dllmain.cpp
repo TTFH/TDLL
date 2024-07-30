@@ -81,13 +81,11 @@ namespace Hook {
 		MH_Initialize();
 	}
 	template<typename T>
-	void Create(T target, T hook, T* original) {
+	void Create(T target, T hook, T* original, const char* name = "") {
 		MH_STATUS status = MH_CreateHook((LPVOID)target, (LPVOID)hook, (LPVOID*)original);
 		if (status != MH_OK)
-			printf("Failed to create hook: %p -> %p\n", (void*)target, (void*)hook);
-		status = MH_EnableHook((LPVOID)target);
-		if (status != MH_OK)
-			printf("Failed to enable hook: %p\n", (void*)target);
+			printf("ERROR %d: Failed to create hook for %s\n", status, name);
+		MH_EnableHook((LPVOID)target);
 	}
 	template<typename T>
 	void Create(LPCWSTR module, const char* target, T hook, T* original) {
@@ -348,7 +346,8 @@ void RenderImGui() {
 	int saved_frames = recorder.GetSavedFrames();
 	int total_frames = recorder.GetTotalFrames();
 	ImGui::Text("%d / %d", saved_frames, total_frames);
-	ImGui::ProgressBar((float)saved_frames / total_frames);
+	if (total_frames > 0)
+		ImGui::ProgressBar((float)saved_frames / total_frames);
 	if (ImGui::Button("Save recorded video"))
 		recorder.SaveFrames();
 	if (ImGui::Button("Clear"))
@@ -425,7 +424,6 @@ void RenderImGui() {
 			ImGui::End();
 		}
 	}
-	ImGui::Render();
 }
 
 BOOL wglSwapBuffersHook(HDC hDc) {
@@ -451,17 +449,135 @@ BOOL wglSwapBuffersHook(HDC hDc) {
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		RenderImGui();
+		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
 	return td_wglSwapBuffers(hDc);
 }
 
-HRESULT PresentHook(IDXGISwapChain3* swapChain, UINT syncInterval, UINT flags) {
-	return td_Present(swapChain, syncInterval, flags);
-}
+// TODO: cleanup, use example_win32_directx12 for reference
+struct FrameContext {
+	ID3D12CommandAllocator* commandAllocator = nullptr;
+	ID3D12Resource* main_render_target_resource = nullptr;
+	D3D12_CPU_DESCRIPTOR_HANDLE main_render_target_descriptor;
+};
 
 HWND gHwnd = nullptr;
 ID3D12CommandQueue* d3d12CommandQueue = nullptr;
+ID3D12Device* d3d12Device = nullptr;
+ID3D12DescriptorHeap* d3d12DescriptorHeapBackBuffers = nullptr;
+ID3D12DescriptorHeap* d3d12DescriptorHeapImGuiRender = nullptr;
+ID3D12GraphicsCommandList* d3d12CommandList = nullptr;
+HWND hGameWindow = nullptr;
+UINT buffersCounts = 0;
+FrameContext* frameContext = nullptr;
+
+HRESULT PresentHook(IDXGISwapChain3* swapChain, UINT syncInterval, UINT flags) {
+	static bool imGuiInitialized = false;
+	if (!imGuiInitialized) {
+		imGuiInitialized = true;
+
+		CreateEvent(nullptr, false, false, nullptr);
+
+		DXGI_SWAP_CHAIN_DESC sdesc;
+		swapChain->GetDevice(__uuidof(ID3D12Device), (void**)&d3d12Device);
+		swapChain->GetDesc(&sdesc);
+		swapChain->GetHwnd(&hGameWindow);
+		sdesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+		sdesc.OutputWindow = hGameWindow;
+		sdesc.Windowed = (GetWindowLongPtr(hGameWindow, GWL_STYLE) & WS_POPUP) == 0;
+
+		buffersCounts = sdesc.BufferCount;
+		//frameContext = (FrameContext*) calloc(buffersCounts, sizeof(FrameContext));
+		frameContext = new FrameContext[buffersCounts];
+
+		D3D12_DESCRIPTOR_HEAP_DESC descriptorImGuiRender = {};
+		descriptorImGuiRender.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		descriptorImGuiRender.NumDescriptors = buffersCounts;
+		descriptorImGuiRender.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+		d3d12Device->CreateDescriptorHeap(&descriptorImGuiRender, IID_PPV_ARGS(&d3d12DescriptorHeapImGuiRender));
+
+		ID3D12CommandAllocator* allocator;
+		d3d12Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
+		for (size_t i = 0; i < buffersCounts; i++)
+			frameContext[i].commandAllocator = allocator;
+
+		d3d12Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator, NULL, IID_PPV_ARGS(&d3d12CommandList));
+
+		D3D12_DESCRIPTOR_HEAP_DESC descriptorBackBuffers;
+		descriptorBackBuffers.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		descriptorBackBuffers.NumDescriptors = buffersCounts;
+		descriptorBackBuffers.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		descriptorBackBuffers.NodeMask = 1;
+
+		d3d12Device->CreateDescriptorHeap(&descriptorBackBuffers, IID_PPV_ARGS(&d3d12DescriptorHeapBackBuffers));
+
+		const auto rtvDescriptorSize = d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = d3d12DescriptorHeapBackBuffers->GetCPUDescriptorHandleForHeapStart();
+
+		for (UINT i = 0; i < buffersCounts; i++) {
+			ID3D12Resource* pBackBuffer = nullptr;
+			frameContext[i].main_render_target_descriptor = rtvHandle;
+			swapChain->GetBuffer(i, IID_PPV_ARGS(&pBackBuffer));
+			d3d12Device->CreateRenderTargetView(pBackBuffer, nullptr, rtvHandle);
+			frameContext[i].main_render_target_resource = pBackBuffer;
+			rtvHandle.ptr += rtvDescriptorSize;
+		}
+
+		ImGui::CreateContext();
+		ImGui_ImplWin32_Init(hGameWindow);
+		ImGui_ImplDX12_Init(d3d12Device, buffersCounts,
+			DXGI_FORMAT_R8G8B8A8_UNORM, d3d12DescriptorHeapImGuiRender,
+			d3d12DescriptorHeapImGuiRender->GetCPUDescriptorHandleForHeapStart(),
+			d3d12DescriptorHeapImGuiRender->GetGPUDescriptorHandleForHeapStart()
+		);
+
+		ImGui_ImplDX12_CreateDeviceObjects();
+		hGameWindowProc = (WNDPROC)SetWindowLongPtrW(hGameWindow, GWLP_WNDPROC, (LONG_PTR)WindowProcHook);
+
+		ImGui::StyleColorsClassic();
+		ImGuiIO& io = ImGui::GetIO();
+		ImGuiStyle& style = ImGui::GetStyle();
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+		style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
+	}
+
+	if (show_menu) {
+		ImGui_ImplDX12_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		RenderImGui();
+
+		FrameContext& currentFrameContext = frameContext[swapChain->GetCurrentBackBufferIndex()];
+		currentFrameContext.commandAllocator->Reset();
+
+		D3D12_RESOURCE_BARRIER barrier; // Bari Bari no Mi
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = currentFrameContext.main_render_target_resource;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+			
+		d3d12CommandList->Reset(currentFrameContext.commandAllocator, nullptr);
+		d3d12CommandList->ResourceBarrier(1, &barrier);
+		d3d12CommandList->OMSetRenderTargets(1, &currentFrameContext.main_render_target_descriptor, FALSE, nullptr);
+		d3d12CommandList->SetDescriptorHeaps(1, &d3d12DescriptorHeapImGuiRender);
+
+		ImGui::Render(); // TODO: move into render
+		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), d3d12CommandList);
+
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+
+		d3d12CommandList->ResourceBarrier(1, &barrier);
+		d3d12CommandList->Close();
+
+		d3d12CommandQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList* const*>(&d3d12CommandList));
+	}
+	return td_Present(swapChain, syncInterval, flags);
+}
 
 HRESULT CreateSwapChainForHwndHook(
 	IDXGIFactory* pFactory,
@@ -477,7 +593,7 @@ HRESULT CreateSwapChainForHwndHook(
 	HRESULT result = td_CreateSwapChainForHwnd(pFactory, pDevice, hWnd, pDesc, pFullscreenDesc, pRestrictToOutput, ppSwapChain);
 	void** vTable = *reinterpret_cast<void***>(*ppSwapChain);
 	t_Present present_addr = (t_Present)vTable[8];
-	Hook::Create(present_addr, PresentHook, &td_Present);
+	Hook::Create(present_addr, PresentHook, &td_Present, "Present");
 	return result;
 }
 
@@ -485,7 +601,7 @@ HRESULT CreateDXGIFactory1Hook(REFIID riid, void** ppFactory) {
 	HRESULT result = td_CreateDXGIFactory1(riid, ppFactory);
 	void** factoryVTable = *reinterpret_cast<void***>(*ppFactory);
 	t_CreateSwapChainForHwnd cscfh_addr = (t_CreateSwapChainForHwnd)factoryVTable[15];
-	Hook::Create(cscfh_addr, CreateSwapChainForHwndHook, &td_CreateSwapChainForHwnd);
+	Hook::Create(cscfh_addr, CreateSwapChainForHwndHook, &td_CreateSwapChainForHwnd, "CreateSwapChainForHwnd");
 	return result;
 }
 
@@ -495,7 +611,7 @@ DWORD* InitRendererHook(DWORD* param1, int* param2) {
 		"DirectX 12"
 	};
 	int index = *param2;
-	printf("Current Renderer is %s\n", RENDERER_NAMES[index]);
+	printf("Current renderer is %s\n", RENDERER_NAMES[index]);
 	return td_InitRenderer(param1, param2);
 }
 
@@ -515,13 +631,13 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	Hook::Create(L"opengl32.dll", "wglSwapBuffers", wglSwapBuffersHook, &td_wglSwapBuffers);
 	Hook::Create(L"dxgi.dll", "CreateDXGIFactory1", CreateDXGIFactory1Hook, &td_CreateDXGIFactory1);
 	t_RegisterGameFunctions rgf_addr = (t_RegisterGameFunctions)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions);
-	Hook::Create(rgf_addr, RegisterGameFunctionsHook, &td_RegisterGameFunctions);
+	Hook::Create(rgf_addr, RegisterGameFunctionsHook, &td_RegisterGameFunctions, "RegisterGameFunctions");
 #ifdef TDC
 	t_ProcessVideoFrameOGL pvf_addr = (t_ProcessVideoFrameOGL)Teardown::GetReferenceTo(MEM_OFFSET::ProcessVideoFrameOGL);
-	Hook::Create(pvf_addr, ProcessVideoFrameOGLHook, &td_ProcessVideoFrameOGL);
+	Hook::Create(pvf_addr, ProcessVideoFrameOGLHook, &td_ProcessVideoFrameOGL, "ProcessVideoFrameOGL");
 #endif
 	t_InitRenderer ir_addr = (t_InitRenderer)Teardown::GetReferenceTo(MEM_OFFSET::InitRenderer);
-	Hook::Create(ir_addr, InitRendererHook, &td_InitRenderer);
+	Hook::Create(ir_addr, InitRendererHook, &td_InitRenderer, "InitRenderer");
 	return 0;
 }
 
