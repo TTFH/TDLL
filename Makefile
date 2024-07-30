@@ -9,7 +9,7 @@ SOURCES += $(IMGUI_DIR)/backends/imgui_impl_win32.cpp $(IMGUI_DIR)/backends/imgu
 OBJS = $(addprefix obj/, $(addsuffix .o, $(basename $(notdir $(SOURCES)))))
 UNAME_S := $(shell uname -s)
 
-CXXFLAGS = -Wall -Wextra -Werror -Wpedantic -DDEBUGCONSOLE #-DTDC
+CXXFLAGS = -Wall -Wextra -Werror -Wpedantic -DDEBUGCONSOLE -DTDC
 CXXFLAGS += -s -shared -static
 CXXFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 CXXFLAGS += -Wno-cast-function-type -Wno-unused-parameter -Wno-invalid-offsetof
@@ -17,7 +17,7 @@ CXXFLAGS += -Wno-missing-field-initializers
 CXXFLAGS += `pkg-config --cflags glfw3`
 LIBS = `pkg-config --libs --static libcurl`
 LIBS += -lMinHook -lz -ldwmapi -lgdi32 -limm32 -Llua5.1.4 -llua5.1 -lcrypt32 -lws2_32 -lglfw3 -lopengl32
-LIBS += -lD3DCompiler
+LIBS += -ld3d12 -lD3DCompiler -ldxgi -ldxguid
 
 ifeq ($(OS), Windows_NT)
 	CXX = g++

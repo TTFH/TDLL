@@ -17,6 +17,9 @@ Press 'F1' on the pause menu to access the DLL menu (only on OpenGL), it contain
 Verify the game on Steam.
 Or restore the original `pros.sdk.x64.dll` file if you have made a backup.
 
+### Dependencies:
+ImGui Docking branch is requiered for compiling the DLL.
+
 ## New API functions:
 ```lua
 version = GetDllVersion()
