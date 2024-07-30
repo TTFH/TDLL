@@ -2,14 +2,14 @@ DLL = pros.sdk.x64.dll
 ODIR = obj
 IMGUI_DIR = imgui
 
-SOURCES = dllmain.cpp lua_utils.cpp extended_api.cpp
+SOURCES = dllmain.cpp src/lua_utils.cpp src/extended_api.cpp src/memory.cpp src/recorder.cpp
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_win32.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp $(IMGUI_DIR)/backends/imgui_impl_dx12.cpp
 
 OBJS = $(addprefix obj/, $(addsuffix .o, $(basename $(notdir $(SOURCES)))))
 UNAME_S := $(shell uname -s)
 
-CXXFLAGS = -Wall -Wextra -Werror -Wpedantic -DDEBUGCONSOLE -DTDC
+CXXFLAGS = -Wall -Wextra -Werror -Wpedantic -D_DEBUG_CONSOLE -D_TDC
 CXXFLAGS += -s -shared -static
 CXXFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 CXXFLAGS += -Wno-cast-function-type -Wno-unused-parameter -Wno-invalid-offsetof
@@ -27,6 +27,9 @@ endif
 .PHONY: all clean
 
 $(ODIR)/%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(ODIR)/%.o: src/%.cpp src/%.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(ODIR)/%.o: glad/%.c glad/%.h

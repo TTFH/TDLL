@@ -5,6 +5,7 @@
 #include <vector>
 #include <zlib.h>
 
+#include "memory.h"
 #include "extended_api.h"
 
 const double PI = 3.14159265358979323846;
@@ -15,17 +16,6 @@ using std::chrono::nanoseconds;
 using hrc = std::chrono::high_resolution_clock;
 hrc::time_point clocks[16];
 bool clock_init[16] = { false };
-
-uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
-	uintptr_t addr = ptr;
-	for (size_t i = 0; i < offsets.size(); i++) {
-		addr = *(uintptr_t*)addr;
-		if (IsBadReadPtr((uintptr_t*)addr, sizeof(addr)))
-			return 0;
-		addr += offsets[i];
-	}
-	return addr;
-}
 
 // TODO: Find by signature (not gonna happen)
 namespace MEM_OFFSET {				// Addr		// Type
@@ -51,7 +41,7 @@ namespace Teardown {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.6.0.726");
+	td_lua_pushstring(L, "v1.6.0.730");
 	return 1;
 }
 
