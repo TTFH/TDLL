@@ -21,10 +21,8 @@ uintptr_t FindPatternInModule(HMODULE hModule, const char* pattern, const char* 
 namespace Hook {
 	void Init();
 	template<typename T>
-	void Create(T target, T hook, T* original, const char* name = "") {
-		MH_STATUS status = MH_CreateHook((LPVOID)target, (LPVOID)hook, (LPVOID*)original);
-		if (status != MH_OK)
-			printf("ERROR %d: Failed to create hook for %s\n", status, name);
+	void Create(T target, T hook, T* original) {
+		MH_CreateHook((LPVOID)target, (LPVOID)hook, (LPVOID*)original);
 		MH_EnableHook((LPVOID)target);
 	}
 	template<typename T>

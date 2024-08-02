@@ -106,6 +106,10 @@ void LuaPushFunction(lua_State* L, const char* name, lua_CFunction func) {
 	lua_setglobal(L, name);
 }
 
+void LuaPushEmptyTable(lua_State* L) {
+	td_lua_createtable(L, 0, 0);
+}
+
 bool LuaIsGlobalDefined(lua_State* L, const char* name) {
 	lua_getglobal(L, name);
 	bool defined = !lua_isnil(L, -1);

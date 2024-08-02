@@ -364,12 +364,11 @@ HRESULT CreateSwapChainForHwndHook(
 	IDXGIOutput* pRestrictToOutput,
 	IDXGISwapChain1** ppSwapChain
 ) {
-	printf("CreateSwapChainForHwnd Hook called!\n");
 	d3d12CommandQueue = (ID3D12CommandQueue*)pDevice;
 	HRESULT result = td_CreateSwapChainForHwnd(pFactory, pDevice, hWnd, pDesc, pFullscreenDesc, pRestrictToOutput, ppSwapChain);
 	void** vTable = *reinterpret_cast<void***>(*ppSwapChain);
 	t_Present present_addr = (t_Present)vTable[8];
-	Hook::Create(present_addr, PresentHook, &td_Present, "Present");
+	Hook::Create(present_addr, PresentHook, &td_Present);
 	return result;
 }
 
@@ -377,7 +376,7 @@ HRESULT CreateDXGIFactory1Hook(REFIID riid, void** ppFactory) {
 	HRESULT result = td_CreateDXGIFactory1(riid, ppFactory);
 	void** factoryVTable = *reinterpret_cast<void***>(*ppFactory);
 	t_CreateSwapChainForHwnd cscfh_addr = (t_CreateSwapChainForHwnd)factoryVTable[15];
-	Hook::Create(cscfh_addr, CreateSwapChainForHwndHook, &td_CreateSwapChainForHwnd, "CreateSwapChainForHwnd");
+	Hook::Create(cscfh_addr, CreateSwapChainForHwndHook, &td_CreateSwapChainForHwnd);
 	return result;
 }
 
@@ -407,13 +406,13 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	Hook::Create(L"opengl32.dll", "wglSwapBuffers", wglSwapBuffersHook, &td_wglSwapBuffers);
 	Hook::Create(L"dxgi.dll", "CreateDXGIFactory1", CreateDXGIFactory1Hook, &td_CreateDXGIFactory1);
 	t_RegisterGameFunctions rgf_addr = (t_RegisterGameFunctions)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions);
-	Hook::Create(rgf_addr, RegisterGameFunctionsHook, &td_RegisterGameFunctions, "RegisterGameFunctions");
+	Hook::Create(rgf_addr, RegisterGameFunctionsHook, &td_RegisterGameFunctions);
 #ifdef _TDC
 	t_ProcessVideoFrameOGL pvf_addr = (t_ProcessVideoFrameOGL)Teardown::GetReferenceTo(MEM_OFFSET::ProcessVideoFrameOGL);
-	Hook::Create(pvf_addr, ProcessVideoFrameOGLHook, &td_ProcessVideoFrameOGL, "ProcessVideoFrameOGL");
+	Hook::Create(pvf_addr, ProcessVideoFrameOGLHook, &td_ProcessVideoFrameOGL);
 #endif
 	t_InitRenderer ir_addr = (t_InitRenderer)Teardown::GetReferenceTo(MEM_OFFSET::InitRenderer);
-	Hook::Create(ir_addr, InitRendererHook, &td_InitRenderer, "InitRenderer");
+	Hook::Create(ir_addr, InitRendererHook, &td_InitRenderer);
 	return 0;
 }
 

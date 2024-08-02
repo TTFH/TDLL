@@ -22,6 +22,7 @@ Vec3 LuaToVec3(lua_State* L, int index);
 Quat LuaToQuat(lua_State* L, int index);
 Transform LuaToTransform(lua_State* L, int index);
 void LuaPushFunction(lua_State* L, const char* name, lua_CFunction func);
+void LuaPushEmptyTable(lua_State* L);
 bool LuaIsGlobalDefined(lua_State* L, const char* name);
 
 // Not so Lua related
