@@ -1,51 +1,67 @@
-DLL = pros.sdk.x64.dll
-ODIR = obj
-IMGUI_DIR = imgui
+TARGET = pros.sdk.x64.dll
 
-SOURCES = dllmain.cpp src/lua_utils.cpp src/extended_api.cpp src/memory.cpp src/recorder.cpp
-SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
-SOURCES += $(IMGUI_DIR)/backends/imgui_impl_win32.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp $(IMGUI_DIR)/backends/imgui_impl_dx12.cpp
-
-OBJS = $(addprefix obj/, $(addsuffix .o, $(basename $(notdir $(SOURCES)))))
-UNAME_S := $(shell uname -s)
-
-CXXFLAGS = -Wall -Wextra -Werror -Wpedantic -D_DEBUG_CONSOLE -D_TDC
-CXXFLAGS += -s -shared -static
-CXXFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
-CXXFLAGS += -Wno-cast-function-type -Wno-unused-parameter -Wno-invalid-offsetof
+CXX = g++
+CXXFLAGS = -Wall -Wextra -Werror -Wpedantic -O3 -g
+CXXFLAGS += -s -shared -static -D_DEBUG_CONSOLE -D_TDC
+CXXFLAGS += -Iimgui
 CXXFLAGS += -Wno-missing-field-initializers
+CXXFLAGS += -Wno-invalid-offsetof -Wno-unused-parameter -Wno-cast-function-type
 CXXFLAGS += `pkg-config --cflags glfw3`
-LIBS = `pkg-config --libs --static libcurl`
-LIBS += -lMinHook -lz -ldwmapi -lgdi32 -limm32 -Llua5.1.4 -llua5.1 -lcrypt32 -lws2_32 -lglfw3 -lopengl32
+
+# -l*
+LIBS = `pkg-config --libs glfw3 --static` -lz
+LIBS += `pkg-config --libs libcurl --static`
+LIBS += -Llua5.1.4 -llua5.1
+LIBS += -lMinHook -ldwmapi -lgdi32 -lcrypt32 -lws2_32 -lglfw3
 LIBS += -ld3d12 -lD3DCompiler -ldxgi -ldxguid
 
-ifeq ($(OS), Windows_NT)
-	CXX = g++
-	ECHO_MESSAGE = "Windows"
+SOURCES = dllmain.cpp src/extended_api.cpp src/lua_utils.cpp src/memory.cpp src/recorder.cpp
+SOURCES += imgui/imgui.cpp imgui/imgui_demo.cpp imgui/imgui_draw.cpp imgui/imgui_tables.cpp imgui/imgui_widgets.cpp
+SOURCES += imgui/backends/imgui_impl_dx12.cpp imgui/backends/imgui_impl_opengl3.cpp imgui/backends/imgui_impl_win32.cpp
+
+OBJDIR = obj
+OBJS = $(SOURCES:.cpp=.o)
+OBJS := $(OBJS:.c=.o)
+OBJS := $(addprefix $(OBJDIR)/, $(notdir $(OBJS)))
+
+UNAME_S := $(shell uname -s)
+
+ifeq ($(UNAME_S), Linux)
+	ECHO_MESSAGE = "Nice try ;)"
+	CXX = echo
 endif
 
-.PHONY: all clean
+ifeq ($(OS), Windows_NT)
+	ECHO_MESSAGE = "MinGW"
+	LIBS += -lopengl32 -limm32
+endif
 
-$(ODIR)/%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+ifeq ($(UNAME_S), Darwin)
+	ECHO_MESSAGE = "Really?"
+	CXX = echo
+endif
 
-$(ODIR)/%.o: src/%.cpp src/%.h
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+.PHONY: all clean rebuild
 
-$(ODIR)/%.o: glad/%.c glad/%.h
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+all: $(TARGET)
+	@echo Build complete for: $(ECHO_MESSAGE)
 
-$(ODIR)/%.o: $(IMGUI_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-$(ODIR)/%.o: $(IMGUI_DIR)/backends/%.cpp $(IMGUI_DIR)/backends/%.h
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-all: $(DLL)
-	@echo Build complete for $(ECHO_MESSAGE)
-
-$(DLL): $(OBJS)
+$(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LIBS)
 
+$(OBJDIR)/%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.o: src/%.cpp src/%.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.o: imgui/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.o: imgui/backends/%.cpp imgui/backends/%.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+rebuild: clean all
+
 clean:
-	rm -f $(DLL) $(OBJS)
+	rm -f $(TARGET) $(OBJDIR)/*.o
