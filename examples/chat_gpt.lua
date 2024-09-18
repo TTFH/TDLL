@@ -1,13 +1,13 @@
 #include "json_parser.lua"
 
 function init()
-	local query = "Respond with a random cat fact"
+	local query = "Respond with a random cat fact."
 	local request = [[
 		{
-			"model": "gpt-3.5-turbo-0125",
+			"model": "gpt-4o",
 			"messages": [
 				{
-					"role": "assistant",
+					"role": "user",
 					"content": "]] .. query .. [["
 				}
 			]
@@ -15,9 +15,9 @@ function init()
 	]]
 	local headers = {
 		["Content-Type"] = "application/json",
-		["Authorization"] = "Bearer sk-*****",
+		["Authorization"] = "Bearer ghp_*****",
 	}
-	local status, response = HttpRequest("POST", "https://api.openai.com/v1/chat/completions", headers, request)
+	local status, response = HttpRequest("POST", "https://models.inference.ai.azure.com/chat/completions", headers, request)
 	DebugPrint("Status: " .. tostring(status))
 
 	local json_response = json.parse(response)

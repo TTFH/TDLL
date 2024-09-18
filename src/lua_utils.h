@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "../lua5.1.4/lua.hpp"
+#include <lua.hpp>
 #include "teardown_structs.h"
 
 typedef void (*t_lua_createtable) (lua_State* L, int narr, int nrec);

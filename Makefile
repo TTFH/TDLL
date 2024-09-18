@@ -7,11 +7,11 @@ CXXFLAGS += -Iimgui
 CXXFLAGS += -Wno-missing-field-initializers
 CXXFLAGS += -Wno-invalid-offsetof -Wno-unused-parameter -Wno-cast-function-type
 CXXFLAGS += `pkg-config --cflags glfw3`
+CXXFLAGS += `pkg-config --cflags lua5.1`
 
-# -l*
 LIBS = `pkg-config --libs glfw3 --static` -lz
 LIBS += `pkg-config --libs libcurl --static`
-LIBS += -Llua5.1.4 -llua5.1
+LIBS += -llua5.1
 LIBS += -lMinHook -ldwmapi -lgdi32 -lcrypt32 -lws2_32 -lglfw3
 LIBS += -ld3d12 -lD3DCompiler -ldxgi -ldxguid
 

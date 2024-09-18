@@ -174,13 +174,28 @@ end
 function dump(o)
 	if type(o) == "table" then
 		local s = "{ "
+		local first_key = true
 		for k, v in pairs(o) do
-			if type(k) ~= "number" then
-				k = '"' .. k .. '"'
+			if not first_key then
+				s = s .. ", "
 			end
-			s = s .. "[" .. k .. "] = " .. dump(v) .. ","
+			first_key = false
+			if type(k) == "number" then
+				s = s .. "[" .. k .. "]"
+			elseif type(k) == "string" and k:match("^[%a_][%w_]*$") and k ~= "function" then
+				s = s .. k
+			else
+				s = s .. '["' .. k .. '"]'
+			end
+			s = s .. " = " .. dump(v)
 		end
-		return s .. "} "
+		return s .. " }"
+	elseif type(o) == "string" then
+		if string.find(o, '"') then
+			return "'" .. o .. "'"
+		else
+			return '"' .. o .. '"'
+		end
 	else
 		return tostring(o)
 	end

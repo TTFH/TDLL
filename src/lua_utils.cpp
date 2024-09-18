@@ -157,6 +157,6 @@ int HttpRequest(const char* method, const char* endpoint, std::map<std::string, 
 		curl_slist_free_all(curl_headers);
 		curl_easy_cleanup(curl);
 	} else
-		response = "Failed to initialize curl";
+		response = "Failed to initialize Curl.";
 	return http_code;
 }
