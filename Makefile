@@ -2,7 +2,7 @@ TARGET = pros.sdk.x64.dll
 
 CXX = g++
 CXXFLAGS = -Wall -Wextra -Werror -Wpedantic -O3 -g
-CXXFLAGS += -s -shared -static -D_DEBUG_CONSOLE -D_TDC
+CXXFLAGS += -s -shared -static #-D_DEBUG_CONSOLE -D_TDC
 CXXFLAGS += -Iimgui
 CXXFLAGS += -Wno-missing-field-initializers
 CXXFLAGS += -Wno-invalid-offsetof -Wno-unused-parameter -Wno-cast-function-type
@@ -15,7 +15,7 @@ LIBS += -llua5.1
 LIBS += -lMinHook -ldwmapi -lgdi32 -lcrypt32 -lws2_32 -lglfw3
 LIBS += -ld3d12 -lD3DCompiler -ldxgi -ldxguid
 
-SOURCES = dllmain.cpp src/extended_api.cpp src/lua_utils.cpp src/memory.cpp src/recorder.cpp
+SOURCES = dllmain.cpp src/extended_api.cpp src/lua_utils.cpp src/memory.cpp src/networking.cpp src/recorder.cpp
 SOURCES += imgui/imgui.cpp imgui/imgui_demo.cpp imgui/imgui_draw.cpp imgui/imgui_tables.cpp imgui/imgui_widgets.cpp
 SOURCES += imgui/backends/imgui_impl_dx12.cpp imgui/backends/imgui_impl_opengl3.cpp imgui/backends/imgui_impl_win32.cpp
 

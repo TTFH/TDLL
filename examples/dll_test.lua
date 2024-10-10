@@ -238,10 +238,13 @@ function MakeFlamable(shape)
 	end
 end
 
+function GetWheelShape(wheel)
+	return wheel + 1
+end
+
 function init()
 	local version = GetDllVersion()
 	DebugPrint(version)
-	DebugPrint("Hello from script " .. GetScriptId())
 	local current_map = GetString("game.levelid")
 	if current_map ~= "" then
 		ZlibSaveCompressed(current_map .. ".z", "Hello, World!")
@@ -252,6 +255,12 @@ function init()
 	SetSunLength(128)
 	local sunlength = GetEnvironmentProperty("sunlength")
 	DebugWatch("Sun length", sunlength)
+
+	SendDatagram("Hello World!")
+	local messages = FetchDatagrams()
+	for _, message in ipairs(messages) do
+		DebugPrint(message)
+	end
 end
 
 function tick(dt)
@@ -288,12 +297,14 @@ function tick(dt)
 		local script = scripts[i]
 		local script_path = GetScriptPath(script)
 		DebugWatch(script, script_path)
+
+		-- This probably works for entities of this script, getting the entities of other scripts could be useful
 		local entities = FindEntities("", false)
 		for j = 1, #entities do
 			local entity = entities[j]
 			local entity_type = GetEntityType(entity)
 			if entity_type == "shape" then
-				DrawOBB(entity)
+				DrawOBB(GetOBB(entity))
 			end
 		end
 	end
@@ -322,7 +333,7 @@ function tick(dt)
 		for i = 1, #wheels do
 			local wheel = wheels[i]
 			local wheel_shape = GetWheelShape(wheel)
-			DrawOBB(wheel_shape)
+			DrawOBB(GetOBB(wheel_shape))
 		end
 
 		wheels = FindEntities("", true, "wheel")

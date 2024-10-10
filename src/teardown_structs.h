@@ -507,9 +507,11 @@ struct ScriptCoreInner {
 };
 
 struct InternalCheck {
-	uint8_t padding[0x38C];
+	uint8_t padding[0x3AC];
 	uint32_t privilege;
 };
+
+static_assert(offsetof(InternalCheck, privilege) == 0x3AC, "Wrong offset ic->privilege");
 
 // non-ptr used for LuaApiFunction
 struct ScriptCore {
@@ -520,24 +522,8 @@ struct ScriptCore {
 	td_string location;
 	uint8_t padding2[0x18];
 	ScriptCoreInner inner_core;		// 0x68
-	/*
-	bool has_init;	// 0xA1
-	bool has_tick;
-	bool has_update;
-	bool has_ppu;
-	bool has_render;
-	bool has_draw;
-	bool has_handle_cmd;
-
-	float tick_time;	// 0xAC
-	float update_time;
-
-	td_vector<> transitions;	// 0x1D8
-	td_vector<> params;			// 0x214
-	*/
 	uint8_t padding4[0x1F8];		// an onion?
 	td_vector<uint32_t> entities;	// 0x298
-	//td_vector<> sounds;
 	uint8_t padding5[0x18];
 	InternalCheck* check_internal;	// 0x2C0
 }; // 0x21A8
@@ -656,51 +642,11 @@ static_assert(sizeof(Heat) == 0x18, "Wrong Heat size");
 
 struct Player {
 	Transform transform;
-	uint8_t padding1[0x70];
-	Vec3 velocity;			// 0x8C
-	uint8_t padding2[0xD4];
-	float pitch;			// 0x16C
-	float yaw;
-	//bool is_jumping;	// 0x185
-	uint8_t padding3[0x94];
-	float health;			// 0x208
-	//Body* tool_body;		// 0xE08
-	//float tool_recoil;	// 0xE70
-	uint8_t padding4[0xDCC];
-	float time_underwater;	// 0xFD8
-	uint8_t padding5[0x14];
-	td_vector<Heat> heats;	// 0xFF0
-	uint8_t padding6[0x301C];
-	float transition_timer;	// 0x401C
-	/*
-	Transform tool_tr_override; // 0x4030
-	Vec3 tool_offset;
-	float tool_sway;
-	bool override_tr;
-	bool hand_tr_override;
-	*/
-	//Transform right_hand_tr;	// 0x4098
-	//Transform left_hand_tr;
-	//bool dual_handed;
-	uint8_t padding7[0x3D8];
-	float bluetide_timer;	// 0x43F8
-	float bluetide_power;
-	/*
-	bool third_person;	// 0x441D
-	bool transition_3rd;
-	bool first_person;
-	bool transition_1st;
-	*/
-	//Animator* animator;	//0x45A0
-	//td_string spawn_tool;	//0x45B0
-}; // 0x45E8
+	uint8_t padding[0xBEC];
+	td_vector<Heat> heats;	// 0xC08
+}; // 0x4218
 
-static_assert(offsetof(Player, velocity) == 0x8C, "Wrong offset player->velocity");
-static_assert(offsetof(Player, pitch) == 0x16C, "Wrong offset player->pitch");
-static_assert(offsetof(Player, health) == 0x208, "Wrong offset player->health");
-static_assert(offsetof(Player, time_underwater) == 0xFD8, "Wrong offset player->time_underwater");
-static_assert(offsetof(Player, heats) == 0xFF0, "Wrong offset player->heats");
-static_assert(offsetof(Player, transition_timer) == 0x401C, "Wrong offset player->transition_timer");
+static_assert(offsetof(Player, heats) == 0xC08, "Wrong offset player->heats");
 
 struct Material {
 	uint32_t type;

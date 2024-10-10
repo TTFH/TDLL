@@ -27,6 +27,12 @@ function GetSystemDate() return 0, 0, 0 end
 ---@return string response Response body
 function HttpRequest(method, endpoint, headers, request, cookies) return 0, "" end
 
+---@param message string Message to send
+function SendDatagram(message) end
+
+---@return any list Table with received messages. Note: outgoing messages are also included
+function FetchDatagrams() return nil end
+
 ---@return number scale Current time scale
 function GetTimeScale() return 0 end
 
@@ -164,6 +170,14 @@ function GetShapeDensity(shape) return 0 end
 ---@param shape number Shape handle
 ---@return number palette Palette index
 function GetShapePaletteId(shape) return 0 end
+
+---@param shape number Shape handle
+---@return boolean collision If the shape has collision
+function HasCollision(shape) return false end
+
+---@param shape number Shape handle
+---@param collision boolean If the shape has collision
+function SetCollision(shape, collision) end
 
 ---@param shape number Shape handle
 ---@return number texture Texture index

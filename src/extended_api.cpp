@@ -1,7 +1,9 @@
-#include <math.h>
-#include <time.h>
-#include <stdio.h>
 #include <chrono>
+#include <map>
+#include <math.h>
+#include <stdio.h>
+#include <string>
+#include <time.h>
 #include <vector>
 #include <zlib.h>
 
@@ -19,14 +21,13 @@ bool clock_init[16] = { false };
 
 // TODO: Find by signature (not gonna happen)
 namespace MEM_OFFSET {				// Addr		// Type
-	uintptr_t Game					= 0xB45550; // Game*
-	uintptr_t RenderDist			= 0x8BB568; // float
-	uintptr_t InitRenderer			= 0x530910; // ll* fn(ll, int*)
-	uintptr_t LuaPushString			= 0x57DB50; // void fn(lua_State*, const char*)
-	uintptr_t LuaCreateTable		= 0x57C8F0; // void fn(lua_State*, int, int)
-	uintptr_t ProcessVideoFrameOGL	= 0x454720; // void fn(ScreenCapture*, int)
-	uintptr_t RegisterGameFunctions	= 0x405F80; // void fn(ScriptCore*)
-	// game->30->E38->0 *ID3D12CommandQueue
+	uintptr_t Game					= 0xB51D90; // Game*
+	uintptr_t RenderDist			= 0x8C45C8; // float
+	uintptr_t InitRenderer			= 0x538AB0; // ll* fn(ll, int*)
+	uintptr_t LuaPushString			= 0x585D70; // void fn(lua_State*, const char*)
+	uintptr_t LuaCreateTable		= 0x584B10; // void fn(lua_State*, int, int)
+	uintptr_t ProcessVideoFrameOGL	= 0x4591C0; // void fn(ScreenCapture*, int)
+	uintptr_t RegisterGameFunctions	= 0x409B30; // void fn(ScriptCore*)
 }
 
 namespace Teardown {
@@ -53,14 +54,14 @@ T* GetEntity(unsigned int handle, uint8_t type) {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.6.0.802");
+	td_lua_pushstring(L, "v1.6.0.1010");
 	return 1;
 }
 
 int Tick(lua_State* L) {
 	unsigned int index = lua_tointeger(L, 1);
-	clocks[index] = hrc::now();
 	clock_init[index] = true;
+	clocks[index] = hrc::now();
 	return 0;
 }
 
@@ -680,9 +681,8 @@ int SetSunLength(lua_State* L) {
 int AllowInternalFunctions(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Script* script = GetEntity<Script>(handle, EntityType::Script);
-	if (script != nullptr)
-		if (script->core.check_internal->privilege > 1)
-			script->core.check_internal->privilege = 1;
+	if (script != nullptr && script->core.check_internal != nullptr && script->core.check_internal->privilege > 1)
+		script->core.check_internal->privilege = 1;
 	return 0;
 }
 
@@ -719,6 +719,24 @@ int SetCollision(lua_State* L) {
 	return 0;
 }
 
+int SendDatagram(lua_State* L) {
+	const char* message = lua_tostring(L, 1);
+	broadcast.Send(message);
+	return 0;
+}
+
+int FetchDatagrams(lua_State* L) {
+	msg_mutex.lock();
+	td_lua_createtable(L, messages.size(), 0);
+	for (std::vector<std::string>::iterator it = messages.begin(); it != messages.end(); it++) {
+		td_lua_pushstring(L, it->c_str());
+		lua_rawseti(L, -2, std::distance(messages.begin(), it) + 1);
+	}
+	messages.clear();
+	msg_mutex.unlock();
+	return 1;
+}
+
 void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "GetDllVersion", GetDllVersion);
 	LuaPushFunction(L, "Tick", Tick);
@@ -727,6 +745,8 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "GetSystemDate", GetSystemDate);
 	LuaPushFunction(L, "HttpRequest", HttpRequest);
 	LuaPushFunction(L, "SaveToFile", SaveToFile);
+	LuaPushFunction(L, "SendDatagram", SendDatagram);
+	LuaPushFunction(L, "FetchDatagrams", FetchDatagrams);
 	LuaPushFunction(L, "ZlibSaveCompressed", ZlibSaveCompressed);
 	LuaPushFunction(L, "ZlibLoadCompressed", ZlibLoadCompressed);
 

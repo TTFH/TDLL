@@ -1,8 +1,6 @@
 #ifndef _LUA_UTILS_H
 #define _LUA_UTILS_H
 
-#include <map>
-#include <string>
 #include <vector>
 
 #include <lua.hpp>
@@ -24,8 +22,5 @@ Transform LuaToTransform(lua_State* L, int index);
 void LuaPushFunction(lua_State* L, const char* name, lua_CFunction func);
 void LuaPushEmptyTable(lua_State* L);
 bool LuaIsGlobalDefined(lua_State* L, const char* name);
-
-// Not so Lua related
-int HttpRequest(const char*, const char*, std::map<std::string, std::string>, const char*, const char*, std::string&);
 
 #endif

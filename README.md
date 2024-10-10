@@ -2,7 +2,7 @@
 
 ## Extended Teardown API - DLL
 
-# This DLL only works on Teardown 1.6.0 Experimental branch Build 14917974 from 04/July/2024 and will stop working after the next game update, make sure to remove it by verifying the game files on Steam.
+# This DLL only works on Teardown 1.6.0 Build 15982403 from 10/October/2024 and will stop working after the next game update, make sure to remove it by verifying the game files on Steam.
 
 ### What it does:
 - Provides a DLL that can be used to extend the Teardown API
@@ -19,6 +19,8 @@ Or restore the original `pros.sdk.x64.dll` file if you have made a backup.
 
 ### Dependencies:
 ImGui Docking branch is requiered for compiling the DLL.
+
+## Warning: Some functions are untested and may not work or crash the game, if that happens please report it.
 
 ## New API functions:
 ```lua
@@ -66,6 +68,18 @@ cookies (string) – Filename where to store and read cookies from
 Return value
 status (number) – HTTP status code
 response (string) – Response body
+
+SendDatagram(message)
+Arguments
+message (string) – Message to send
+Return value
+none
+
+messages = FetchDatagrams()
+Arguments
+none
+Return value
+messages (table) – Table with received messages. Note: outgoing messages are also included
 
 scale = GetTimeScale()
 Arguments
@@ -289,6 +303,17 @@ palette (number) – Palette index
 Return value
 none
 
+HasCollision(shape)
+Arguments
+shape (number) – Shape handle
+Return value
+collision (bool) – If the shape has collision
+
+SetCollision(shape, collision)
+Arguments
+shape (number) – Shape handle
+collision (bool) – If the shape has collision
+
 texture, weight, blendTexture, blendTextureWeight = GetShapeTexture(shape)
 Arguments
 shape (number) – Shape handle
@@ -430,10 +455,13 @@ UiGetProsModRange
 UiLikeProsMod
 UiLinkColor
 UiRemoveDrawObject
+UiRichTextSplitByWords
 UiSelectProsMod
 UiSelectedProsModInfo
 UiSetProsModFilter
 UiSubscribeToProsMod
+UiTextToLower
+UiTextToUpper
 UiUnsubscribeFromProsMod
 WatchBodyHit
 WinddustSpawnParticlesCPP

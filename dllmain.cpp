@@ -1,6 +1,8 @@
-#include <vector>
-#include <time.h>
+#include <mutex>
 #include <stdio.h>
+#include <thread>
+#include <time.h>
+#include <vector>
 
 #include <d3d12.h>
 #include <dxgi1_4.h>
@@ -48,6 +50,10 @@ t_CreateSwapChainForHwnd td_CreateSwapChainForHwnd = nullptr;
 typedef HRESULT (*t_Present) (IDXGISwapChain3* swapChain, UINT syncInterval, UINT flags);
 t_Present td_Present = nullptr;
 
+Broadcast broadcast;
+std::mutex msg_mutex;
+std::vector<std::string> messages;
+
 HMODULE moduleBase;
 bool awwnb = false;
 FastRecorder recorder;
@@ -56,15 +62,11 @@ ID3D12CommandQueue* d3d12CommandQueue = nullptr;
 void RegisterGameFunctionsHook(ScriptCore* core) {
 	td_RegisterGameFunctions(core);
 	lua_State* L = core->inner_core.state_info->state;
-	//const char* script_name = core->path.c_str();
-	//printf("%p | Script: %s\n", (void*)L, script_name);
+	const char* script_name = core->path.c_str();
+	printf("%p | Script: %s\n", (void*)L, script_name);
 
 	RegisterLuaCFunctions(L);
-
-	// TODO: improve, this may break if a script is spawned
 	awwnb = false; // Reset remove boundary checkbox
-	for (int i = 0; i < 16; i++)
-		clock_init[i] = false;
 }
 
 void ProcessVideoFrameOGLHook(ScreenCapture* sc, int frame) {
@@ -380,14 +382,15 @@ HRESULT CreateDXGIFactory1Hook(REFIID riid, void** ppFactory) {
 	return result;
 }
 
-DWORD* InitRendererHook(DWORD* param1, int* param2) {
-	static const char* RENDERER_NAMES[] = {
-		"OpenGL",
-		"DirectX 12"
-	};
-	int index = *param2;
-	printf("Current renderer is %s\n", RENDERER_NAMES[index]);
-	return td_InitRenderer(param1, param2);
+void ReceiveThread() {
+	char buffer[1024];
+	while (true) {
+		memset(buffer, 0, 1024);
+		broadcast.Receive(buffer, 1024);
+		msg_mutex.lock();
+		messages.push_back(buffer);
+		msg_mutex.unlock();
+	}
 }
 
 DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
@@ -398,21 +401,32 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	freopen("CONOUT$", "w", stderr);
 	printf("TDLL Loaded\n");
 #endif
-	moduleBase = GetModuleHandleA("teardown.exe");
-	td_lua_pushstring = (t_lua_pushstring)Teardown::GetReferenceTo(MEM_OFFSET::LuaPushString);
-	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable);
 
 	Hook::Init();
 	Hook::Create(L"opengl32.dll", "wglSwapBuffers", wglSwapBuffersHook, &td_wglSwapBuffers);
 	Hook::Create(L"dxgi.dll", "CreateDXGIFactory1", CreateDXGIFactory1Hook, &td_CreateDXGIFactory1);
+	Sleep(1000);
+
+	try {
+		WSADATA wsa_data;
+		WSAStartup(MAKEWORD(2, 2), &wsa_data);
+		broadcast.Init(8038);
+		std::thread receiveThread(ReceiveThread);
+		receiveThread.detach();
+	} catch (std::exception& e) {
+		printf("Error: %s\n", e.what());
+	}
+
+	moduleBase = GetModuleHandleA("teardown.exe");
+	td_lua_pushstring = (t_lua_pushstring)Teardown::GetReferenceTo(MEM_OFFSET::LuaPushString);
+	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable);
+
 	t_RegisterGameFunctions rgf_addr = (t_RegisterGameFunctions)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions);
 	Hook::Create(rgf_addr, RegisterGameFunctionsHook, &td_RegisterGameFunctions);
 #ifdef _TDC
 	t_ProcessVideoFrameOGL pvf_addr = (t_ProcessVideoFrameOGL)Teardown::GetReferenceTo(MEM_OFFSET::ProcessVideoFrameOGL);
 	Hook::Create(pvf_addr, ProcessVideoFrameOGLHook, &td_ProcessVideoFrameOGL);
 #endif
-	t_InitRenderer ir_addr = (t_InitRenderer)Teardown::GetReferenceTo(MEM_OFFSET::InitRenderer);
-	Hook::Create(ir_addr, InitRendererHook, &td_InitRenderer);
 	return 0;
 }
 
