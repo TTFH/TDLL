@@ -194,6 +194,10 @@ function GetShapeDensity(shape) return 0 end
 function GetShapePaletteId(shape) return 0 end
 
 ---@param shape number Shape handle
+---@return any voxels Table with the voxel matrix [x][y][z]
+function GetShapeVoxelMatrix(shape) return nil end
+
+---@param shape number Shape handle
 ---@return boolean collision If the shape has collision
 function HasCollision(shape) return false end
 

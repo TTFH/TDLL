@@ -434,6 +434,33 @@ int GetShapePaletteId(lua_State* L) {
 	return 1;
 }
 
+int GetShapeVoxelMatrix(lua_State* L) {
+	unsigned int handle = lua_tointeger(L, 1);
+	Shape* shape = GetEntity<Shape>(handle, EntityType::Shape);
+	if (shape != nullptr) {
+		int sizex = shape->vox->size[0];
+		int sizey = shape->vox->size[1];
+		int sizez = shape->vox->size[2];
+		uint8_t* voxels = shape->vox->voxels;
+
+		td_lua_createtable(L, sizex, 0);
+		for (int x = 0; x < sizex; x++) {
+			td_lua_createtable(L, sizey, 0);
+			for (int y = 0; y < sizey; y++) {
+				td_lua_createtable(L, sizez, 0);
+				for (int z = 0; z < sizez; z++) {
+					lua_pushinteger(L, voxels[x + sizex * (y + sizey * z)]);
+					lua_rawseti(L, -2, z + 1);
+				}
+				lua_rawseti(L, -2, y + 1);
+			}
+			lua_rawseti(L, -2, x + 1);
+		}
+	} else
+		LuaPushEmptyTable(L);
+	return 1;
+}
+
 int GetShapeTexture(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Shape* shape = GetEntity<Shape>(handle, EntityType::Shape);
@@ -841,6 +868,7 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "FetchHttpResponses", FetchHttpResponses);
 	LuaPushFunction(L, "LoadImagePixels", LoadImagePixels);
 	LuaPushFunction(L, "SaveImageToFile", SaveImageToFile);
+	LuaPushFunction(L, "GetShapeVoxelMatrix", GetShapeVoxelMatrix);
 
 	LuaPushFunction(L, "RemoveBoundary", RemoveBoundary);
 	LuaPushFunction(L, "GetBoundaryVertices", GetBoundaryVertices);

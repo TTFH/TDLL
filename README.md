@@ -321,6 +321,12 @@ shape (number) – Shape handle
 Return value
 palette (number) – Palette index
 
+voxels = GetShapeVoxelMatrix(shape)
+Arguments
+shape (number) – Shape handle
+Return value
+voxels (table) – Table with the voxel matrix [x][y][z]
+
 SetShapeScale(shape, scale)
 Arguments
 shape (number) – Shape handle
