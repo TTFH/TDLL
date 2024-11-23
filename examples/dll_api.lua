@@ -21,11 +21,33 @@ function GetSystemDate() return 0, 0, 0 end
 ---@param method string HTTP method to use
 ---@param endpoint string URL to send the request
 ---@param headers any Table with headers to send
----@param request any Request body
+---@param body any Request body
 ---@param cookies any Filename where to store and read cookies from
 ---@return number status HTTP status code
 ---@return string response Response body
-function HttpRequest(method, endpoint, headers, request, cookies) return 0, "" end
+function HttpRequest(method, endpoint, headers, body, cookies) return 0, "" end
+
+---@param method string HTTP method to use
+---@param endpoint string URL to send the request
+---@param headers any Table with headers to send
+---@param body any Request body
+---@return number id Request id
+function HttpAsyncRequest(method, endpoint, headers, body) return 0 end
+
+---@return any list Table with responses [{id, url, status, body}]
+function FetchHttpResponses() return nil end
+
+---@param path string Path to the image (relative to the game directory or absolute)
+---@return number width Image width
+---@return number height Image height
+---@return any pixels Table with the image pixels [{r, g, b}]
+function LoadImagePixels(path) return 0, 0, nil end
+
+---@param path string Path to save the image (relative to the game directory or absolute)
+---@param width number Image width
+---@param height number Image height
+---@param pixels any Table with the image pixels [{r, g, b}]
+function SaveImageToFile(path, width, height, pixels) end
 
 ---@param message string Message to send
 function SendDatagram(message) end

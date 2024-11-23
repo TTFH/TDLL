@@ -1,7 +1,4 @@
 function GetWheelShape(wheel)
-	--local body = GetEntityParent(wheel, "", "body")
-	--local shapes = GetBodyShapes(body)
-	--return shapes[1]
 	return wheel + 1
 end
 
@@ -9,7 +6,7 @@ function GetWheelRadius(wheel)
 	local shape = GetWheelShape(wheel)
 	local sizex, sizey, sizez, scale = GetShapeSize(shape)
 	local width = math.max(sizex, math.max(sizey, sizez))
-	return width * scale / 2
+	return (width / 2) * scale
 end
 
 function ScaleWorld(FACTOR)

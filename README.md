@@ -2,7 +2,7 @@
 
 ## Extended Teardown API - DLL
 
-# This DLL only works on Teardown 1.6.0 Build 15982403 from 10/October/2024 and will stop working after the next game update, make sure to remove it by verifying the game files on Steam.
+# This DLL only works on Teardown 1.6.2 Build 16262651 from 06/November/2024 and will stop working after the next game update, make sure to remove it by verifying the game files on Steam.
 
 ### What it does:
 - Provides a DLL that can be used to extend the Teardown API
@@ -58,16 +58,48 @@ year (number) – Current year
 month (number) – Current month
 day (number) – Current day
 
-status, response = HttpRequest(method, endpoint, headers, request, cookies)
+status, response = HttpRequest(method, endpoint, headers, body, cookies)
 Arguments
 method (string) – HTTP method to use
 endpoint (string) – URL to send the request
 headers (table) – Table with headers to send
-request (string) – Request body
+body (string) – Request body
 cookies (string) – Filename where to store and read cookies from
 Return value
 status (number) – HTTP status code
 response (string) – Response body
+
+id = HttpAsyncRequest(method, endpoint, headers, body)
+Arguments
+method (string) – HTTP method to use
+endpoint (string) – URL to send the request
+headers (table) – Table with headers to send
+body (string) – Request body
+Return value
+id (number) – Request id
+
+responses = FetchHttpResponses()
+Arguments
+none
+Return value
+responses (table) – Table with responses [{id, url, status, body}]
+
+width, height, pixels = LoadImagePixels(path)
+Arguments
+path (string) – Path to the image (relative to the game directory or absolute)
+Return value
+width (number) – Image width
+height (number) – Image height
+pixels (table) – Table with the image pixels [{r, g, b}]
+
+SaveImageToFile(path, width, height, pixels)
+Arguments
+path (string) – Path to save the image (relative to the game directory or absolute)
+width (number) – Image width
+height (number) – Image height
+pixels (table) – Table with the image pixels [{r, g, b}]
+Return value
+none
 
 SendDatagram(message)
 Arguments

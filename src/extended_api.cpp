@@ -8,7 +8,10 @@
 #include <zlib.h>
 
 #include "memory.h"
+#include "recorder.h"
 #include "extended_api.h"
+
+#include "../lib/stb_image.h"
 
 const double PI = 3.14159265358979323846;
 
@@ -21,13 +24,13 @@ bool clock_init[16] = { false };
 
 // TODO: Find by signature (not gonna happen)
 namespace MEM_OFFSET {				// Addr		// Type
-	uintptr_t Game					= 0xB51D90; // Game*
-	uintptr_t RenderDist			= 0x8C45C8; // float
-	uintptr_t InitRenderer			= 0x538AB0; // ll* fn(ll, int*)
-	uintptr_t LuaPushString			= 0x585D70; // void fn(lua_State*, const char*)
-	uintptr_t LuaCreateTable		= 0x584B10; // void fn(lua_State*, int, int)
-	uintptr_t ProcessVideoFrameOGL	= 0x4591C0; // void fn(ScreenCapture*, int)
-	uintptr_t RegisterGameFunctions	= 0x409B30; // void fn(ScriptCore*)
+	uintptr_t Game					= 0xB52D90; // Game*
+	uintptr_t RenderDist			= 0x8C55C8; // float
+	uintptr_t InitRenderer			= 0x5393D0; // ll* fn(ll, int*)
+	uintptr_t LuaPushString			= 0x586690; // void fn(lua_State*, const char*)
+	uintptr_t LuaCreateTable		= 0x585430; // void fn(lua_State*, int, int)
+	uintptr_t ProcessVideoFrameOGL	= 0x459AE0; // void fn(ScreenCapture*, int)
+	uintptr_t RegisterGameFunctions	= 0x40A450; // void fn(ScriptCore*)
 }
 
 namespace Teardown {
@@ -54,7 +57,7 @@ T* GetEntity(unsigned int handle, uint8_t type) {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.6.0.1010");
+	td_lua_pushstring(L, "v1.6.2.1123");
 	return 1;
 }
 
@@ -77,26 +80,47 @@ int Tock(lua_State* L) {
 }
 
 int HttpRequest(lua_State* L) {
-	std::map<std::string, std::string> headers;
 	const char* method = lua_tostring(L, 1);
 	const char* endpoint = lua_tostring(L, 2);
-	if (lua_istable(L, 3)) {
-		lua_pushnil(L);
-		while (lua_next(L, 3) != 0) {
-			const char* key = lua_tostring(L, -2);
-			const char* value = lua_tostring(L, -1);
-			headers[key] = value;
-			lua_pop(L, 1);
-		}
-	}
-	const char* request = lua_tostring(L, 4);
+	std::map<std::string, std::string> headers = LuaToMap(L, 3);
+	const char* body = lua_tostring(L, 4);
 	const char* cookies = lua_tostring(L, 5);
 
 	std::string response;
-	int status = HttpRequest(method, endpoint, headers, request, cookies, response);
+	int status = HttpRequest(method, endpoint, headers, body, cookies, response);
 	lua_pushinteger(L, status);
 	td_lua_pushstring(L, response.c_str());
 	return 2;
+}
+
+int HttpAsyncRequest(lua_State* L) {
+	const char* method = lua_tostring(L, 1);
+	const char* endpoint = lua_tostring(L, 2);
+	std::map<std::string, std::string> headers = LuaToMap(L, 3);
+	const char* body = lua_tostring(L, 4);
+
+	int handle = AddRequest(method, endpoint, headers, body);
+	lua_pushinteger(L, handle);
+	return 1;
+}
+
+int FetchHttpResponses(lua_State* L) {
+	std::vector<HTTP_Response> responses = FetchResponses();
+	td_lua_createtable(L, responses.size(), 0);
+	for (unsigned int i = 0; i < responses.size(); i++) {
+		HTTP_Response response = responses[i];
+		td_lua_createtable(L, 0, 4);
+		lua_pushinteger(L, response.id);
+		lua_setfield(L, -2, "id");
+		td_lua_pushstring(L, response.url.c_str());
+		lua_setfield(L, -2, "url");
+		lua_pushinteger(L, response.status);
+		lua_setfield(L, -2, "status");
+		td_lua_pushstring(L, response.body.c_str());
+		lua_setfield(L, -2, "body");
+		lua_rawseti(L, -2, i + 1);
+	}
+	return 1;
 }
 
 int GetSystemDate(lua_State* L) {
@@ -737,6 +761,68 @@ int FetchDatagrams(lua_State* L) {
 	return 1;
 }
 
+int LoadImagePixels(lua_State* L) {
+	const char* filename = lua_tostring(L, 1);
+	int width, height;
+	uint8_t* pixels = stbi_load(filename, &width, &height, NULL, STBI_rgb);
+	if (pixels != nullptr) {
+		lua_pushinteger(L, width);
+		lua_pushinteger(L, height);
+		td_lua_createtable(L, width * height, 0);
+		for (int i = 0; i < width * height; i++) {
+			uint8_t red = pixels[i * 3];
+			uint8_t green = pixels[i * 3 + 1];
+			uint8_t blue = pixels[i * 3 + 2];
+			lua_pushinteger(L, i + 1);
+			td_lua_createtable(L, 0, 3);
+			lua_pushinteger(L, red);
+			lua_setfield(L, -2, "r");
+			lua_pushinteger(L, green);
+			lua_setfield(L, -2, "g");
+			lua_pushinteger(L, blue);
+			lua_setfield(L, -2, "b");
+			lua_rawset(L, -3);
+		}
+		stbi_image_free(pixels);
+		return 3;
+	}
+	lua_pushinteger(L, 0);
+	lua_pushinteger(L, 0);
+	td_lua_createtable(L, 0, 0);
+	return 3;
+}
+
+int SaveImageToFile(lua_State* L) {
+	const char* filename = lua_tostring(L, 1);
+	int width = lua_tointeger(L, 2);
+	int height = lua_tointeger(L, 3);
+	uint8_t* pixels = new uint8_t[width * height * 3];
+
+	lua_pushnil(L);
+	while (lua_next(L, 4) != 0) {
+		int index = lua_tointeger(L, -2);
+		if (index > 0 && index <= width * height) {
+			lua_getfield(L, -1, "r");
+			uint8_t red = lua_tointeger(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "g");
+			uint8_t green = lua_tointeger(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "b");
+			uint8_t blue = lua_tointeger(L, -1);
+			lua_pop(L, 1);
+			pixels[(index - 1) * 3] = red;
+			pixels[(index - 1) * 3 + 1] = green;
+			pixels[(index - 1) * 3 + 2] = blue;
+		}
+		lua_pop(L, 1);
+	}
+
+	SaveImagePNG(filename, width, height, pixels);
+	delete[] pixels;
+	return 0;
+}
+
 void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "GetDllVersion", GetDllVersion);
 	LuaPushFunction(L, "Tick", Tick);
@@ -749,6 +835,12 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "FetchDatagrams", FetchDatagrams);
 	LuaPushFunction(L, "ZlibSaveCompressed", ZlibSaveCompressed);
 	LuaPushFunction(L, "ZlibLoadCompressed", ZlibLoadCompressed);
+
+	// New!
+	LuaPushFunction(L, "HttpAsyncRequest", HttpAsyncRequest);
+	LuaPushFunction(L, "FetchHttpResponses", FetchHttpResponses);
+	LuaPushFunction(L, "LoadImagePixels", LoadImagePixels);
+	LuaPushFunction(L, "SaveImageToFile", SaveImageToFile);
 
 	LuaPushFunction(L, "RemoveBoundary", RemoveBoundary);
 	LuaPushFunction(L, "GetBoundaryVertices", GetBoundaryVertices);

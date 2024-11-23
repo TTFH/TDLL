@@ -97,6 +97,20 @@ Transform LuaToTransform(lua_State* L, int index) {
 	return transform;
 }
 
+std::map<std::string, std::string> LuaToMap(lua_State* L, int index) {
+	std::map<std::string, std::string> map;
+	lua_pushnil(L);
+	if (lua_istable(L, index)) {
+		while (lua_next(L, index) != 0) {
+			std::string key = lua_tostring(L, -2);
+			std::string value = lua_tostring(L, -1);
+			map[key] = value;
+			lua_pop(L, 1);
+		}
+	}
+	return map;
+}
+
 void LuaPushFunction(lua_State* L, const char* name, lua_CFunction func) {
 	lua_pushcfunction(L, func);
 	lua_setglobal(L, name);

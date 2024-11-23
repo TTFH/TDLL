@@ -1,26 +1,26 @@
+#include <stdio.h>
+#include <memory>
 #include <stdexcept>
 
 #include <winsock2.h>
 
-#define CURL_STATICLIB
-#include <curl/curl.h>
-
 #include "networking.h"
 
-size_t write_callback(void* contents, size_t size, size_t nmemb, std::string* response) {
-	response->append((char*)contents, size * nmemb);
+size_t write_callback(char* contents, size_t size, size_t nmemb, std::string* response) {
+	response->append(contents, size * nmemb);
 	return size * nmemb;
 }
 
-int HttpRequest(const char* method, const char* endpoint, std::map<std::string, std::string> headers, const char* request, const char* cookie_file, std::string& response) {
+int HttpRequest(const char* method, const char* endpoint, std::map<std::string, std::string> headers, const char* request_body, const char* cookie_file, std::string& response) {
 	int http_code = 500;
 	response.clear();
 	CURL* curl = curl_easy_init();
 	if (curl != nullptr) {
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
 		curl_easy_setopt(curl, CURLOPT_URL, endpoint);
-		if (request != nullptr && strlen(request) > 0)
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request);
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+		if (request_body != nullptr && strlen(request_body) > 0)
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_body);
 
 		curl_slist* curl_headers = nullptr;
 		for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++) {
@@ -29,7 +29,12 @@ int HttpRequest(const char* method, const char* endpoint, std::map<std::string, 
 		}
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, curl_headers);
 
-		curl_easy_setopt(curl, CURLOPT_CAINFO, "ca-bundle.crt"); // C:\msys64\usr\ssl\certs
+		FILE* ca_bundle = fopen("ca-bundle.crt", "r");
+		if (ca_bundle != nullptr) {
+			fclose(ca_bundle);
+			curl_easy_setopt(curl, CURLOPT_CAINFO, "ca-bundle.crt"); // C:\msys64\usr\ssl\certs
+		}
+
 		if (cookie_file != nullptr && strlen(cookie_file) > 0) {
 			curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookie_file);
 			curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookie_file);
@@ -49,6 +54,66 @@ int HttpRequest(const char* method, const char* endpoint, std::map<std::string, 
 	} else
 		response = "Failed to initialize Curl.";
 	return http_code;
+}
+
+int request_count = 0;
+CURLM* multi_handle = nullptr;
+std::map<CURL*, HTTP_Response> running_requests;
+
+int AddRequest(const char* method, const char* endpoint, std::map<std::string, std::string> headers, const char* request_body) {
+	if (multi_handle == nullptr)
+		multi_handle = curl_multi_init();
+	CURL* curl = curl_easy_init();
+
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
+	curl_easy_setopt(curl, CURLOPT_URL, endpoint);
+	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+	if (request_body != nullptr && strlen(request_body) > 0)
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_body);
+
+	curl_slist* curl_headers = nullptr;
+	for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++) {
+		std::string header = it->first + ": " + it->second;
+		curl_headers = curl_slist_append(curl_headers, header.c_str());
+	}
+	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, curl_headers);
+
+	FILE* ca_bundle = fopen("ca-bundle.crt", "r");
+	if (ca_bundle != nullptr) {
+		fclose(ca_bundle);
+		curl_easy_setopt(curl, CURLOPT_CAINFO, "ca-bundle.crt");
+	}
+
+	HTTP_Response response;
+	response.url = endpoint;
+	response.id = request_count++;
+	running_requests[curl] = response;
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &running_requests[curl].body);
+
+	curl_multi_add_handle(multi_handle, curl);
+	return response.id;
+}
+
+std::vector<HTTP_Response> FetchResponses() {
+	int running_handles;
+	std::vector<HTTP_Response> responses;
+	curl_multi_perform(multi_handle, &running_handles);
+	int msgs_left;
+	do {
+		CURLMsg* msg = curl_multi_info_read(multi_handle, &msgs_left);
+		if (msg != nullptr && msg->msg == CURLMSG_DONE) {
+			CURL* curl = msg->easy_handle;
+			HTTP_Response response = running_requests[curl];
+			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response.status);
+			printf("Request to %s finished with status code %d\n", response.url.c_str(), response.status);
+			responses.push_back(response);
+			running_requests.erase(curl);
+			curl_multi_remove_handle(multi_handle, curl);
+			curl_easy_cleanup(curl);
+		}
+	} while (msgs_left > 0);
+	return responses;
 }
 
 Broadcast::Broadcast() {

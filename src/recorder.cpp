@@ -1,5 +1,8 @@
 #include <synchapi.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "../lib/stb_image.h"
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../lib/stb_image_write.h"
 
@@ -23,6 +26,9 @@ void SaveImageJPG(const char* path, int width, int height, uint8_t* pixels) {
 	stbi_write_jpg(path, width, height, 3, pixels, 80);
 }
 
+void SaveImagePNG(const char* path, int width, int height, uint8_t* pixels) {
+	stbi_write_png(path, width, height, 3, pixels, 3 * width);
+}
 
 void FastRecorder::SaveThread(int index) {
 	unsigned int start = starting_frame[index];

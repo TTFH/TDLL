@@ -7,6 +7,8 @@
 #include <thread>
 #include <vector>
 
+void SaveImagePNG(const char* path, int width, int height, uint8_t* pixels);
+
 class FastRecorder {
 private:
 	#define THREAD_COUNT 4					// One thread is always idle

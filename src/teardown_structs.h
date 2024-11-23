@@ -644,6 +644,8 @@ struct Player {
 	Transform transform;
 	uint8_t padding[0xBEC];
 	td_vector<Heat> heats;	// 0xC08
+	// friction 0x210 used by teardown.exe+B0570
+	// restitution 0x214 teardown.exe+B0560
 }; // 0x4218
 
 static_assert(offsetof(Player, heats) == 0xC08, "Wrong offset player->heats");

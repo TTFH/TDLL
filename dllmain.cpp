@@ -62,8 +62,8 @@ ID3D12CommandQueue* d3d12CommandQueue = nullptr;
 void RegisterGameFunctionsHook(ScriptCore* core) {
 	td_RegisterGameFunctions(core);
 	lua_State* L = core->inner_core.state_info->state;
-	const char* script_name = core->path.c_str();
-	printf("%p | Script: %s\n", (void*)L, script_name);
+	//const char* script_name = core->path.c_str();
+	//printf("%p | Script: %s\n", (void*)L, script_name);
 
 	RegisterLuaCFunctions(L);
 	awwnb = false; // Reset remove boundary checkbox
