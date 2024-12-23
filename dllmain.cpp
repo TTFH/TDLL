@@ -107,14 +107,24 @@ void ImGuiRenderFrame() {
 		ImGui::EndMenuBar();
 	}
 
-	static float render_dist = 500;
-	ImGui::Text("Render distance:");
-	ImGui::SliderFloat("##render_dist", &render_dist, 100.0f, 1000.0f, "%.0f");
-	ImGui::InputFloat("##render_dist_input", &render_dist, 1.0f, 10.0f, "%.0f");
-	if (ImGui::Button("Set render distance")) {
-		float* render_addr = (float*)Teardown::GetReferenceTo(MEM_OFFSET::RenderDist);
-		Patch(render_addr, &render_dist);
+	static float far_plane = 500.0f;
+	static float near_plane = 0.001f;
+	ImGui::Text("Max render distance:");
+	ImGui::SliderFloat("##far_plane", &far_plane, 100.0f, 1000.0f, "%.0f");
+	ImGui::InputFloat("##far_plane_input", &far_plane, 1.0f, 10.0f, "%.0f");
+	if (ImGui::Button("Set max render distance")) {
+		float* render_addr = (float*)Teardown::GetReferenceTo(MEM_OFFSET::FarPlane);
+		Patch(render_addr, &far_plane);
 	}
+
+	/*ImGui::Text("Min render distance:");
+	ImGui::SliderFloat("##near_plane", &near_plane, 0.001f, 100.0f, "%.3f");
+	ImGui::InputFloat("##near_plane_input", &near_plane, 0.001f, 1.0f, "%.3f");
+	if (ImGui::Button("Set min render distance")) {
+		float* render_addr = (float*)Teardown::GetReferenceTo(MEM_OFFSET::NearPlane);
+		Patch(render_addr, &near_plane);
+	}*/
+
 	if (ImGui::Checkbox("Remove boundaries", &awwnb) && awwnb) {
 		Game* game = (Game*)Teardown::GetGame();
 		game->scene->boundary.setSize(0);
@@ -131,8 +141,13 @@ void ImGuiRenderFrame() {
 	ImGui::Text("%d / %d", saved_frames, total_frames);
 	if (total_frames > 0)
 		ImGui::ProgressBar((float)saved_frames / total_frames);
+
+	bool disabled = recorder.GetTotalFrames() == 0;
+	ImGui::BeginDisabled(disabled);
 	if (ImGui::Button("Save recorded video"))
 		recorder.SaveFrames();
+	ImGui::EndDisabled();
+
 	if (ImGui::Button("Clear"))
 		recorder.ClearFrames();
 	ImGui::End();

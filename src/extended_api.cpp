@@ -22,15 +22,16 @@ using hrc = std::chrono::high_resolution_clock;
 hrc::time_point clocks[16];
 bool clock_init[16] = { false };
 
-// TODO: Find by signature (not gonna happen)
+// TODO: Find by signature
 namespace MEM_OFFSET {				// Addr		// Type
-	uintptr_t Game					= 0xB52D90; // Game*
-	uintptr_t RenderDist			= 0x8C55C8; // float
-	uintptr_t InitRenderer			= 0x5393D0; // ll* fn(ll, int*)
-	uintptr_t LuaPushString			= 0x586690; // void fn(lua_State*, const char*)
-	uintptr_t LuaCreateTable		= 0x585430; // void fn(lua_State*, int, int)
-	uintptr_t ProcessVideoFrameOGL	= 0x459AE0; // void fn(ScreenCapture*, int)
-	uintptr_t RegisterGameFunctions	= 0x40A450; // void fn(ScriptCore*)
+	uintptr_t Game					= 0XB52D90; // Game*
+	uintptr_t FarPlane				= 0x8C55E8; // float
+	uintptr_t NearPlane				= 0x8C46D8; // float
+	uintptr_t InitRenderer			= 0x539360; // ll* fn(ll, int*)
+	uintptr_t LuaPushString			= 0x586620; // void fn(lua_State*, const char*)
+	uintptr_t LuaCreateTable		= 0x5853C0; // void fn(lua_State*, int, int)
+	uintptr_t ProcessVideoFrameOGL	= 0x459960; // void fn(ScreenCapture*, int)
+	uintptr_t RegisterGameFunctions	= 0x40A2D0; // void fn(ScriptCore*)
 }
 
 namespace Teardown {
@@ -57,7 +58,7 @@ T* GetEntity(unsigned int handle, uint8_t type) {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.6.2.1123");
+	td_lua_pushstring(L, "v1.6.2.1216");
 	return 1;
 }
 

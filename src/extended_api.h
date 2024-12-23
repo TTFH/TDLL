@@ -15,7 +15,8 @@ extern HMODULE moduleBase;
 
 namespace MEM_OFFSET {
 	extern uintptr_t Game;
-	extern uintptr_t RenderDist;
+	extern uintptr_t FarPlane;
+	extern uintptr_t NearPlane;
 	extern uintptr_t InitRenderer;
 	extern uintptr_t LuaPushString;
 	extern uintptr_t LuaCreateTable;
@@ -28,8 +29,6 @@ namespace Teardown {
 	uintptr_t GetPointerTo(uintptr_t offset);
 	Game* GetGame();
 }
-
-extern bool clock_init[16];
 
 extern Broadcast broadcast;
 extern std::mutex msg_mutex;

@@ -227,9 +227,6 @@ function SetShapeTexture(shape, texture, weight, blendTexture, blendTextureWeigh
 ---@param offset any Vector with the texture offset
 function SetTextureOffset(shape, offset) end
 
----@return string align UI alignment
-function UiGetAlign() return "" end
-
 ---@param file string File path
 ---@param str string String to save
 function SaveToFile(file, str) end

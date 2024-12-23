@@ -2,7 +2,7 @@
 
 ## Extended Teardown API - DLL
 
-# This DLL only works on Teardown 1.6.2 Build 16262651 from 06/November/2024 and will stop working after the next game update, make sure to remove it by verifying the game files on Steam.
+# This DLL only works on Teardown 1.6.2 Build 16602375 from 04/December/2024 and will stop working after the next game update, make sure to remove it by verifying the game files on Steam.
 
 ### What it does:
 - Provides a DLL that can be used to extend the Teardown API
@@ -383,12 +383,6 @@ shape (number) – Shape handle
 offset (table) – Vector with the texture offset
 Return value
 none
-
-align = UiGetAlign()
-Arguments
-none
-Return value
-align (string) – UI alignment
 
 SaveToFile(file, str)
 Arguments
