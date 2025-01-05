@@ -1,7 +1,16 @@
+#include <string.h>
+
 #include "memory.h"
 
 #define PSAPI_VERSION 2
 #include <psapi.h>
+
+void PatchBA(BYTE* dst, BYTE* src, unsigned int size) {
+	DWORD oldProtect;
+	VirtualProtect(dst, size, PAGE_EXECUTE_READWRITE, &oldProtect);
+	memcpy(dst, src, size);
+	VirtualProtect(dst, size, oldProtect, &oldProtect);
+}
 
 uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 	uintptr_t addr = ptr;

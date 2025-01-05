@@ -125,7 +125,7 @@ void Broadcast::Init(int port) {
 	this->port = port;
 	udp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (udp_socket == INVALID_SOCKET)
-		throw std::runtime_error("Socket creation failed - " + WSAGetLastError());
+		throw std::runtime_error("Socket creation failed");
 
 	send_addr.sin_family = AF_INET;
 	send_addr.sin_port = htons(port);
@@ -133,25 +133,25 @@ void Broadcast::Init(int port) {
 
 	BOOL broadcast = TRUE;
 	if (setsockopt(udp_socket, SOL_SOCKET, SO_BROADCAST, (char*)&broadcast, sizeof(broadcast)) == SOCKET_ERROR)
-		throw std::runtime_error("Socket option failed - " + WSAGetLastError());
+		throw std::runtime_error("Socket option failed");
 
 	recv_addr.sin_family = AF_INET;
 	recv_addr.sin_port = htons(port);
 	recv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	if (bind(udp_socket, (SOCKADDR*)&recv_addr, sizeof(recv_addr)) == SOCKET_ERROR)
-		throw std::runtime_error("Binding failed - " + WSAGetLastError());
+		throw std::runtime_error("Binding failed");
 }
 
 void Broadcast::Send(const char* message) {
 	if (sendto(udp_socket, message, strlen(message), 0, (SOCKADDR*)&send_addr, sizeof(send_addr)) < 0)
-		throw std::runtime_error("Error sending broadcast message - " + WSAGetLastError());
+		throw std::runtime_error("Failed to send broadcast message");
 }
 
 void Broadcast::Receive(char* buffer, int buffer_size) {
 	int recv_addr_size = sizeof(recv_addr);
 	int bytes_received = recvfrom(udp_socket, buffer, buffer_size, 0, (SOCKADDR*)&recv_addr, &recv_addr_size);
 	if (bytes_received == SOCKET_ERROR)
-		throw std::runtime_error("Error receiving broadcast message - " + WSAGetLastError());
+		throw std::runtime_error("Failed to receive broadcast message");
 	buffer[bytes_received] = '\0';
 }

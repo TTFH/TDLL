@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <mutex>
 #include <stdio.h>
 #include <thread>
@@ -108,22 +109,22 @@ void ImGuiRenderFrame() {
 	}
 
 	static float far_plane = 500.0f;
-	static float near_plane = 0.001f;
 	ImGui::Text("Max render distance:");
 	ImGui::SliderFloat("##far_plane", &far_plane, 100.0f, 1000.0f, "%.0f");
 	ImGui::InputFloat("##far_plane_input", &far_plane, 1.0f, 10.0f, "%.0f");
 	if (ImGui::Button("Set max render distance")) {
-		float* render_addr = (float*)Teardown::GetReferenceTo(MEM_OFFSET::FarPlane);
-		Patch(render_addr, &far_plane);
+		float* far_plane_addr = (float*)Teardown::GetReferenceTo(MEM_OFFSET::FarPlane);
+		Patch(far_plane_addr, &far_plane);
 	}
 
-	/*ImGui::Text("Min render distance:");
-	ImGui::SliderFloat("##near_plane", &near_plane, 0.001f, 100.0f, "%.3f");
-	ImGui::InputFloat("##near_plane_input", &near_plane, 0.001f, 1.0f, "%.3f");
+	static float near_plane = 0.05f;
+	ImGui::Text("Min render distance:");
+	ImGui::SliderFloat("##near_plane", &near_plane, 0.01f, 100.0f, "%.2f");
+	ImGui::InputFloat("##near_plane_input", &near_plane, 0.01f, 1.0f, "%.2f");
 	if (ImGui::Button("Set min render distance")) {
-		float* render_addr = (float*)Teardown::GetReferenceTo(MEM_OFFSET::NearPlane);
-		Patch(render_addr, &near_plane);
-	}*/
+		float* near_plane_addr = (float*)Teardown::GetReferenceTo(0x92FE58);
+		Patch(near_plane_addr, &near_plane);
+	}
 
 	if (ImGui::Checkbox("Remove boundaries", &awwnb) && awwnb) {
 		Game* game = (Game*)Teardown::GetGame();
@@ -429,7 +430,7 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 		std::thread receiveThread(ReceiveThread);
 		receiveThread.detach();
 	} catch (std::exception& e) {
-		printf("Error: %s\n", e.what());
+		printf("[ERROR] %s\n", e.what());
 	}
 
 	moduleBase = GetModuleHandleA("teardown.exe");
@@ -442,6 +443,14 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	t_ProcessVideoFrameOGL pvf_addr = (t_ProcessVideoFrameOGL)Teardown::GetReferenceTo(MEM_OFFSET::ProcessVideoFrameOGL);
 	Hook::Create(pvf_addr, ProcessVideoFrameOGLHook, &td_ProcessVideoFrameOGL);
 #endif
+
+	// teardown.exe+64E55 - F3 44 0F10 05 82F88500  - movss xmm8,[teardown.exe+8C46E0] { (0.05) }
+	uintptr_t load_near_plane_addr = Teardown::GetReferenceTo(0x64E55);
+	uintptr_t new_near_plane_addr = Teardown::GetReferenceTo(0x92FE58); // Some ~hopefully~ unused memory, initialized to the default value
+	int32_t relative_offset = (int32_t)(new_near_plane_addr - (load_near_plane_addr + 9));
+	uint8_t load_near_plane_bytes[] = { 0xF3, 0x44, 0x0F, 0x10, 0x05, 0x82, 0xF8, 0x85, 0x00 };
+	memcpy(&load_near_plane_bytes[5], &relative_offset, sizeof(relative_offset));
+	PatchBA((BYTE*)load_near_plane_addr, (BYTE*)load_near_plane_bytes, sizeof(load_near_plane_bytes));
 	return 0;
 }
 

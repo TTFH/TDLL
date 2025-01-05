@@ -1,7 +1,7 @@
 TARGET = pros.sdk.x64.dll
 
 CXX = g++
-CXXFLAGS = -Wall -Wextra -Werror -Wpedantic -O3 -g
+CXXFLAGS = -Wall -Wextra -Werror -Wpedantic -O3 #-g
 CXXFLAGS += -s -shared -static #-D_DEBUG_CONSOLE -D_TDC
 CXXFLAGS += -Iimgui
 CXXFLAGS += -Wno-missing-field-initializers

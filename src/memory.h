@@ -14,6 +14,7 @@ void Patch(T* dst, const T* src) {
 	VirtualProtect(dst, sizeof(T), oldProtect, &oldProtect);
 }
 
+void PatchBA(BYTE* dst, BYTE* src, unsigned int size);
 uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<uintptr_t> offsets);
 uintptr_t FindPattern(uintptr_t dwAddress, size_t dwLen, const char* pattern, const char* mask);
 uintptr_t FindPatternInModule(HMODULE hModule, const char* pattern, const char* mask);

@@ -24,9 +24,8 @@ bool clock_init[16] = { false };
 
 // TODO: Find by signature
 namespace MEM_OFFSET {				// Addr		// Type
-	uintptr_t Game					= 0XB52D90; // Game*
+	uintptr_t Game					= 0xB52D90; // Game*
 	uintptr_t FarPlane				= 0x8C55E8; // float
-	uintptr_t NearPlane				= 0x8C46D8; // float
 	uintptr_t InitRenderer			= 0x539360; // ll* fn(ll, int*)
 	uintptr_t LuaPushString			= 0x586620; // void fn(lua_State*, const char*)
 	uintptr_t LuaCreateTable		= 0x5853C0; // void fn(lua_State*, int, int)
@@ -58,7 +57,7 @@ T* GetEntity(unsigned int handle, uint8_t type) {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.6.2.1216");
+	td_lua_pushstring(L, "v1.6.2.0105");
 	return 1;
 }
 
@@ -539,7 +538,7 @@ int SaveToFile(lua_State* L) {
 
 	FILE* file = fopen(filename, "wb");
 	if (file == nullptr) {
-		printf("Error opening file %s for writing.\n", filename);
+		printf("[ERROR] Could not open file %s for writing.\n", filename);
 		return 0;
 	}
 
@@ -556,20 +555,20 @@ int ZlibSaveCompressed(lua_State* L) {
 	uLong dest_length = compressBound(src_length);
 	Bytef* dest = new Bytef[dest_length];
 	if (dest == nullptr) {
-		printf("Memory allocation failed.\n");
+		printf("[ERROR] Memory allocation failed.\n");
 		return 0;
 	}
 
 	int result = compress(dest, &dest_length, (const Bytef*)str, src_length);
 	if (result != Z_OK) {
-		printf("Compression failed with error code %d\n", result);
+		printf("[ERROR] Compression failed with code %d\n", result);
 		delete[] dest;
 		return 0;
 	}
 
 	FILE* file = fopen(filename, "wb");
 	if (file == nullptr) {
-		printf("Error opening file %s for writing.\n", filename);
+		printf("[ERROR] Could not open file %s for writing.\n", filename);
 		delete[] dest;
 		return 0;
 	}
@@ -587,7 +586,7 @@ int ZlibLoadCompressed(lua_State* L) {
 
 	FILE* file = fopen(filename, "rb");
 	if (file == nullptr) {
-		printf("Error opening file %s for reading.\n", filename);
+		printf("[ERROR] Could not open %s for reading.\n", filename);
 		return 0;
 	}
 
@@ -597,7 +596,7 @@ int ZlibLoadCompressed(lua_State* L) {
 
 	Bytef* compressed_data = new Bytef[file_size];
 	if (compressed_data == nullptr) {
-		printf("Memory allocation failed.\n");
+		printf("[ERROR] Memory allocation failed.\n");
 		fclose(file);
 		return 0;
 	}
@@ -615,7 +614,7 @@ int ZlibLoadCompressed(lua_State* L) {
 			dest_length *= 2;
 			dest.resize(dest_length);
 		} else if (result != Z_OK) {
-			printf("Decompression failed with error code %d\n", result);
+			printf("[ERROR] Decompression failed with code %d\n", result);
 			delete[] compressed_data;
 			return 0;
 		}
