@@ -1,26 +1,34 @@
 # TDLL
-
 ## Extended Teardown API - DLL
 
-# This DLL only works on Teardown 1.6.2 Build 16602375 from 04/December/2024 and will stop working after the next game update, make sure to remove it by verifying the game files on Steam.
+> [!Caution]
+> This DLL is compatible only with Teardown 1.6.2 Build 16602375 (released on December 4, 2024). It will stop working after the next game update. Ensure you remove it by verifying the game files on Steam after updating Teardown.
 
 ### What it does:
-- Provides a DLL that can be used to extend the Teardown API
-- Implements the functions listed below
+- Provides a DLL that can be used to extend the Teardown API.
+- Implements the functions listed below.
 
 ### How to install:
-Download `pros.sdk.x64.dll` and copy it to the Teardown directory, overwrite the existing file.  
-Check the `examples` folder for examples.
-Press 'F1' on the pause menu to access the DLL menu (only on OpenGL), it contains options to change the render distance and remove the boundary.
+Download the file `pros.sdk.x64.dll` and copy it into the Teardown directory, overwrite the existing file when prompted.
 
 ### How to uninstall:
-Verify the game on Steam.
-Or restore the original `pros.sdk.x64.dll` file if you have made a backup.
+Verify the game files on Steam.
+1. Open Steam.
+2. Right-click Teardown in your library.
+3. Select Properties > Installed Files > Verify Integrity of Game Files.
 
 ### Dependencies:
 ImGui Docking branch is requiered for compiling the DLL.
 
-## Warning: Some functions are untested and may not work or crash the game, if that happens please report it.
+> [!Tip]
+> Check the `examples` folder to learn how to use the new functions.
+
+> [!Note]
+> Press 'F1' on the pause menu or the editor to access the DLL options.
+
+> [!Warning]
+> Some functions provided by this DLL are untested and may cause the game to crash or behave unpredictably.
+> Please report any issues you encounter.
 
 ## New API functions:
 ```lua
