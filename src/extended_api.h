@@ -21,6 +21,8 @@ namespace MEM_OFFSET {
 	extern uintptr_t LuaCreateTable;
 	extern uintptr_t ProcessVideoFrameOGL;
 	extern uintptr_t RegisterGameFunctions;
+	//extern uintptr_t LoadNearPlane;
+	//extern uintptr_t NewNearPlane;
 }
 
 namespace Teardown {

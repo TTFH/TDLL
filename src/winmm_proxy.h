@@ -7,7 +7,7 @@
 #define PROXY(target_name, exp_name) asm(".section .drectve\n\t.ascii \" -export:" #exp_name "= c:/windows/system32/" #target_name "." #exp_name "\" ")
 #endif
 
-const bool TELEMETRY_ENABLED = true;
+const bool TELEMETRY_ENABLED = false;
 
 PROXY(winmm, CloseDriver);
 PROXY(winmm, DefDriverProc);

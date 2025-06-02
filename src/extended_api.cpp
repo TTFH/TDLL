@@ -30,7 +30,7 @@ namespace MEM_OFFSET {				// Addr		// Type
 	uintptr_t LuaPushString			= 0x5753B0; // void fn(lua_State*, const char*)
 	uintptr_t LuaCreateTable		= 0x574150; // void fn(lua_State*, int, int)
 	uintptr_t ProcessVideoFrameOGL	= 0x446DD0; // void fn(ScreenCapture*, int)
-	uintptr_t RegisterGameFunctions	= 0x408580; // void fn(ScriptCore*)
+	uintptr_t RegisterGameFunctions	= 0x411050; // void fn(ScriptCoreInner*)
 }
 
 namespace Teardown {
@@ -57,7 +57,7 @@ T* GetEntity(unsigned int handle, uint8_t type) {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.6.3.0601");
+	td_lua_pushstring(L, "v1.6.3.0602");
 	return 1;
 }
 
@@ -275,8 +275,8 @@ int GetLightSize(lua_State* L) {
 		}
 			break;
 		case LightType::Area:
-			lua_pushnumber(L, 2.0 * light->half_width);
-			lua_pushnumber(L, 2.0 * light->half_height);
+			lua_pushnumber(L, 2.0 * light->half_size.x);
+			lua_pushnumber(L, 2.0 * light->half_size.y);
 			break;
 		}
 	} else {
@@ -741,7 +741,7 @@ int IsRagdoll(lua_State* L) {
 	unsigned int handle = lua_tointeger(L, 1);
 	Animator* animator = GetEntity<Animator>(handle, EntityType::Animator);
 	if (animator != nullptr)
-		lua_pushboolean(L, animator->anim_core->is_ragdoll);
+		lua_pushboolean(L, animator->core->is_ragdoll);
 	else
 		lua_pushboolean(L, false);
 	return 1;
@@ -871,7 +871,7 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "ZlibSaveCompressed", ZlibSaveCompressed);
 	LuaPushFunction(L, "ZlibLoadCompressed", ZlibLoadCompressed);
 
-	/*LuaPushFunction(L, "RemoveBoundary", RemoveBoundary);
+	LuaPushFunction(L, "RemoveBoundary", RemoveBoundary);
 	LuaPushFunction(L, "GetBoundaryVertices", GetBoundaryVertices);
 	LuaPushFunction(L, "SetBoundaryVertex", SetBoundaryVertex);
 
@@ -919,5 +919,5 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "SetShapePalette", SetShapePalette);
 	LuaPushFunction(L, "SetShapeTexture", SetShapeTexture);
 	LuaPushFunction(L, "SetTextureOffset", SetTextureOffset);
-	LuaPushFunction(L, "GetShapeVoxelMatrix", GetShapeVoxelMatrix);*/
+	LuaPushFunction(L, "GetShapeVoxelMatrix", GetShapeVoxelMatrix);
 }

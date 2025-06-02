@@ -1,9 +1,9 @@
 #ifndef _MEMORY_H
 #define _MEMORY_H
 
+#include <vector>
 #include <stdio.h>
 #include <stdint.h>
-#include <vector>
 #include <MinHook.h>
 
 template<typename T>
@@ -21,16 +21,32 @@ uintptr_t FindPatternInModule(HMODULE hModule, const char* pattern, const char* 
 
 namespace Hook {
 	void Init();
+
 	template<typename T>
 	void Create(T target, T hook, T* original) {
-		MH_CreateHook((LPVOID)target, (LPVOID)hook, (LPVOID*)original);
-		MH_EnableHook((LPVOID)target);
+		MH_STATUS status;
+		status = MH_CreateHook((LPVOID)target, (LPVOID)hook, (LPVOID*)original);
+		if (status != MH_OK) {
+			printf("MH_CreateHook failed: %s\n", MH_StatusToString(status));
+			return;
+		}
+		status = MH_EnableHook((LPVOID)target);
+		if (status != MH_OK)
+			printf("MH_EnableHook failed: %s\n", MH_StatusToString(status));
 	}
+
 	template<typename T>
 	void Create(LPCWSTR module, const char* target, T hook, T* original) {
+		MH_STATUS status;
 		LPVOID target_addr;
-		MH_CreateHookApiEx(module, target, (LPVOID)hook, (LPVOID*)original, &target_addr);
-		MH_EnableHook(target_addr);
+		status = MH_CreateHookApiEx(module, target, (LPVOID)hook, (LPVOID*)original, &target_addr);
+		if (status != MH_OK) {
+			printf("MH_CreateHookApiEx for %s failed: %s\n", target, MH_StatusToString(status));
+			return;
+		}
+		status = MH_EnableHook(target_addr);
+		if (status != MH_OK)
+			printf("MH_EnableHook for %s failed: %s\n", target, MH_StatusToString(status));
 	}
 };
 

@@ -9,13 +9,10 @@
 - Implements the functions listed below.
 
 ### How to install:
-Download the file `winmm.dll` and copy it into the Teardown directory, overwrite the existing file when prompted.
+Download the file `winmm.dll` and copy it into the Teardown directory.
 
 ### How to uninstall:
-Verify the game files on Steam.
-1. Open Steam.
-2. Right-click Teardown in your library.
-3. Select Properties > Installed Files > Verify Integrity of Game Files.
+Delete the file `winmm.dll` from the Teardown directory.
 
 ### Dependencies:
 ImGui Docking branch is requiered for compiling the DLL.
@@ -494,6 +491,7 @@ UiGetProsModNumber
 UiGetProsModRange
 UiLikeProsMod
 UiLinkColor
+UiRectBgBlur
 UiRemoveDrawObject
 UiRichTextSplitByWords
 UiSelectProsMod

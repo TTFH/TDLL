@@ -25,7 +25,7 @@ t_lua_pushstring td_lua_pushstring = nullptr;
 typedef BOOL WINAPI (*t_wglSwapBuffers) (HDC hDc);
 t_wglSwapBuffers td_wglSwapBuffers = nullptr;
 
-typedef void (*t_RegisterGameFunctions) (ScriptCore* core);
+typedef void (*t_RegisterGameFunctions) (ScriptCoreInner* inner_core);
 t_RegisterGameFunctions td_RegisterGameFunctions = nullptr;
 
 typedef void (*t_ProcessVideoFrameOGL) (ScreenCapture* sc, int frame);
@@ -60,15 +60,14 @@ bool awwnb = false;
 FastRecorder recorder;
 ID3D12CommandQueue* d3d12CommandQueue = nullptr;
 
-void RegisterGameFunctionsHook(ScriptCore* core) {
-	printf("Hook called!\n");
-	td_RegisterGameFunctions(core);
-	/*lua_State* L = core->inner_core.state_info->state;
-	const char* script_name = core->path.c_str();
-	printf("%p | Script: %s\n", (void*)L, script_name);
-
-	RegisterLuaCFunctions(L);*/
+void RegisterGameFunctionsHook(ScriptCoreInner* inner_core) {
+	td_RegisterGameFunctions(inner_core);
 	awwnb = false; // Reset remove boundary checkbox
+
+	lua_State* L = inner_core->state_info->state;
+	//const char* script_name = core->path.c_str();
+	//printf("%p | Script: %s\n", (void*)L, script_name);
+	RegisterLuaCFunctions(L);
 }
 
 void ProcessVideoFrameOGLHook(ScreenCapture* sc, int frame) {
@@ -422,7 +421,7 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	Hook::Init();
 	Hook::Create(L"opengl32.dll", "wglSwapBuffers", wglSwapBuffersHook, &td_wglSwapBuffers);
 	Hook::Create(L"dxgi.dll", "CreateDXGIFactory1", CreateDXGIFactory1Hook, &td_CreateDXGIFactory1);
-	Sleep(1000);
+	Sleep(1500);
 
 	try {
 		WSADATA wsa_data;
