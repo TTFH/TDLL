@@ -11,7 +11,7 @@
 #include "src/memory.h"
 #include "src/recorder.h"
 #include "src/extended_api.h"
-#include "src/pros_override.h"
+#include "src/winmm_proxy.h"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"
@@ -61,12 +61,13 @@ FastRecorder recorder;
 ID3D12CommandQueue* d3d12CommandQueue = nullptr;
 
 void RegisterGameFunctionsHook(ScriptCore* core) {
+	printf("Hook called!\n");
 	td_RegisterGameFunctions(core);
-	lua_State* L = core->inner_core.state_info->state;
-	//const char* script_name = core->path.c_str();
-	//printf("%p | Script: %s\n", (void*)L, script_name);
+	/*lua_State* L = core->inner_core.state_info->state;
+	const char* script_name = core->path.c_str();
+	printf("%p | Script: %s\n", (void*)L, script_name);
 
-	RegisterLuaCFunctions(L);
+	RegisterLuaCFunctions(L);*/
 	awwnb = false; // Reset remove boundary checkbox
 }
 
@@ -117,18 +118,18 @@ void ImGuiRenderFrame() {
 		Patch(far_plane_addr, &far_plane);
 	}
 
-	static float near_plane = 0.05f;
+	/*static float near_plane = 0.05f;
 	ImGui::Text("Min render distance:");
 	ImGui::SliderFloat("##near_plane", &near_plane, 0.01f, 100.0f, "%.2f");
 	ImGui::InputFloat("##near_plane_input", &near_plane, 0.01f, 1.0f, "%.2f");
 	if (ImGui::Button("Set min render distance")) {
 		float* near_plane_addr = (float*)Teardown::GetReferenceTo(0x92FE58);
 		Patch(near_plane_addr, &near_plane);
-	}
+	}*/
 
 	if (ImGui::Checkbox("Remove boundaries", &awwnb) && awwnb) {
 		Game* game = (Game*)Teardown::GetGame();
-		game->scene->boundary.setSize(0);
+		game->scene->boundary.clear();
 	}
 	ImGui::BeginDisabled();
 	static bool telemetry_disabled = !TELEMETRY_ENABLED;
@@ -153,7 +154,7 @@ void ImGuiRenderFrame() {
 		recorder.ClearFrames();
 	ImGui::End();
 
-	if (show_vertex_editor) {
+	/*if (show_vertex_editor) {
 		Game* game = (Game*)Teardown::GetGame();
 		if (game->editor != NULL && game->editor->selected != NULL) {
 			ImGui::Begin("Vertex Editor", &show_vertex_editor);
@@ -222,7 +223,7 @@ void ImGuiRenderFrame() {
 			}
 			ImGui::End();
 		}
-	}
+	}*/
 	ImGui::Render();
 }
 
@@ -445,12 +446,12 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 #endif
 
 	// teardown.exe+64E55 - F3 44 0F10 05 82F88500  - movss xmm8,[teardown.exe+8C46E0] { (0.05) }
-	uintptr_t load_near_plane_addr = Teardown::GetReferenceTo(0x64E55);
+	/*uintptr_t load_near_plane_addr = Teardown::GetReferenceTo(0x64E55);
 	uintptr_t new_near_plane_addr = Teardown::GetReferenceTo(0x92FE58); // Some ~hopefully~ unused memory, initialized to the default value
 	int32_t relative_offset = (int32_t)(new_near_plane_addr - (load_near_plane_addr + 9));
 	uint8_t load_near_plane_bytes[] = { 0xF3, 0x44, 0x0F, 0x10, 0x05, 0x82, 0xF8, 0x85, 0x00 };
 	memcpy(&load_near_plane_bytes[5], &relative_offset, sizeof(relative_offset));
-	PatchBA((BYTE*)load_near_plane_addr, (BYTE*)load_near_plane_bytes, sizeof(load_near_plane_bytes));
+	PatchBA((BYTE*)load_near_plane_addr, (BYTE*)load_near_plane_bytes, sizeof(load_near_plane_bytes));*/
 	return 0;
 }
 

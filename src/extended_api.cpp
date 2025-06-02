@@ -1,5 +1,5 @@
-#include <chrono>
 #include <map>
+#include <chrono>
 #include <math.h>
 #include <stdio.h>
 #include <string>
@@ -13,7 +13,7 @@
 
 #include "../lib/stb_image.h"
 
-const double PI = 3.14159265358979323846;
+#define PI 3.14159265358979323846
 
 // TODO: clocks per script
 using std::chrono::duration_cast;
@@ -24,13 +24,13 @@ bool clock_init[16] = { false };
 
 // TODO: Find by signature
 namespace MEM_OFFSET {				// Addr		// Type
-	uintptr_t Game					= 0xB52D90; // Game*
-	uintptr_t FarPlane				= 0x8C55E8; // float
-	uintptr_t InitRenderer			= 0x539360; // ll* fn(ll, int*)
-	uintptr_t LuaPushString			= 0x586620; // void fn(lua_State*, const char*)
-	uintptr_t LuaCreateTable		= 0x5853C0; // void fn(lua_State*, int, int)
-	uintptr_t ProcessVideoFrameOGL	= 0x459960; // void fn(ScreenCapture*, int)
-	uintptr_t RegisterGameFunctions	= 0x40A2D0; // void fn(ScriptCore*)
+	uintptr_t Game					= 0xB4A0D0; // Game*
+	uintptr_t FarPlane				= 0x8C14B0; // float
+	uintptr_t InitRenderer			= 0x527B10; // ll* fn(ll, int*)
+	uintptr_t LuaPushString			= 0x5753B0; // void fn(lua_State*, const char*)
+	uintptr_t LuaCreateTable		= 0x574150; // void fn(lua_State*, int, int)
+	uintptr_t ProcessVideoFrameOGL	= 0x446DD0; // void fn(ScreenCapture*, int)
+	uintptr_t RegisterGameFunctions	= 0x408580; // void fn(ScriptCore*)
 }
 
 namespace Teardown {
@@ -57,7 +57,7 @@ T* GetEntity(unsigned int handle, uint8_t type) {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.6.2.0105");
+	td_lua_pushstring(L, "v1.6.3.0601");
 	return 1;
 }
 
@@ -155,7 +155,7 @@ int GetBoundaryVertices(lua_State* L) {
 
 int RemoveBoundary(lua_State* L) {
 	Game* game = Teardown::GetGame();
-	game->scene->boundary.setSize(0);
+	game->scene->boundary.clear();
 	return 0;
 }
 
@@ -260,21 +260,21 @@ int GetLightSize(lua_State* L) {
 	Light* light = GetEntity<Light>(handle, EntityType::Light);
 	if (light != nullptr) {
 		switch (light->type) {
-		case LightSphere:
+		case LightType::Sphere:
 			lua_pushnumber(L, light->radius);
 			lua_pushnumber(L, 0);
 			break;
-		case LightCapsule:
+		case LightType::Capsule:
 			lua_pushnumber(L, light->radius);
 			lua_pushnumber(L, 2.0 * light->half_length);
 			break;
-		case LightCone: {
+		case LightType::Cone: {
 			double angle = 2.0 * acos(light->cos_half_angle_rad) * 180.0 / PI;
 			lua_pushnumber(L, light->radius);
 			lua_pushnumber(L, angle);
 		}
 			break;
-		case LightArea:
+		case LightType::Area:
 			lua_pushnumber(L, 2.0 * light->half_width);
 			lua_pushnumber(L, 2.0 * light->half_height);
 			break;
@@ -346,7 +346,7 @@ int GetJointParams(lua_State* L) {
 	return 3;
 }
 
-static const char* MaterialTypeName[] = {
+const char* MaterialTypeName[] = {
 	"none",
 	"glass",
 	"wood",
@@ -364,7 +364,7 @@ static const char* MaterialTypeName[] = {
 	"unphysical"
 };
 
-const int MATERIALS_COUNT = 15;
+const int MATERIALS_COUNT = sizeof(MaterialTypeName) / sizeof(MaterialTypeName[0]);
 
 int GetPaletteMaterial(lua_State* L) {
 	unsigned int palette_id = lua_tointeger(L, 1);
@@ -852,25 +852,26 @@ int SaveImageToFile(lua_State* L) {
 
 void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "GetDllVersion", GetDllVersion);
+
 	LuaPushFunction(L, "Tick", Tick);
 	LuaPushFunction(L, "Tock", Tock);
 	LuaPushFunction(L, "GetSystemTime", GetSystemTime);
 	LuaPushFunction(L, "GetSystemDate", GetSystemDate);
+
 	LuaPushFunction(L, "HttpRequest", HttpRequest);
-	LuaPushFunction(L, "SaveToFile", SaveToFile);
+	LuaPushFunction(L, "HttpAsyncRequest", HttpAsyncRequest);
+	LuaPushFunction(L, "FetchHttpResponses", FetchHttpResponses);
+
 	LuaPushFunction(L, "SendDatagram", SendDatagram);
 	LuaPushFunction(L, "FetchDatagrams", FetchDatagrams);
+
+	LuaPushFunction(L, "SaveToFile", SaveToFile);
+	LuaPushFunction(L, "LoadImagePixels", LoadImagePixels);
+	LuaPushFunction(L, "SaveImageToFile", SaveImageToFile);
 	LuaPushFunction(L, "ZlibSaveCompressed", ZlibSaveCompressed);
 	LuaPushFunction(L, "ZlibLoadCompressed", ZlibLoadCompressed);
 
-	// New!
-	LuaPushFunction(L, "HttpAsyncRequest", HttpAsyncRequest);
-	LuaPushFunction(L, "FetchHttpResponses", FetchHttpResponses);
-	LuaPushFunction(L, "LoadImagePixels", LoadImagePixels);
-	LuaPushFunction(L, "SaveImageToFile", SaveImageToFile);
-	LuaPushFunction(L, "GetShapeVoxelMatrix", GetShapeVoxelMatrix);
-
-	LuaPushFunction(L, "RemoveBoundary", RemoveBoundary);
+	/*LuaPushFunction(L, "RemoveBoundary", RemoveBoundary);
 	LuaPushFunction(L, "GetBoundaryVertices", GetBoundaryVertices);
 	LuaPushFunction(L, "SetBoundaryVertex", SetBoundaryVertex);
 
@@ -892,7 +893,7 @@ void RegisterLuaCFunctions(lua_State* L) {
 
 	LuaPushFunction(L, "GetWaterTransform", GetWaterTransform);
 	LuaPushFunction(L, "GetWaterVertices", GetWaterVertices);
-	LuaPushFunction(L, "SetWaterVertex", SetWaterVertex); // Does this even works?
+	LuaPushFunction(L, "SetWaterVertex", SetWaterVertex);
 
 	LuaPushFunction(L, "GetScriptPath", GetScriptPath);
 
@@ -918,4 +919,5 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "SetShapePalette", SetShapePalette);
 	LuaPushFunction(L, "SetShapeTexture", SetShapeTexture);
 	LuaPushFunction(L, "SetTextureOffset", SetTextureOffset);
+	LuaPushFunction(L, "GetShapeVoxelMatrix", GetShapeVoxelMatrix);*/
 }

@@ -1,8 +1,8 @@
-TARGET = pros.sdk.x64.dll
+TARGET = winmm.dll
 
 CXX = g++
-CXXFLAGS = -Wall -Wextra -Werror -Wpedantic -O3 #-g
-CXXFLAGS += -s -shared -static #-D_DEBUG_CONSOLE -D_TDC
+CXXFLAGS = -Wall -Wextra -Werror -Wpedantic -O3 -g
+CXXFLAGS += -s -shared -static -D_DEBUG_CONSOLE #-D_TDC
 CXXFLAGS += -Iimgui
 CXXFLAGS += -Wno-missing-field-initializers
 CXXFLAGS += -Wno-invalid-offsetof -Wno-unused-parameter -Wno-cast-function-type
