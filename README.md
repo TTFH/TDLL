@@ -2,7 +2,7 @@
 ## Extended Teardown API - DLL
 
 > [!Caution]
-> This DLL is compatible only with Teardown 1.6.3 Build 18614570 (released on 27 May 2025). It will stop working after the next game update. Ensure you remove it by verifying the game files on Steam after updating Teardown.
+> This DLL is compatible only with Teardown 1.6.3 Build 18614570 (released on 27 May 2025). It will stop working in the next game update. Ensure you remove it by deleteting the file `winmm.dll` from the Teardown directory.
 
 ### What it does:
 - Provides a DLL that can be used to extend the Teardown API.
@@ -11,7 +11,7 @@
 ### How to install:
 Download the file `winmm.dll` and copy it into the Teardown directory.
 
-### How to uninstall:
+### How to remove:
 Delete the file `winmm.dll` from the Teardown directory.
 
 ### Dependencies:
