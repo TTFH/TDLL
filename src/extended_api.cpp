@@ -24,13 +24,13 @@ bool clock_init[16] = { false };
 
 // TODO: Find by signature
 namespace MEM_OFFSET {				// Addr		// Type
-	uintptr_t Game					= 0xB4A0D0; // Game*
-	uintptr_t FarPlane				= 0x8C14B0; // float
-	uintptr_t InitRenderer			= 0x527B10; // ll* fn(ll, int*)
-	uintptr_t LuaPushString			= 0x5753B0; // void fn(lua_State*, const char*)
-	uintptr_t LuaCreateTable		= 0x574150; // void fn(lua_State*, int, int)
-	uintptr_t ProcessVideoFrameOGL	= 0x446DD0; // void fn(ScreenCapture*, int)
-	uintptr_t RegisterGameFunctions	= 0x411050; // void fn(ScriptCoreInner*)
+	uintptr_t Game					= 0xB3A0D0; // Game*
+	uintptr_t FarPlane				= 0x8B14B0; // float
+	uintptr_t InitRenderer			= 0x52B4D0; // ll* fn(ll, int*)
+	uintptr_t LuaPushString			= 0x578670; // void fn(lua_State*, const char*)
+	uintptr_t LuaCreateTable		= 0x577410; // void fn(lua_State*, int, int)
+	uintptr_t ProcessVideoFrameOGL	= 0x44BBB0; // void fn(ScreenCapture*, int)
+	uintptr_t RegisterGameFunctions	= 0x4159C0; // void fn(ScriptCoreInner*)
 }
 
 namespace Teardown {
@@ -57,7 +57,7 @@ T* GetEntity(unsigned int handle, uint8_t type) {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.6.3.0602");
+	td_lua_pushstring(L, "v1.6.3.0605");
 	return 1;
 }
 

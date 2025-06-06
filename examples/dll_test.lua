@@ -419,4 +419,51 @@ function tick(dt)
 		local world_pos = TransformToParentPoint(shape_tr, local_pos)
 		DebugCross(world_pos, 1, amount, amount)
 	end
+
+	if InputPressed("X") then
+		local camera_tr = GetPlayerCameraTransform()
+		local camera_fwd = TransformToParentVec(camera_tr, Vec(0, 0, -1))
+		local hit, _, _, shape = QueryRaycast(camera_tr.pos, camera_fwd, 100)
+		if hit then
+			local voxel_count = GetShapeVoxelCount(shape)
+			if voxel_count < 256 * 256 * 10 then
+				Tick()
+				local voxels_b = GetShapeVoxelMatrix(shape)
+				local elapsed_b = Tock()
+
+				Tick()
+				local voxels = {}
+				local sizex, sizey, sizez = GetShapeSize(shape)
+				for x = 1, sizex do
+					voxels[x] = {}
+					for y = 1, sizey do
+						voxels[x][y] = {}
+						for z = 1, sizez do
+							local material, r, g, b, a, index = GetShapeMaterialAtIndex(shape, x - 1, y - 1, z - 1)
+							voxels[x][y][z] = index
+						end
+					end
+				end
+				local elapsed = Tock()
+
+				DebugPrint("Voxel count:\t" .. voxel_count)
+				DebugPrint("GetShapeVoxelMatrix:\t" .. elapsed_b / 1000000 .. "ms")
+				DebugPrint("GetShapeMaterialAtIndex:\t" .. elapsed / 1000000 .. "ms")
+
+				DebugPrint("Times faster:\t" .. math.floor(elapsed / elapsed_b))
+
+				for x = 1, #voxels do
+					for y = 1, #voxels[x] do
+						for z = 1, #voxels[x][y] do
+							local index = voxels[x][y][z]
+							local index_b = voxels_b[x][y][z]
+							if index ~= index_b then
+								DebugPrint("Voxel mismatch at " .. x .. ", " .. y .. ", " .. z)
+							end
+						end
+					end
+				end
+			end
+		end
+	end
 end
