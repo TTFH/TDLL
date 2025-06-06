@@ -26,7 +26,6 @@ bool clock_init[16] = { false };
 namespace MEM_OFFSET {				// Addr		// Type
 	uintptr_t Game					= 0xB3A0D0; // Game*
 	uintptr_t FarPlane				= 0x8B14B0; // float
-	uintptr_t InitRenderer			= 0x52B4D0; // ll* fn(ll, int*)
 	uintptr_t LuaPushString			= 0x578670; // void fn(lua_State*, const char*)
 	uintptr_t LuaCreateTable		= 0x577410; // void fn(lua_State*, int, int)
 	uintptr_t ProcessVideoFrameOGL	= 0x44BBB0; // void fn(ScreenCapture*, int)

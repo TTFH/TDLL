@@ -17,6 +17,11 @@ Delete the file `winmm.dll` from the Teardown directory.
 ### Dependencies:
 ImGui Docking branch is requiered for compiling the DLL.
 
+### Info:
+- teardown.exe SHA-256: `532250dd6247989c5f192301bda87ece988b00226628b6ec58568ea795491a5d`
+- winmm.dll SHA-256: `1cf453024e19ba5ad80a10f41526528de9ea4e6234259a8a232883392c467bf5`
+- If the game crashes on startup, remove the dll and try changing the graphics API in the game settings from Direct3D 12 to OpenGL.
+
 > [!Tip]
 > Check the `examples` folder to learn how to use the new functions.
 

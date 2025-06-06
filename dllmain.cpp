@@ -34,9 +34,6 @@ t_ProcessVideoFrameOGL td_ProcessVideoFrameOGL = nullptr;
 typedef HRESULT (*t_CreateDXGIFactory1) (REFIID riid, void** ppFactory);
 t_CreateDXGIFactory1 td_CreateDXGIFactory1 = nullptr;
 
-typedef DWORD* (*t_InitRenderer) (DWORD* a1, int* a2);
-t_InitRenderer td_InitRenderer = nullptr;
-
 typedef HRESULT (*t_CreateSwapChainForHwnd) (
 	IDXGIFactory* pFactory,
 	IUnknown* pDevice,

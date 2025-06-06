@@ -296,7 +296,7 @@ function tick(dt)
 	for i = 1, #scripts do
 		local script = scripts[i]
 		local script_path = GetScriptPath(script)
-		DebugWatch(script, script_path)
+		--DebugWatch(script, script_path)
 
 		-- This probably works for entities of this script, getting the entities of other scripts could be useful
 		local entities = FindEntities("", false)
