@@ -78,6 +78,7 @@ int Tock(lua_State* L) {
 	return 1;
 }
 
+#ifdef _USE_CURL
 int HttpRequest(lua_State* L) {
 	const char* method = lua_tostring(L, 1);
 	const char* endpoint = lua_tostring(L, 2);
@@ -121,6 +122,7 @@ int FetchHttpResponses(lua_State* L) {
 	}
 	return 1;
 }
+#endif
 
 int GetSystemDate(lua_State* L) {
 	time_t t = time(NULL);
@@ -856,11 +858,11 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "Tock", Tock);
 	LuaPushFunction(L, "GetSystemTime", GetSystemTime);
 	LuaPushFunction(L, "GetSystemDate", GetSystemDate);
-
+#ifdef _USE_CURL
 	LuaPushFunction(L, "HttpRequest", HttpRequest);
 	LuaPushFunction(L, "HttpAsyncRequest", HttpAsyncRequest);
 	LuaPushFunction(L, "FetchHttpResponses", FetchHttpResponses);
-
+#endif
 	LuaPushFunction(L, "SendDatagram", SendDatagram);
 	LuaPushFunction(L, "FetchDatagrams", FetchDatagrams);
 

@@ -2,11 +2,15 @@
 #include <memory>
 #include <stdexcept>
 
+#ifdef _USE_CURL
+#include <curl/curl.h>
+#endif
 #include <winsock2.h>
 
 #include "networking.h"
 
-size_t write_callback(char* contents, size_t size, size_t nmemb, std::string* response) {
+#ifdef _USE_CURL
+static size_t write_callback(char* contents, size_t size, size_t nmemb, std::string* response) {
 	response->append(contents, size * nmemb);
 	return size * nmemb;
 }
@@ -115,6 +119,7 @@ std::vector<HTTP_Response> FetchResponses() {
 	} while (msgs_left > 0);
 	return responses;
 }
+#endif
 
 Broadcast::Broadcast() {
 	port = 0;
