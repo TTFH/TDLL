@@ -2,14 +2,14 @@ TARGET = winmm.dll
 
 CXX = g++
 CXXFLAGS = -Wall -Wextra -Werror -Wpedantic -O3 #-g
-CXXFLAGS += -shared -static #-D_DEBUG_CONSOLE -D_TDC
+CXXFLAGS += -shared -static -D_USE_CURL #-D_DEBUG_CONSOLE -D_TDC
 CXXFLAGS += -Iimgui
 CXXFLAGS += -Wno-missing-field-initializers
 CXXFLAGS += -Wno-invalid-offsetof -Wno-unused-parameter -Wno-cast-function-type
-CXXFLAGS += `pkg-config --cflags --static glfw3 lua5.1`
+CXXFLAGS += `pkg-config --cflags --static libcurl glfw3 lua5.1`
 
-LIBS = `pkg-config --libs --static glfw3 lua5.1`
-LIBS += -lMinHook -ldwmapi -lcrypt32 -lws2_32 -lz
+LIBS = `pkg-config --libs --static libcurl glfw3 lua5.1`
+LIBS += -lMinHook -ldwmapi -lcrypt32 -lws2_32 -lz -lssl
 LIBS += -ld3d12 -lD3DCompiler -ldxgi -ldxguid
 
 SOURCES = dllmain.cpp src/extended_api.cpp src/lua_utils.cpp src/memory.cpp src/networking.cpp src/recorder.cpp
