@@ -45,9 +45,9 @@ namespace Teardown {
 }
 
 template<typename T>
-T* GetEntity(int handle, uint8_t type) {
+T* GetEntity(unsigned int handle, uint8_t type) {
 	Game* game = Teardown::GetGame();
-	if (handle > 0 && handle < game->scene->entities.getSize()) {
+	if (handle < game->scene->entities.getSize()) {
 		Entity* entity = game->scene->entities[handle];
 		if (entity->type == type)
 			return (T*)entity;
