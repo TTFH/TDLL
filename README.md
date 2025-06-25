@@ -2,7 +2,7 @@
 ## Extended Teardown API - DLL
 
 > [!Caution]
-> This DLL is compatible only with Teardown 1.6.3 Build 18731874 (released on 4 June 2025). It will stop working in the next game update. Ensure you remove it by deleteting the file `winmm.dll` from the Teardown directory.
+> This DLL is compatible only with Teardown 1.7.0 Build 18996205 (released on 25 June 2025). It will stop working in the next game update. Ensure you remove it by deleteting the file `winmm.dll` from the Teardown directory.
 
 ### What it does:
 - Provides a DLL that can be used to extend the Teardown API.
@@ -18,15 +18,15 @@ Delete the file `winmm.dll` from the Teardown directory.
 ImGui Docking branch is requiered for compiling the DLL.
 
 ### Info:
-- teardown.exe SHA-256: `532250dd6247989c5f192301bda87ece988b00226628b6ec58568ea795491a5d`
-- winmm.dll SHA-256: `1cf453024e19ba5ad80a10f41526528de9ea4e6234259a8a232883392c467bf5`
-- If the game crashes on startup, remove the dll and try changing the graphics API in the game settings from Direct3D 12 to OpenGL.
+- teardown.exe SHA-256: ``
+- winmm.dll SHA-256: ``
+- If the game crashes on startup, remove the dll and change the graphics API in the game settings from Direct3D 12 to OpenGL, then install it back, if it still crashes make sure you're running the correct version.
 
 > [!Tip]
 > Check the `examples` folder to learn how to use the new functions.
 
 > [!Note]
-> Press 'F1' on the pause menu or the editor to access the DLL options.
+> Press 'F1' on the pause menu ~or the editor~ to access the DLL options.
 
 > [!Warning]
 > Some functions provided by this DLL are untested and may cause the game to crash or behave unpredictably.
@@ -423,6 +423,7 @@ ActivityStart
 ActivityTerminate
 CompleteAchievement
 DeleteShape
+DisableCrouch
 FxEmitSmokeCPP
 GetActionByButton
 GetBodyHit
@@ -440,6 +441,7 @@ HasInputController
 IndicateAchievementProgress
 IsAchievementCompleted
 IsBodyHitted
+IsControllerButtonDown
 IsRunningOnApple
 IsRunningOnEgs
 IsRunningOnIOS
@@ -478,6 +480,7 @@ RobotSetFootConstraintsCPP
 SaveCameraOverrideTransform
 SaveShape
 SetClipboardText
+SetPlayerCharacter
 SetPresence
 SetRopeSlack
 SetShapeStrength

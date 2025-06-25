@@ -24,12 +24,12 @@ bool clock_init[16] = { false };
 
 // TODO: Find by signature
 namespace MEM_OFFSET {				// Addr		// Type
-	uintptr_t Game					= 0xB3A0D0; // Game*
-	uintptr_t FarPlane				= 0x8B14B0; // float
-	uintptr_t LuaPushString			= 0x578670; // void fn(lua_State*, const char*)
-	uintptr_t LuaCreateTable		= 0x577410; // void fn(lua_State*, int, int)
-	uintptr_t ProcessVideoFrameOGL	= 0x44BBB0; // void fn(ScreenCapture*, int)
-	uintptr_t RegisterGameFunctions	= 0x4159C0; // void fn(ScriptCoreInner*)
+	uintptr_t Game					= 0xB411D0; // Game*
+	uintptr_t FarPlane				= 0x8B74F0; // float
+	uintptr_t LuaPushString			= 0x57D430; // void fn(lua_State*, const char*)
+	uintptr_t LuaCreateTable		= 0x57C1D0; // void fn(lua_State*, int, int)
+	uintptr_t ProcessVideoFrameOGL	= 0x450930; // void fn(ScreenCapture*, int)
+	uintptr_t RegisterGameFunctions	= 0x41A6F0; // void fn(ScriptCoreInner*)
 }
 
 namespace Teardown {
@@ -45,7 +45,7 @@ namespace Teardown {
 }
 
 template<typename T>
-T* GetEntity(unsigned int handle, uint8_t type) {
+T* GetEntity(int handle, uint8_t type) {
 	Game* game = Teardown::GetGame();
 	if (handle > 0 && handle < game->scene->entities.getSize()) {
 		Entity* entity = game->scene->entities[handle];
@@ -56,7 +56,7 @@ T* GetEntity(unsigned int handle, uint8_t type) {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.6.3.0605");
+	td_lua_pushstring(L, "v1.7.0.0625");
 	return 1;
 }
 

@@ -18,7 +18,7 @@ namespace MEM_OFFSET {
 	extern uintptr_t FarPlane;
 	extern uintptr_t LuaPushString;
 	extern uintptr_t LuaCreateTable;
-	extern uintptr_t ProcessVideoFrameOGL;
+	extern uintptr_t ProcessVideoFrameOGL; // TODO: remove?
 	extern uintptr_t RegisterGameFunctions;
 	//extern uintptr_t LoadNearPlane;
 	//extern uintptr_t NewNearPlane;
