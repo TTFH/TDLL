@@ -10,19 +10,9 @@
 
 #include "lua_utils.h"
 #include "networking.h"
+#include "signatures.h"
 
 extern HMODULE moduleBase;
-
-namespace MEM_OFFSET {
-	extern uintptr_t Game;
-	extern uintptr_t FarPlane;
-	extern uintptr_t LuaPushString;
-	extern uintptr_t LuaCreateTable;
-	extern uintptr_t ProcessVideoFrameOGL; // TODO: remove?
-	extern uintptr_t RegisterGameFunctions;
-	//extern uintptr_t LoadNearPlane;
-	//extern uintptr_t NewNearPlane;
-}
 
 namespace Teardown {
 	uintptr_t GetReferenceTo(uintptr_t offset);

@@ -2,10 +2,8 @@
 #define _TEARDOWN_STRUCTS_H
 
 #include <stdint.h>
-#include <stddef.h>
-#include <string.h>
 
-#include "lua_utils.h"
+#include <lua.hpp>
 
 class td_string {
 	union {
@@ -361,11 +359,11 @@ struct Heat {
 static_assert(sizeof(Heat) == 0x18, "Wrong Heat size");
 
 struct Player {
-	uint8_t padding[0xC08];
-	td_vector<Heat> heats;	// 0xC08
+	uint8_t padding[0xC30];
+	td_vector<Heat> heats;	// 0xC30
 };
 
-static_assert(offsetof(Player, heats) == 0xC08, "Wrong offset player->heats");
+static_assert(offsetof(Player, heats) == 0xC30, "Wrong offset player->heats");
 
 struct Game {
 	uint8_t padding1[0x50];

@@ -1,4 +1,5 @@
 #include "lua_utils.h"
+#include "signatures.h"
 
 void LuaPushList(lua_State* L, std::vector<int> list) {
 	td_lua_createtable(L, list.size(), 0);

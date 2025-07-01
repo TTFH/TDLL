@@ -2,7 +2,7 @@
 ## Extended Teardown API - DLL
 
 > [!Caution]
-> This DLL is compatible only with Teardown 1.7.0 Build 18996205 (released on 25 June 2025). It will stop working in the next game update. Ensure you remove it by deleteting the file `winmm.dll` from the Teardown directory.
+> This DLL is compatible with Teardown 1.7.0+. It may not work with newer versions of the game.
 
 ### What it does:
 - Provides a DLL that can be used to extend the Teardown API.
@@ -14,19 +14,14 @@ Download the file `winmm.dll` and copy it into the Teardown directory.
 ### How to remove:
 Delete the file `winmm.dll` from the Teardown directory.
 
-### Dependencies:
-ImGui Docking branch is requiered for compiling the DLL.
-
 > [!Tip]
 > Check the `examples` folder to learn how to use the new functions.
 
 > [!Note]
-> Press 'F1' on the pause menu to access the DLL options.
-> If the game crashes on startup, remove the dll, change the graphics API in the game settings from Direct3D 12 to OpenGL, then reinstall it, if it still crashes make sure you're running the correct version.
+> Press 'F1' on the pause menu to access the DLL options menu.
 
 > [!Warning]
-> Some functions provided by this DLL are untested and may cause the game to crash or behave unpredictably.
-> Please report any issues you encounter.
+> Some functions provided by this DLL are untested and may cause the game to crash.
 
 ## New API functions:
 ```lua

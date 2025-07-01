@@ -22,16 +22,6 @@ using hrc = std::chrono::high_resolution_clock;
 hrc::time_point clocks[16];
 bool clock_init[16] = { false };
 
-// TODO: Find by signature
-namespace MEM_OFFSET {				// Addr		// Type
-	uintptr_t Game					= 0xB411D0; // Game*
-	uintptr_t FarPlane				= 0x8B74F0; // float
-	uintptr_t LuaPushString			= 0x57D430; // void fn(lua_State*, const char*)
-	uintptr_t LuaCreateTable		= 0x57C1D0; // void fn(lua_State*, int, int)
-	uintptr_t ProcessVideoFrameOGL	= 0x450930; // void fn(ScreenCapture*, int)
-	uintptr_t RegisterGameFunctions	= 0x41A6F0; // void fn(ScriptCoreInner*)
-}
-
 namespace Teardown {
 	uintptr_t GetReferenceTo(uintptr_t offset) {
 		return (uintptr_t)moduleBase + offset;
@@ -56,7 +46,7 @@ T* GetEntity(unsigned int handle, uint8_t type) {
 }
 
 int GetDllVersion(lua_State* L) {
-	td_lua_pushstring(L, "v1.7.0.0625");
+	td_lua_pushstring(L, "v1.7.0.0701");
 	return 1;
 }
 

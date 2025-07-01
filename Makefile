@@ -12,7 +12,7 @@ LIBS = `pkg-config --libs --static libcurl glfw3 lua5.1`
 LIBS += -lMinHook -ldwmapi -lcrypt32 -lws2_32 -lz -lssl
 LIBS += -ld3d12 -lD3DCompiler -ldxgi -ldxguid
 
-SOURCES = dllmain.cpp src/extended_api.cpp src/lua_utils.cpp src/memory.cpp src/networking.cpp src/recorder.cpp
+SOURCES = dllmain.cpp src/extended_api.cpp src/lua_utils.cpp src/memory.cpp src/networking.cpp src/recorder.cpp src/signatures.cpp
 SOURCES += imgui/imgui.cpp imgui/imgui_demo.cpp imgui/imgui_draw.cpp imgui/imgui_tables.cpp imgui/imgui_widgets.cpp
 SOURCES += imgui/backends/imgui_impl_dx12.cpp imgui/backends/imgui_impl_opengl3.cpp imgui/backends/imgui_impl_win32.cpp
 

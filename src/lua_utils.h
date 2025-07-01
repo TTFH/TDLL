@@ -8,12 +8,6 @@
 #include <lua.hpp>
 #include "teardown_structs.h"
 
-typedef void (*t_lua_createtable) (lua_State* L, int narr, int nrec);
-extern t_lua_createtable td_lua_createtable;
-
-typedef void (*t_lua_pushstring) (lua_State* L, const char* s);
-extern t_lua_pushstring td_lua_pushstring;
-
 void LuaPushList(lua_State* L, std::vector<int> list);
 void LuaPushVec3(lua_State* L, Vec3 v);
 void LuaPushQuat(lua_State* L, Quat q);

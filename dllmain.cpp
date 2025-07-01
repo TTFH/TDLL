@@ -19,17 +19,8 @@
 #include "imgui/backends/imgui_impl_opengl3.h"
 #include "imgui/backends/imgui_impl_dx12.h"
 
-t_lua_createtable td_lua_createtable = nullptr;
-t_lua_pushstring td_lua_pushstring = nullptr;
-
 typedef BOOL WINAPI (*t_wglSwapBuffers) (HDC hDc);
 t_wglSwapBuffers td_wglSwapBuffers = nullptr;
-
-typedef void (*t_RegisterGameFunctions) (ScriptCoreInner* inner_core);
-t_RegisterGameFunctions td_RegisterGameFunctions = nullptr;
-
-typedef void (*t_ProcessVideoFrameOGL) (ScreenCapture* sc, int frame);
-t_ProcessVideoFrameOGL td_ProcessVideoFrameOGL = nullptr;
 
 typedef HRESULT (*t_CreateDXGIFactory1) (REFIID riid, void** ppFactory);
 t_CreateDXGIFactory1 td_CreateDXGIFactory1 = nullptr;
@@ -48,17 +39,15 @@ t_CreateSwapChainForHwnd td_CreateSwapChainForHwnd = nullptr;
 typedef HRESULT (*t_Present) (IDXGISwapChain3* swapChain, UINT syncInterval, UINT flags);
 t_Present td_Present = nullptr;
 
+bool awwnb = false;
+FastRecorder recorder;
+
 Broadcast broadcast;
 std::mutex msg_mutex;
 std::vector<std::string> messages;
 
-HMODULE moduleBase;
-bool awwnb = false;
-FastRecorder recorder;
-ID3D12CommandQueue* d3d12CommandQueue = nullptr;
-
-void RegisterGameFunctionsHook(ScriptCoreInner* inner_core) {
-	td_RegisterGameFunctions(inner_core);
+void InitScriptInnerLoopHook(ScriptCoreInner* inner_core) {
+	td_InitScriptInnerLoop(inner_core);
 	awwnb = false; // Reset remove boundary checkbox
 
 	lua_State* L = inner_core->state_info->state;
@@ -67,7 +56,7 @@ void RegisterGameFunctionsHook(ScriptCoreInner* inner_core) {
 	RegisterLuaCFunctions(L);
 }
 
-void ProcessVideoFrameOGLHook(ScreenCapture* sc, int frame) {
+void ProcessVideoFrameGLHook(ScreenCapture* sc, int frame) {
 	recorder.SetResolution(sc->width, sc->height);
 	recorder.SetFolder(sc->capture_dir.c_str());
 	recorder.AddFrame(sc->image_buffer);
@@ -75,8 +64,10 @@ void ProcessVideoFrameOGLHook(ScreenCapture* sc, int frame) {
 
 // ----------------------------------------------------------------------------
 
+HMODULE moduleBase;
 bool show_menu = false;
 WNDPROC hGameWindowProc;
+ID3D12CommandQueue* d3d12CommandQueue = nullptr;
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 LRESULT CALLBACK WindowProcHook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -105,7 +96,7 @@ void ImGuiRenderFrame() {
 		ImGui::EndMenuBar();
 	}
 
-	static float far_plane = 500.0f;
+	/*static float far_plane = 500.0f;
 	ImGui::Text("Max render distance:");
 	ImGui::SliderFloat("##far_plane", &far_plane, 100.0f, 1000.0f, "%.0f");
 	ImGui::InputFloat("##far_plane_input", &far_plane, 1.0f, 10.0f, "%.0f");
@@ -114,7 +105,7 @@ void ImGuiRenderFrame() {
 		Patch(far_plane_addr, &far_plane);
 	}
 
-	/*static float near_plane = 0.05f;
+	static float near_plane = 0.05f;
 	ImGui::Text("Min render distance:");
 	ImGui::SliderFloat("##near_plane", &near_plane, 0.01f, 100.0f, "%.2f");
 	ImGui::InputFloat("##near_plane_input", &near_plane, 0.01f, 1.0f, "%.2f");
@@ -383,7 +374,7 @@ HRESULT CreateSwapChainForHwndHook(
 	HRESULT result = td_CreateSwapChainForHwnd(pFactory, pDevice, hWnd, pDesc, pFullscreenDesc, pRestrictToOutput, ppSwapChain);
 	void** vTable = *reinterpret_cast<void***>(*ppSwapChain);
 	t_Present present_addr = (t_Present)vTable[8];
-	Hook::Create(present_addr, PresentHook, &td_Present);
+	Hook::Create(present_addr, PresentHook, &td_Present, "Present");
 	return result;
 }
 
@@ -391,7 +382,7 @@ HRESULT CreateDXGIFactory1Hook(REFIID riid, void** ppFactory) {
 	HRESULT result = td_CreateDXGIFactory1(riid, ppFactory);
 	void** factoryVTable = *reinterpret_cast<void***>(*ppFactory);
 	t_CreateSwapChainForHwnd cscfh_addr = (t_CreateSwapChainForHwnd)factoryVTable[15];
-	Hook::Create(cscfh_addr, CreateSwapChainForHwndHook, &td_CreateSwapChainForHwnd);
+	Hook::Create(cscfh_addr, CreateSwapChainForHwndHook, &td_CreateSwapChainForHwnd, "CreateSwapChainForHwnd");
 	return result;
 }
 
@@ -418,28 +409,39 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	Hook::Init();
 	Hook::Create(L"opengl32.dll", "wglSwapBuffers", wglSwapBuffersHook, &td_wglSwapBuffers);
 	Hook::Create(L"dxgi.dll", "CreateDXGIFactory1", CreateDXGIFactory1Hook, &td_CreateDXGIFactory1);
-	Sleep(1500);
+	Sleep(1000);
+
+	moduleBase = GetModuleHandleA("teardown.exe");
+	td_lua_pushstring = (t_lua_pushstring)FindPatternInModule(moduleBase, luaPushStringPattern);
+	td_lua_createtable = (t_lua_createtable)FindPatternInModule(moduleBase, luaCreateTablePattern);
+	t_InitScriptInnerLoop isil_addr = (t_InitScriptInnerLoop)FindPatternInModule(moduleBase, initScriptInnerLoopPattern);
+	uintptr_t get_flashlight_addr = FindPatternInModule(moduleBase, getFlashlightPattern);
+	if (!td_lua_pushstring || !td_lua_createtable || !get_flashlight_addr || !isil_addr) {
+		MessageBoxA(nullptr, "TDLL is not compatible with this version of Teardown.\nPlease update or remove.", "TDLL - Invalid version", MB_ICONERROR | MB_OK);
+		return 0;
+	}
+
+	// MOV RAX, [game]
+	uint32_t game_addr_offset = 0;
+	memcpy(&game_addr_offset, (void*)(get_flashlight_addr + 3), sizeof(uint32_t));
+	uintptr_t get_flashlight_offset = get_flashlight_addr - (uintptr_t)moduleBase;
+	MEM_OFFSET::Game = get_flashlight_offset + game_addr_offset + 7;
+
+	Hook::Create(isil_addr, InitScriptInnerLoopHook, &td_InitScriptInnerLoop, "InitScriptInnerLoop");
+#ifdef _TDC
+	t_ProcessVideoFrameGL pvf_addr = (t_ProcessVideoFrameGL)FindPatternInModule(moduleBase, processVideoFrameGLPattern);
+	Hook::Create(pvf_addr, ProcessVideoFrameGLHook, &td_ProcessVideoFrameGL);
+#endif
 
 	try {
 		WSADATA wsa_data;
 		WSAStartup(MAKEWORD(2, 2), &wsa_data);
-		broadcast.Init(8038);
+		broadcast.Init(3802);
 		std::thread receiveThread(ReceiveThread);
 		receiveThread.detach();
 	} catch (std::exception& e) {
 		printf("[ERROR] %s\n", e.what());
 	}
-
-	moduleBase = GetModuleHandleA("teardown.exe");
-	td_lua_pushstring = (t_lua_pushstring)Teardown::GetReferenceTo(MEM_OFFSET::LuaPushString);
-	td_lua_createtable = (t_lua_createtable)Teardown::GetReferenceTo(MEM_OFFSET::LuaCreateTable);
-
-	t_RegisterGameFunctions rgf_addr = (t_RegisterGameFunctions)Teardown::GetReferenceTo(MEM_OFFSET::RegisterGameFunctions);
-	Hook::Create(rgf_addr, RegisterGameFunctionsHook, &td_RegisterGameFunctions);
-#ifdef _TDC
-	t_ProcessVideoFrameOGL pvf_addr = (t_ProcessVideoFrameOGL)Teardown::GetReferenceTo(MEM_OFFSET::ProcessVideoFrameOGL);
-	Hook::Create(pvf_addr, ProcessVideoFrameOGLHook, &td_ProcessVideoFrameOGL);
-#endif
 
 	// teardown.exe+64E55 - F3 44 0F10 05 82F88500  - movss xmm8,[teardown.exe+8C46E0] { (0.05) }
 	/*uintptr_t load_near_plane_addr = Teardown::GetReferenceTo(0x64E55);
