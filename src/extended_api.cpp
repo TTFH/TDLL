@@ -30,7 +30,8 @@ namespace Teardown {
 		return FindDMAAddy((uintptr_t)moduleBase + offset, { 0x00 });
 	}
 	Game* GetGame() {
-		return (Game*)GetPointerTo(MEM_OFFSET::Game);
+		//return (Game*)GetPointerTo(MEM_OFFSET::Game);
+		return game_ptr;
 	}
 }
 

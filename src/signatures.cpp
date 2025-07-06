@@ -1,6 +1,7 @@
 #include "signatures.h"
 
-uintptr_t MEM_OFFSET::Game = 0;
+//uintptr_t MEM_OFFSET::Game = 0;
+Game* game_ptr = nullptr;
 t_lua_pushstring td_lua_pushstring = nullptr;
 t_lua_createtable td_lua_createtable = nullptr;
 t_InitScriptInnerLoop td_InitScriptInnerLoop = nullptr;

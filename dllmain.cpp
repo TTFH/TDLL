@@ -422,10 +422,13 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter) {
 	}
 
 	// MOV RAX, [game]
+	const int MOV_HEADER_SIZE = 3;
+	const int MOV_INSTRUCTION_SIZE = 7;
 	uint32_t game_addr_offset = 0;
-	memcpy(&game_addr_offset, (void*)(get_flashlight_addr + 3), sizeof(uint32_t));
-	uintptr_t get_flashlight_offset = get_flashlight_addr - (uintptr_t)moduleBase;
-	MEM_OFFSET::Game = get_flashlight_offset + game_addr_offset + 7;
+	memcpy(&game_addr_offset, (void*)(get_flashlight_addr + MOV_HEADER_SIZE), sizeof(uint32_t));
+	//uintptr_t get_flashlight_offset = get_flashlight_addr - (uintptr_t)moduleBase;
+	//MEM_OFFSET::Game = get_flashlight_offset + game_addr_offset + MOV_INSTRUCTION_SIZE;
+	game_ptr = *(Game**)(get_flashlight_addr + game_addr_offset + MOV_INSTRUCTION_SIZE);
 
 	Hook::Create(isil_addr, InitScriptInnerLoopHook, &td_InitScriptInnerLoop, "InitScriptInnerLoop");
 #ifdef _TDC

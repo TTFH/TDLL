@@ -5,16 +5,18 @@
 #include <stdint.h>
 #include "teardown_structs.h"
 
-namespace MEM_OFFSET {						// Type
+/*namespace MEM_OFFSET {						// Type
 	extern uintptr_t Game;					// Game*
-/*	extern uintptr_t LuaPushString;			// void fn(lua_State*, const char*)
+	extern uintptr_t LuaPushString;			// void fn(lua_State*, const char*)
 	extern uintptr_t LuaCreateTable;		// void fn(lua_State*, int, int)
 	extern uintptr_t InitScriptInnerLoop;	// void fn(ScriptCoreInner*)
 	extern uintptr_t FarPlane;				// float
 	extern uintptr_t NewNearPlane;			// float
 	extern uintptr_t LoadNearPlane;			// movss xmm8, 0.05
-	extern uintptr_t ProcessVideoFrameGL;	// void fn(ScreenCapture*, int)*/
-}
+	extern uintptr_t ProcessVideoFrameGL;	// void fn(ScreenCapture*, int)
+}*/
+
+extern Game* game_ptr;
 
 typedef void (*t_lua_pushstring) (lua_State* L, const char* s);
 extern t_lua_pushstring td_lua_pushstring;
