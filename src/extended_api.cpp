@@ -370,7 +370,7 @@ int GetPaletteMaterial(lua_State* L) {
 	if (palette_id >= palette_count)
 		return 0;
 
-	Material material = game->palettes->get(palette_id).materials[index];
+	Material& material = game->palettes->get(palette_id).materials[index];
 	td_lua_pushstring(L, MaterialTypeName[material.type]);
 	lua_pushnumber(L, material.color.r);
 	lua_pushnumber(L, material.color.g);
@@ -625,7 +625,7 @@ int GetFireInfo(lua_State* L) {
 	if (index > 0) index--; // To 0-based index
 	Game* game = Teardown::GetGame();
 	if (index < game->scene->firesystem->fires.getSize()) {
-		Fire fire = game->scene->firesystem->fires[index];
+		Fire& fire = game->scene->firesystem->fires[index];
 		lua_pushinteger(L, fire.shape->handle);
 		LuaPushVec3(L, fire.position);
 		return 2;
@@ -906,10 +906,10 @@ void RegisterLuaCFunctions(lua_State* L) {
 	LuaPushFunction(L, "GetShapeDensity", GetShapeDensity);
 	LuaPushFunction(L, "GetShapePaletteId", GetShapePaletteId);
 	LuaPushFunction(L, "GetShapeTexture", GetShapeTexture);
+	LuaPushFunction(L, "GetShapeVoxelMatrix", GetShapeVoxelMatrix);
 	LuaPushFunction(L, "GetTextureOffset", GetTextureOffset);
-	LuaPushFunction(L, "SetShapeScale", SetShapeScale);
 	LuaPushFunction(L, "SetShapePalette", SetShapePalette);
+	LuaPushFunction(L, "SetShapeScale", SetShapeScale);
 	LuaPushFunction(L, "SetShapeTexture", SetShapeTexture);
 	LuaPushFunction(L, "SetTextureOffset", SetTextureOffset);
-	LuaPushFunction(L, "GetShapeVoxelMatrix", GetShapeVoxelMatrix);
 }

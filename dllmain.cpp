@@ -48,6 +48,8 @@ std::vector<std::string> messages;
 
 void InitScriptInnerLoopHook(ScriptCoreInner* inner_core) {
 	td_InitScriptInnerLoop(inner_core);
+	// TODO: move to start level
+	// TODO: reset clock
 	awwnb = false; // Reset remove boundary checkbox
 
 	lua_State* L = inner_core->state_info->state;

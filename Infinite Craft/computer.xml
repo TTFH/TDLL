@@ -1,12 +1,12 @@
-<prefab version="1.5.3">
-	<group name="instance=MOD/computer.xml" pos="0.0 0.1 0.0" rot="0.0 0.0 0.0">
+<prefab version="1.7.0">
+	<group name="instance=MOD/computer.xml">
 		<script pos="0.1 1.1 0.2" file="terminal.lua">
 			<body tags="interact" dynamic="true">
 				<vox pos="0.2 -1.1 -0.2" file="MOD/vox/office_murky.vox" object="desk"/>
 				<vox pos="-0.6 -0.1 -0.3" file="MOD/vox/modern_pc.vox" object="tower"/>
 				<vox pos="0.0 -0.1 0.0" file="MOD/vox/modern_pc.vox" object="keyboard"/>
 				<vox pos="0.5 -0.1 0.0" file="MOD/vox/modern_pc.vox" object="mouse"/>
-				<vox pos="0.0 -0.1 -0.3" rot="0.0 0.0 0.0" file="MOD/vox/modern_pc.vox" object="monitor">
+				<vox pos="0.0 -0.1 -0.3" file="MOD/vox/modern_pc.vox" object="monitor">
 					<screen tags="terminal noidlecursor" pos="0.0 0.45 0.0" size="0.6 0.3" bulge="0" resolution="1920 1080" script="MOD/options.lua" enabled="true" interactive="true"/>
 				</vox>
 			</body>
