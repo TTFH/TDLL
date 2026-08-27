@@ -66,3 +66,10 @@ const char* initScriptInnerLoopPattern =
 	"48 8B 3B"
 	"48 8B 53 08"
 	"48 8D 4C 24 20";
+
+// What the game uses to register a lua function for a ScriptCoreInner
+const char* scriptRegisterFunctionPattern = "48 89 5c 24 08 57 48 83 ec 20 48 8b f9 48 8b da 48 8b 49 38 49 8b d0 48 8b 09 e8 ?? ?? ?? ?? 48 8b 4f 38 48 8b d7 48 8b 09 e8 ?? ?? ?? ?? 48 8b 4f 38 48 ?? ?? ?? ?? ?? ?? 41 b8 02 00 00 00 48 8b 09 e8 ?? ?? ?? ?? 80 7b 1f 00 74 ?? 48 8b 1b";
+
+// Responsible for registering some of the lua api functions
+// The pattern for this actually matches both the client and shared version of this but doesn't really matter
+extern const char* scriptRegisterSharedFunctionsPattern = "48 89 5c 24 08 48 89 74 24 10 57 48 83 ec 40 48 8b f1 48 ?? ?? ?? ?? ?? ?? 48 85 db 74 38 66 90 48 8b 3b 48 8b 53 08 48 8d 4c 24 20 e8 ?? ?? ?? ?? 90 4c 8b c7 48 8d 54 24 20 48 8b ce e8 ?? ?? ?? ?? 90 48 8d 4c 24 20 e8 ?? ?? ?? ?? 48 8b 5b 10 48 85 db 75 ?? 48 8b 5c 24 50 48 8b 74 24 58 48 83 c4 40 5f c3";

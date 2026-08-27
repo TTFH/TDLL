@@ -27,6 +27,14 @@ extern t_lua_createtable td_lua_createtable;
 typedef void (*t_InitScriptInnerLoop) (ScriptCoreInner* inner_core);
 extern t_InitScriptInnerLoop td_InitScriptInnerLoop;
 
+typedef void (*t_ScriptRegisterFunction) (ScriptCoreInner* inner_core, td_string* name, lua_CFunction func);
+extern t_ScriptRegisterFunction td_ScriptRegisterFunction;
+
+// Responsible for registering some of the lua api functions
+// The pattern for this actually matches both the client and shared version of this but doesn't really matter
+typedef void (*t_ScriptRegisterSharedFunctions) (ScriptCoreInner* inner_core);
+extern t_ScriptRegisterSharedFunctions td_ScriptRegisterSharedFunctions;
+
 //typedef void (*t_ProcessVideoFrameGL) (ScreenCapture* sc, int frame);
 //extern t_ProcessVideoFrameGL td_ProcessVideoFrameGL;
 
@@ -35,5 +43,8 @@ extern const char* luaCreateTablePattern;
 //extern const char* getFlashlightPattern;
 extern const char* getBodyMassPattern;
 extern const char* initScriptInnerLoopPattern;
+extern const char* scriptRegisterFunctionPattern
+// The pattern for this actually matches both the client and shared version of this but doesn't really matter
+extern const char* scriptRegisterSharedFunctionsPattern
 
 #endif
