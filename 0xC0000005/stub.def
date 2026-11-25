@@ -1,0 +1,4 @@
+LIBRARY waitaddr_shim
+EXPORTS
+	WaitOnAddress
+	WakeByAddressSingle

@@ -4,6 +4,7 @@ imgui/
 lib/
 lua5.1.4/
 obj/
+0xC0000005/*.dll
 
 pros.sdk.x64.dll
 winmm.dll
